@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@app/*": ["./app/*"],
+      "@modules/*": ["./modules/*"],
+      "@shared/*": ["./shared/*"],
+      "@/shared/*": ["./shared/*"]
+    }
+  },
+  "include": [
+    "app/**/*",
+    "modules/**/*",
+    "shared/**/*",
+    "pages/**/*",
+    "**/*.jsx",
+    "**/*.js"
+  ],
+  "exclude": ["node_modules", ".next", "public"]
+}

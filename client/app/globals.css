@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme inline {
+  --animate-move: move 5s linear infinite;
+ 
+  @keyframes move {
+    0% {
+      transform: translateX(-200px);
+    }
+    100% {
+      transform: translateX(200px);
+    }
+  }
+}
+
+/* ------------------------------
+   Layout variables
+------------------------------ */
+:root { --nav-h: 180px; }
+@media (max-width: 900px) {
+  :root { --nav-h: 64px; }
+}
+
+/* ------------------------------
+   Global touch/selection tweaks
+------------------------------ */
+* { -webkit-tap-highlight-color: transparent; }
+
+::selection {
+  background: #000;
+  color: #fff; /* ถ้าอยากให้มองไม่เห็นตอนเลือก: ใช้ transparent */
+}
+
+/* ------------------------------
+   Prevent dragging (links & media)
+------------------------------ */
+a, [role="link"], img, svg {
+  -webkit-user-drag: none;
+  user-drag: none; /* บางเบราว์เซอร์อาจไม่รองรับ */
+}
+
+/* ------------------------------
+   Protection mode
+   เปิดเมื่อ <body data-protect="on">
+------------------------------ */
+body[data-protect="on"] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* ปิดเมนูแตะค้างบน iOS */
+}
+
+/* อนุญาตให้เลือก/คัดลอกได้เฉพาะส่วนที่จำเป็น */
+body[data-protect="on"] input,
+body[data-protect="on"] textarea,
+body[data-protect="on"] [contenteditable="true"],
+body[data-protect="on"] .selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}

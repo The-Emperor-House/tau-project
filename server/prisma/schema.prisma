@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// 🔽 ENUMS
+//
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum DesignType {
+  ARCHITECTURAL
+  INTERIOR
+}
+
+enum WorkType {
+  REBUILD
+  RENOVATE
+  REDESIGN
+}
+
+enum FurnitureType {
+  BUILT_IN
+  LOOSE
+  CUSTOM
+}
+
+//
+// 🔽 MODELS
+//
+model user {
+  id             Int       @id @default(autoincrement())
+  email          String    @unique
+  password       String
+  name           String?
+  avatarUrl      String?
+  avatarPublicId String?
+  role           UserRole  @default(USER)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  refreshTokens refreshToken[]
+}
+
+model refreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    Int
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model contact {
+  id         Int          @id @default(autoincrement())
+  fullName   String
+  email      String
+  phone      String
+  budget     Int?
+  areaSize   Float?
+  needs      String
+  details    String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model design {
+  id             Int           @id @default(autoincrement())
+  name           String
+  type           DesignType    @default(ARCHITECTURAL)
+  coverUrl       String
+  coverPublicId  String?
+  images         designImage[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model designImage {
+  id        Int     @id @default(autoincrement())
+  designId  Int
+  imageUrl  String
+  publicId  String?
+  design    design  @relation(fields: [designId], references: [id])
+}
+
+model project {
+  id             Int           @id @default(autoincrement())
+  name           String
+  type           WorkType      
+  details        String?
+  areaSize       Float?
+  coverUrl       String
+  coverPublicId  String?
+  images         projectImage[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model projectImage {
+  id         Int     @id @default(autoincrement())
+  projectId  Int
+  imageUrl   String
+  publicId   String?
+  project    project @relation(fields: [projectId], references: [id])
+}
+
+model furniture {
+  id             Int              @id @default(autoincrement())
+  name           String
+  type           FurnitureType
+  details        String?          @db.Text
+  price          Int?
+  width          Float?
+  depth          Float?
+  height         Float?
+  coverUrl       String
+  coverPublicId  String?
+  images         furnitureImage[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model furnitureImage {
+  id        Int       @id @default(autoincrement())
+  furnitureId Int
+  imageUrl  String
+  publicId  String?
+  furniture furniture @relation(fields: [furnitureId], references: [id])
+}
+
+model news {
+  id             Int            @id @default(autoincrement())
+  heading1       String
+  heading2       String?
+  body          String?   @db.LongText
+  coverUrl       String
+  coverPublicId  String?
+  videoUrl       String?
+  images         newsImage[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model newsImage {
+  id        Int     @id @default(autoincrement())
+  newsId    Int
+  imageUrl  String
+  publicId  String?
+  news      news    @relation(fields: [newsId], references: [id])
+}
