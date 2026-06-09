@@ -31,10 +31,11 @@ export default function Sparkles({
   const particlesRef = useRef([]);
   const lastSizeRef = useRef({ w: 0, h: 0, dpr: 1 });
 
-  const prefersReducedMotion =
-    typeof window !== "undefined" &&
-    window.matchMedia &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const prefersReducedMotion = useRef(false);
+  useEffect(() => {
+    prefersReducedMotion.current =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+  }, []);
 
   // Helper: คำนวณจำนวนอนุภาคตามพื้นที่และความหนาแน่น
   const calcParticleCount = (w, h) => {
@@ -161,7 +162,7 @@ export default function Sparkles({
   };
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion.current) return;
 
     if (wrapperRef.current) {
       wrapperRef.current.style.pointerEvents = "none";
@@ -178,9 +179,9 @@ export default function Sparkles({
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [minSize, maxSize, particleDensity, particleColor, speed, prefersReducedMotion]);
+  }, [minSize, maxSize, particleDensity, particleColor, speed]);
 
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion.current) {
     return <div className={className} ref={wrapperRef} aria-hidden />;
   }
 

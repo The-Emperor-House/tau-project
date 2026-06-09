@@ -9,10 +9,10 @@ router.use(authenticate); // เช็ก JWT ทุก route ด้านล่
 // 👤 ดึง users ทั้งหมด (เฉพาะแอดมินควรเห็นได้ทั้งหมด)
 router.get('/', userController.getUsers);
 
+// 📸 อัปโหลด avatar ของ user ที่ล็อกอินอยู่ (ต้องมาก่อน /:id เพื่อไม่ให้ Express ตีความ "avatar" เป็น id)
+router.put('/avatar/me', userController.uploadAvatar);
+
 // ✏️ แก้ไข user ตาม ID (ควรเช็กว่า user คือเจ้าของข้อมูลหรือเป็น admin)
 router.put('/:id', userController.updateUser);
-
-// 📸 อัปโหลด avatar ของ user ที่ล็อกอินอยู่ (ไม่ใช้ :id เพราะผูกกับ token)
-router.put('/avatar/me', userController.uploadAvatar);
 
 module.exports = router;

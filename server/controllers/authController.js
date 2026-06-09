@@ -1,9 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { uploadAvatar, cloudinary } = require("../utils/cloudinary");
-
-const prisma = new PrismaClient();
+const prisma = require("../utils/prisma");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
@@ -56,7 +54,7 @@ exports.register = [
       !password && "Missing password",
       email && !isValidEmail(email) && "Invalid email format",
       password && password.length < 6 && "Password must be at least 6 characters",
-      !name || name.length < 2 && "Name must be at least 2 characters",
+      (!name || name.length < 2) && "Name must be at least 2 characters",
       role && !["USER", "ADMIN"].includes(role) && "Invalid role",
       role === "ADMIN" && req.user?.role !== "ADMIN" && "Only admins can create admin users",
     ].filter(Boolean);

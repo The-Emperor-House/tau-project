@@ -1,33 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Box, Typography, Button, Card, CardContent, Stack, Skeleton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Snackbar, Alert, Divider } from "@mui/material";
-import Grid from "@mui/material/Grid";
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Close as CloseIcon } from "@mui/icons-material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Snackbar, Alert } from "@mui/material";
+import { Close as CloseIcon } from "@mui/icons-material";
 import { useSession } from "next-auth/react";
+import useModalContext from "@/shared/hooks/useModalContext";
 
-const colors = { bg: "#000", text: "#fff", accent: "#cc8f2a" };
+const TYPES = ["BUILT_IN", "LOOSE", "CUSTOM"];
 
 export default function DashboardFurniture() {
   const { data: session } = useSession();
+  const { showLoading, hideLoading, confirm } = useModalContext();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [openForm, setOpenForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    id: null,
-    name: "",
-    type: "BUILT_IN",
-    details: "",
-    price: "",
-    width: "",
-    depth: "",
-    height: "",
-    images: [],
-    coverUrl: "",
-  });
-
+  const [formData, setFormData] = useState({ id: null, name: "", type: "BUILT_IN", details: "", price: "", width: "", depth: "", height: "", images: [], coverUrl: "" });
   const coverInputRef = useRef(null);
   const imagesInputRef = useRef(null);
   const [coverPreview, setCoverPreview] = useState(null);
@@ -41,8 +29,7 @@ export default function DashboardFurniture() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/furniture`, {
         headers: { Authorization: `Bearer ${session?.backendToken}` },
       });
-      const data = res.ok ? await res.json() : [];
-      setItems(Array.isArray(data) ? data : []);
+      setItems(res.ok ? (await res.json()) : []);
     } catch {
       setSnackbar({ open: true, message: "Failed to load", severity: "error" });
     } finally {
@@ -50,7 +37,7 @@ export default function DashboardFurniture() {
     }
   };
 
-  useEffect(() => { fetchItems(); /* eslint-disable-next-line */ }, [session?.backendToken]);
+  useEffect(() => { fetchItems(); }, [session?.backendToken]); // eslint-disable-line
 
   const resetFiles = () => {
     if (coverInputRef.current) coverInputRef.current.value = null;
@@ -60,36 +47,22 @@ export default function DashboardFurniture() {
   const handleOpenAdd = () => {
     setIsEditing(false);
     setFormData({ id: null, name: "", type: "BUILT_IN", details: "", price: "", width: "", depth: "", height: "", images: [], coverUrl: "" });
-    setCoverPreview(null);
-    setImagesPreview([]);
-    setDeleteImageIds(new Set());
-    setOpenForm(true);
-    resetFiles();
+    setCoverPreview(null); setImagesPreview([]); setDeleteImageIds(new Set());
+    setOpenForm(true); resetFiles();
   };
 
   const handleEdit = (it) => {
     setIsEditing(true);
-    setFormData({
-      id: it.id,
-      name: it.name,
-      type: it.type,
-      details: it.details || "",
-      price: it.price ?? "",
-      width: it.width ?? "",
-      depth: it.depth ?? "",
-      height: it.height ?? "",
-      images: it.images || [],
-      coverUrl: it.coverUrl || "",
-    });
+    setFormData({ id: it.id, name: it.name, type: it.type, details: it.details || "", price: it.price ?? "", width: it.width ?? "", depth: it.depth ?? "", height: it.height ?? "", images: it.images || [], coverUrl: it.coverUrl || "" });
     setCoverPreview(it.coverUrl || null);
     setImagesPreview(it.images?.map((x) => x.imageUrl) || []);
-    setDeleteImageIds(new Set());
-    setOpenForm(true);
-    resetFiles();
+    setDeleteImageIds(new Set()); setOpenForm(true); resetFiles();
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this furniture?")) return;
+    const ok = await confirm({ title: "Delete furniture?", message: "ต้องการลบรายการนี้หรือไม่", confirmText: "Delete", cancelText: "Cancel" });
+    if (!ok) return;
+    showLoading("Deleting...");
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/furniture/${id}`, {
         method: "DELETE",
@@ -100,30 +73,20 @@ export default function DashboardFurniture() {
       fetchItems();
     } catch {
       setSnackbar({ open: true, message: "Failed to delete", severity: "error" });
+    } finally {
+      hideLoading();
     }
   };
 
-  const handleCoverChange = (e) => {
-    const file = e.target.files?.[0];
-    setCoverPreview(file ? URL.createObjectURL(file) : isEditing ? formData.coverUrl : null);
-  };
-  const handleRemoveCover = () => {
-    setCoverPreview(null);
-    if (coverInputRef.current) coverInputRef.current.value = null;
-  };
   const handleImagesChange = (e) => {
     const files = Array.from(e.target.files || []);
-    if (files.length) {
-      setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
-    }
+    if (files.length) setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
   };
+
   const handleRemoveImage = (index) => {
-    if (!isEditing) return setImagesPreview((prev) => prev.filter((_, i) => i !== index));
     const url = imagesPreview[index];
     const ex = formData.images.find((im) => im.imageUrl === url);
-    if (ex) {
-      setDeleteImageIds((prev) => new Set(prev).add(ex.id));
-    }
+    if (ex) setDeleteImageIds((prev) => new Set(prev).add(ex.id));
     setImagesPreview((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -138,131 +101,134 @@ export default function DashboardFurniture() {
     Array.from(imagesInputRef.current?.files || []).forEach((f) => form.append("images", f));
     if (deleteImageIds.size) form.append("deleteImageIds", Array.from(deleteImageIds).join(","));
 
+    showLoading(isEditing ? "Updating..." : "Creating...");
     const method = isEditing ? "PUT" : "POST";
     const url = isEditing
       ? `${process.env.NEXT_PUBLIC_API_URL}/api/furniture/${formData.id}`
       : `${process.env.NEXT_PUBLIC_API_URL}/api/furniture`;
-
     try {
       const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: form });
       if (!res.ok) throw new Error();
       setSnackbar({ open: true, message: isEditing ? "Updated" : "Created", severity: "success" });
-      setOpenForm(false);
-      fetchItems();
+      setOpenForm(false); fetchItems();
     } catch {
       setSnackbar({ open: true, message: "Failed to submit", severity: "error" });
+    } finally {
+      hideLoading();
     }
   };
 
+  const skeletons = Array.from({ length: 6 });
+
   return (
-    <Box sx={{ bgcolor: colors.bg, color: colors.text, minHeight: "100svh", pt: { xs: "120px", md: "270px" }, pb: 6 }}>
-      <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, md: 3 } }}>
-        <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="space-between" gap={2} mb={2}>
-          <Typography variant="h4" fontWeight={900}>Dashboard: Furniture</Typography>
-          <Button startIcon={<AddIcon />} variant="contained" sx={{ bgcolor: colors.accent, color: "#000", fontWeight: 800, "&:hover": { bgcolor: "#b57b14" } }} onClick={handleOpenAdd}>
-            Add New
-          </Button>
-        </Stack>
-        <Divider sx={{ mb: 3, borderColor: "rgba(255,255,255,0.18)" }} />
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <h1 className="text-xl font-semibold text-white">Furniture</h1>
+        <button
+          onClick={handleOpenAdd}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#cc8f2a] text-black rounded-lg hover:bg-[#b57b14] transition-colors"
+        >
+          <PlusIcon /> Add Furniture
+        </button>
+      </div>
 
-        <Grid container spacing={3}>
-          {(loading ? Array.from({ length: 6 }) : items).map((it, i) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={it?.id || i}>
-              <Card sx={{ height: "100%", display: "flex", flexDirection: "column", borderRadius: 2, boxShadow: 3 }}>
-                {loading ? (
-                  <>
-                    <Box sx={{ position: "relative", aspectRatio: "16 / 9" }}>
-                      <Skeleton variant="rectangular" sx={{ position: "absolute", inset: 0 }} />
-                    </Box>
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Skeleton width="80%" height={24} sx={{ mb: 1 }} />
-                      <Skeleton width="60%" height={20} />
-                    </CardContent>
-                  </>
-                ) : (
-                  <>
-                    <Box sx={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden", borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
-                      <img src={it.coverUrl} alt={it.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-                    </Box>
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Typography variant="subtitle1" fontWeight={700}>{it.name}</Typography>
-                      {typeof it.price === "number" && <Typography sx={{ mt: .5 }}>{it.price.toLocaleString("th-TH")} บาท</Typography>}
-                    </CardContent>
-                    <Stack direction="row" spacing={1} p={2} justifyContent="flex-end">
-                      <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={() => handleEdit(it)} sx={{ color: colors.accent, borderColor: colors.accent, "&:hover": { borderColor: colors.accent } }}>
-                        Edit
-                      </Button>
-                      <Button variant="outlined" color="error" size="small" startIcon={<DeleteIcon />} onClick={() => handleDelete(it.id)}>
-                        Delete
-                      </Button>
-                    </Stack>
-                  </>
-                )}
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {(loading ? skeletons : items).map((it, i) => (
+          <div key={it?.id ?? i} className="rounded-xl overflow-hidden bg-neutral-900 border border-neutral-800 flex flex-col">
+            <div className="relative aspect-video bg-neutral-800">
+              {loading
+                ? <div className="absolute inset-0 bg-neutral-800 animate-pulse" />
+                : it.coverUrl && <img src={it.coverUrl} alt={it.name} className="absolute inset-0 w-full h-full object-cover" />
+              }
+            </div>
+            <div className="p-4 flex flex-col flex-1">
+              {loading ? (
+                <div className="space-y-2">
+                  <div className="h-4 bg-neutral-800 rounded animate-pulse w-3/4" />
+                  <div className="h-3 bg-neutral-800 rounded animate-pulse w-1/2" />
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-white">{it.name}</p>
+                  <p className="text-xs text-neutral-500 mt-0.5">{it.type}</p>
+                  {typeof it.price === "number" && (
+                    <p className="text-sm text-[#cc8f2a] mt-1">{it.price.toLocaleString("th-TH")} บาท</p>
+                  )}
+                  <div className="flex gap-2 mt-auto pt-4">
+                    <button onClick={() => handleEdit(it)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#cc8f2a] border border-[#cc8f2a]/40 rounded-lg hover:bg-[#cc8f2a]/10 transition-colors">
+                      <EditIcon /> Edit
+                    </button>
+                    <button onClick={() => handleDelete(it.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-400 border border-rose-400/30 rounded-lg hover:bg-rose-400/10 transition-colors">
+                      <TrashIcon /> Delete
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
-      {/* Form */}
+      {/* Form Dialog */}
       <Dialog open={openForm} onClose={() => setOpenForm(false)} fullWidth maxWidth="sm">
-        <DialogTitle>{isEditing ? "Edit Furniture" : "Add Furniture"}</DialogTitle>
-        <DialogContent sx={{ display: "grid", gap: 2, mt: 1 }}>
-          <TextField label="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} fullWidth required />
-          <TextField select label="Type" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} fullWidth required>
-            <MenuItem value="BUILT_IN">BUILT-IN</MenuItem>
-            <MenuItem value="LOOSE">LOOSE</MenuItem>
-            <MenuItem value="CUSTOM">CUSTOM</MenuItem>
+        <DialogTitle sx={{ bgcolor: "#111", color: "#fff", borderBottom: "1px solid #262626" }}>
+          {isEditing ? "Edit Furniture" : "Add Furniture"}
+        </DialogTitle>
+        <DialogContent sx={{ bgcolor: "#111", color: "#e5e5e5", display: "grid", gap: 2, pt: "20px !important" }}>
+          <TextField label="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} fullWidth required InputLabelProps={{ style: { color: "#737373" } }} inputProps={{ style: { color: "#fff" } }} sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&:hover fieldset": { borderColor: "#737373" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }} />
+          <TextField select label="Type" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} fullWidth InputLabelProps={{ style: { color: "#737373" } }} inputProps={{ style: { color: "#fff" } }} sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }}>
+            {TYPES.map((t) => <MenuItem key={t} value={t} sx={{ bgcolor: "#1a1a1a", color: "#fff", "&:hover": { bgcolor: "#262626" } }}>{t}</MenuItem>)}
           </TextField>
-          <TextField label="Price (THB)" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
-          <Stack direction="row" spacing={1}>
-            <TextField label="Width (cm)" value={formData.width} onChange={(e) => setFormData({ ...formData, width: e.target.value })} />
-            <TextField label="Depth (cm)" value={formData.depth} onChange={(e) => setFormData({ ...formData, depth: e.target.value })} />
-            <TextField label="Height (cm)" value={formData.height} onChange={(e) => setFormData({ ...formData, height: e.target.value })} />
-          </Stack>
-          <TextField label="Details" value={formData.details} onChange={(e) => setFormData({ ...formData, details: e.target.value })} multiline minRows={4} />
+          <TextField label="Price (THB)" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} InputLabelProps={{ style: { color: "#737373" } }} inputProps={{ style: { color: "#fff" } }} sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }} />
+          <div className="grid grid-cols-3 gap-2">
+            {["width", "depth", "height"].map((k) => (
+              <TextField key={k} label={`${k.charAt(0).toUpperCase() + k.slice(1)} (cm)`} value={formData[k]} onChange={(e) => setFormData({ ...formData, [k]: e.target.value })} InputLabelProps={{ style: { color: "#737373" } }} inputProps={{ style: { color: "#fff" } }} sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }} />
+            ))}
+          </div>
+          <TextField label="Details" value={formData.details} onChange={(e) => setFormData({ ...formData, details: e.target.value })} multiline minRows={3} InputLabelProps={{ style: { color: "#737373" } }} inputProps={{ style: { color: "#fff" } }} sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }} />
 
           {/* Cover */}
-          <Typography variant="subtitle2" sx={{ mt: 1 }}>Cover</Typography>
-          <input type="file" accept="image/*" ref={coverInputRef} onChange={(e) => handleCoverChange(e)} style={{ display: "none" }} id="cover-file-input" />
-          <Stack direction="row" spacing={1} alignItems="center">
-            {coverPreview && (
-              <Box sx={{ position: "relative", width: 240, borderRadius: 2, overflow: "hidden", boxShadow: 1 }}>
-                <Box sx={{ pt: "56.25%" }} />
-                <img src={coverPreview} alt="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-                <IconButton size="small" onClick={() => handleRemoveCover()} sx={{ position: "absolute", top: 4, right: 4, bgcolor: "rgba(0,0,0,0.5)" }}>
-                  <CloseIcon fontSize="small" sx={{ color: "white" }} />
-                </IconButton>
-              </Box>
+          <div>
+            <p className="text-sm text-neutral-400 mb-2">Cover Image</p>
+            <input type="file" accept="image/*" ref={coverInputRef} onChange={(e) => { const f = e.target.files?.[0]; setCoverPreview(f ? URL.createObjectURL(f) : null); }} style={{ display: "none" }} />
+            {coverPreview ? (
+              <div className="relative w-48 rounded-lg overflow-hidden">
+                <img src={coverPreview} alt="cover" className="w-full aspect-video object-cover" />
+                <button onClick={() => { setCoverPreview(null); if (coverInputRef.current) coverInputRef.current.value = null; }} className="absolute top-1 right-1 p-1 bg-black/60 rounded-full">
+                  <CloseIcon sx={{ fontSize: 14, color: "#fff" }} />
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => coverInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-400 border border-neutral-700 rounded-lg hover:border-neutral-500 transition-colors">
+                <PlusIcon /> Add Cover
+              </button>
             )}
-            <Button variant="outlined" startIcon={<AddIcon />} onClick={() => coverInputRef.current?.click()}>{coverPreview ? "Change Cover" : "Add Cover"}</Button>
-          </Stack>
+          </div>
 
-          {/* Images */}
-          <Typography variant="subtitle2">Gallery Images</Typography>
-          <input type="file" accept="image/*" multiple ref={imagesInputRef} onChange={handleImagesChange} style={{ display: "none" }} id="images-file-input" />
-          <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
-            {imagesPreview.map((src, idx) => (
-              <Box key={idx} sx={{ position: "relative", width: 160, borderRadius: 1, overflow: "hidden", boxShadow: 1 }}>
-                <Box sx={{ pt: "56.25%" }} />
-                <img src={src} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-                <IconButton size="small" onClick={() => handleRemoveImage(idx)} sx={{ position: "absolute", top: 2, right: 2, bgcolor: "rgba(0,0,0,0.5)" }}>
-                  <CloseIcon fontSize="small" sx={{ color: "white" }} />
-                </IconButton>
-              </Box>
-            ))}
-            <Box onClick={() => imagesInputRef.current?.click()} sx={{ cursor: "pointer", width: 160, borderRadius: 1, border: "2px dashed #ccc", display: "flex", justifyContent: "center", alignItems: "center", color: "gray" }}>
-              <Box sx={{ pt: "56.25%", width: "100%", position: "relative" }}>
-                <AddIcon fontSize="large" style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
-              </Box>
-            </Box>
-          </Stack>
+          {/* Gallery */}
+          <div>
+            <p className="text-sm text-neutral-400 mb-2">Gallery Images</p>
+            <input type="file" accept="image/*" multiple ref={imagesInputRef} onChange={handleImagesChange} style={{ display: "none" }} />
+            <div className="flex flex-wrap gap-2">
+              {imagesPreview.map((src, idx) => (
+                <div key={idx} className="relative w-24 rounded-lg overflow-hidden">
+                  <img src={src} alt="" className="w-full aspect-video object-cover" />
+                  <button onClick={() => handleRemoveImage(idx)} className="absolute top-0.5 right-0.5 p-0.5 bg-black/60 rounded-full">
+                    <CloseIcon sx={{ fontSize: 12, color: "#fff" }} />
+                  </button>
+                </div>
+              ))}
+              <button onClick={() => imagesInputRef.current?.click()} className="w-24 aspect-video rounded-lg border-2 border-dashed border-neutral-700 flex items-center justify-center text-neutral-600 hover:border-neutral-500 transition-colors">
+                <PlusIcon />
+              </button>
+            </div>
+          </div>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenForm(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit} disabled={!coverPreview} sx={{ bgcolor: colors.accent, "&:hover": { bgcolor: "#b57b14" } }}>
+        <DialogActions sx={{ bgcolor: "#111", borderTop: "1px solid #262626", px: 3, py: 2 }}>
+          <button onClick={() => setOpenForm(false)} className="px-4 py-2 text-sm text-neutral-400 hover:text-white transition-colors">Cancel</button>
+          <button onClick={handleSubmit} className="px-4 py-2 text-sm font-medium bg-[#cc8f2a] text-black rounded-lg hover:bg-[#b57b14] disabled:opacity-50 transition-colors">
             {isEditing ? "Update" : "Create"}
-          </Button>
+          </button>
         </DialogActions>
       </Dialog>
 
@@ -271,6 +237,10 @@ export default function DashboardFurniture() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </div>
   );
 }
+
+function PlusIcon() { return <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>; }
+function EditIcon() { return <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>; }
+function TrashIcon() { return <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6M9 6V4h6v2" /></svg>; }

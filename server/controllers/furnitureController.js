@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
 const { cloudinary, uploadFurniture } = require("../utils/cloudinary");
+const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
 
 // CREATE

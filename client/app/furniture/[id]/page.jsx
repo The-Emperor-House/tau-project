@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
 import {
   Box,
   Typography,
@@ -19,10 +20,7 @@ const TEXT = "#fff";
 const FALLBACK = "/images/default-data.jpg";
 
 export default function FurnitureDetail() {
-  const id =
-    typeof window !== "undefined"
-      ? window.location.pathname.split("/").pop()
-      : null;
+  const { id } = useParams();
 
   const [item, setItem] = useState(null);
   const [imgSrc, setImgSrc] = useState(null);

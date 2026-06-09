@@ -1,6 +1,6 @@
 import HomeCard from "@/app/home/components/HomeCards";
 import AboutUsCards from "@/app/home/components/AboutUsCards";
-import ProjectsPage from "@/app/projects/page";
+import ProjectCards from "@/app/home/components/ProjectCards";
 import NewsCards from "@/app/home/components/NewsCards";
 import MapCards from "@/app/home/components/MapCards";
 
@@ -15,7 +15,7 @@ export default function HomePage() {
     <main>
       <HomeCard />
       <AboutUsCards />
-      <ProjectsPage />
+      <ProjectCards />
       <NewsCards />
       <MapCards />
     </main>

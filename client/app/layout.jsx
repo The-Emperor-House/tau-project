@@ -3,8 +3,6 @@ import { Poppins, Prompt } from 'next/font/google';
 import { Providers } from '@/shared/providers/Providers';
 import MainNavbar from '@/modules/layout/navbar/MainNavbar';
 import Footer from '@/modules/layout/footer/Footer';
-import { Suspense } from 'react';
-import RouteLoader from '@/modules/layout/common/RouteLoader';
 import ClientGuards from "@/modules/layout/common/ClientGuards";
 import EmotionRegistry from '@/app/EmotionRegistry';
 
@@ -43,9 +41,7 @@ export default function RootLayout({ children }) {
           <Providers>
             <ClientGuards enabled={enableGuards} />
             <MainNavbar />
-            <main>
-              <Suspense fallback={<RouteLoader />}>{children}</Suspense>
-            </main>
+            <main>{children}</main>
             <Footer />
           </Providers>
         </EmotionRegistry>

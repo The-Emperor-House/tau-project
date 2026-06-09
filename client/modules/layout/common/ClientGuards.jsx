@@ -3,10 +3,6 @@ import { useEffect } from "react";
 
 export default function ClientGuards() {
   useEffect(() => {
-    // ❌ คลิกขวา
-    const onContextMenu = (e) => e.preventDefault();
-    document.addEventListener("contextmenu", onContextMenu);
-
     // ⛔ คีย์ลัดยอดนิยม
     const onKeyDown = (e) => {
       const ctrlOrCmd = e.ctrlKey || e.metaKey;
@@ -74,7 +70,6 @@ export default function ClientGuards() {
     document.addEventListener("cut", onCut);
 
     return () => {
-      document.removeEventListener("contextmenu", onContextMenu);
       window.removeEventListener("keydown", onKeyDown, true);
       document.removeEventListener("dragstart", onDragStart, true);
       document.removeEventListener("copy", onCopy);

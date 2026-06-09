@@ -1,6 +1,5 @@
-const { PrismaClient } = require('@prisma/client')
 const { cloudinary, uploadAvatar } = require('../utils/cloudinary')
-const prisma = new PrismaClient()
+const prisma = require('../utils/prisma')
 
 exports.getUsers = async (req, res) => {
   try {

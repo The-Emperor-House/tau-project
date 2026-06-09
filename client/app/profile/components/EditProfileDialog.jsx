@@ -48,9 +48,9 @@ export default function EditProfileDialog({
     const errors = {};
     if (!form.name.trim()) errors.name = "กรุณากรอกชื่อ";
     if (!form.email.trim()) errors.email = "กรุณากรอกอีเมล";
-    if (!form.role) errors.role = "กรุณาเลือกบทบาท";
     else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(form.email))
       errors.email = "รูปแบบอีเมลไม่ถูกต้อง";
+    if (!form.role) errors.role = "กรุณาเลือกบทบาท";
     setFormError(errors);
     return Object.keys(errors).length === 0;
   };

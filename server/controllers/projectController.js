@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-const { cloudinary, uploadProject } = require("../utils/cloudinary"); // ถ้ายังใช้ตัวอัปโหลดเดิม
+const { cloudinary, uploadProject } = require("../utils/cloudinary");
+const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
 
 // util: ตรวจ enum type ให้ตรง schema

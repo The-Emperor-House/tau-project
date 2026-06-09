@@ -14,6 +14,9 @@ const errorMiddleware = require("./middleware/errorMiddleware");
 const app = express();
 app.set("trust proxy", 1);
 
+/** ✅ Health check — ตอบก่อน middleware ทั้งหมด ไม่โดน rate limit / log */
+app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
+
 /** 🌐 CORS: รองรับ wildcard จาก ENV (เช่น https://*.vercel.app) */
 function compileCorsOrigins(csv) {
   const items = (csv || "")
@@ -90,10 +93,30 @@ app.use(
 app.use(compression());
 app.use(express.json({ limit: "10kb" }));
 
-/** 📈 Logs */
-app.use(morgan(process.env.NODE_ENV === "development" ? "dev" : "combined"));
+/** 📈 Logs — skip health check agents และ uptime monitors */
+const HEALTH_UA = /UptimeRobot|Pingdom|StatusCake|Site24x7|kube-probe|GoogleHC|ELB-HealthChecker|vercel/i;
+app.use(
+  morgan(process.env.NODE_ENV === "development" ? "dev" : "combined", {
+    skip: (req) =>
+      req.path === "/health" || HEALTH_UA.test(req.headers["user-agent"] || ""),
+  })
+);
 
-/** 🚫 Rate limit ตัวอย่าง (เช่น เส้นทาง login) */
+/** 🚫 Rate limit */
+
+// Global API rate limit — ป้องกันบอทยิง endpoint ทั่วไป
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 นาที
+  max: 120,            // 120 req/min ต่อ IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Too many requests. Please try again later.",
+  skip: (req) =>
+    req.path === "/health" || HEALTH_UA.test(req.headers["user-agent"] || ""),
+});
+app.use("/api", globalLimiter);
+
+// Login rate limit — กันบรูทฟอร์ซ
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
