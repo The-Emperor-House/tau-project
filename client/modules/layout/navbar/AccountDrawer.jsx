@@ -20,7 +20,7 @@ export default function AccountDrawer({ open, onClose, onLogout }) {
         sx: (t) => ({
           bgcolor: "grey.900",
           color: "common.white",
-          width: 320,
+          width: "min(85vw, 320px)",
           borderLeft: `1px solid ${alpha(t.palette.common.white, 0.12)}`,
         }),
       }}

@@ -74,7 +74,7 @@ export default function UserProfileCard() {
       ) : (
         <>
           <Avatar
-            src={user?.avatarUrl || "/default-avatar.png"}
+            src={user?.avatarUrl || undefined}
             sx={{
               width: 96,
               height: 96,
@@ -85,7 +85,6 @@ export default function UserProfileCard() {
             }}
             alt={user?.name || "ผู้ใช้ไม่ระบุ"}
             onClick={() => setIsEditAvatarDialogOpen(true)}
-            onError={(e) => { e.currentTarget.src = "/default-avatar.png"; }}
           />
           <Typography variant="h5" sx={{ mt: 2, fontWeight: 700 }}>
             {user?.name || "ผู้ใช้ไม่ระบุ"}
@@ -102,11 +101,30 @@ export default function UserProfileCard() {
             <InfoItem label="🛠️ วันที่แก้ไขล่าสุด" value={formatDateTime(user?.updatedAt)} />
           </Box>
 
-          <Box sx={{ mt: 3, textAlign: "center", display: "flex", gap: 1 }}>
-            <Button variant="contained" color="primary" onClick={() => setIsEditDialogOpen(true)}>
+          <Box
+            sx={{
+              mt: 3,
+              width: "100%",
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              justifyContent: "center",
+              gap: 1,
+            }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ width: { xs: "100%", sm: "auto" } }}
+              onClick={() => setIsEditDialogOpen(true)}
+            >
               แก้ไขโปรไฟล์
             </Button>
-            <Button variant="outlined" color="info" onClick={() => setIsChangePasswordDialogOpen(true)}>
+            <Button
+              variant="outlined"
+              color="info"
+              sx={{ width: { xs: "100%", sm: "auto" } }}
+              onClick={() => setIsChangePasswordDialogOpen(true)}
+            >
               เปลี่ยนรหัสผ่าน
             </Button>
           </Box>
@@ -141,7 +159,15 @@ export default function UserProfileCard() {
 
 function InfoItem({ label, value }) {
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between',
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        gap: 0.5,
+      }}
+    >
       <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
         {label}:
       </Typography>
@@ -153,8 +179,10 @@ function InfoItem({ label, value }) {
           fontFamily: 'monospace',
           backgroundColor: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800],
           borderRadius: '9999px',
-          minWidth: 100,
+          minWidth: { xs: 'auto', sm: 100 },
+          maxWidth: '100%',
           textAlign: 'center',
+          overflowWrap: 'anywhere',
         })}
       >
         {value}
@@ -174,7 +202,10 @@ function formatDateTime(date) {
 const StyledCard = styled(Card)(({ theme }) => ({
   width: "100%",
   maxWidth: 512,
-  padding: theme.spacing(4),
+  padding: theme.spacing(2.5),
+  [theme.breakpoints.up("sm")]: {
+    padding: theme.spacing(4),
+  },
   borderRadius: theme.spacing(2),
   boxShadow: theme.shadows[5],
   backgroundColor: theme.palette.background.paper,

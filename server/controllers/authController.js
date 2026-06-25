@@ -14,12 +14,12 @@ if (!JWT_SECRET || !REFRESH_TOKEN_SECRET) {
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 // Token generator
-const generateTokens = (userId, email, rememberMe = false) => {
+const generateTokens = (userId, email, role, rememberMe = false) => {
   const accessTokenExpiresIn = rememberMe ? "7d" : "2h";
   // const accessTokenExpiresIn = rememberMe ? "7d" : "30s"; // For testing, use a shorter expiration time
   const refreshTokenExpiresIn = "30d";
 
-  const accessToken = jwt.sign({ id: userId, email }, JWT_SECRET, {
+  const accessToken = jwt.sign({ id: userId, email, role }, JWT_SECRET, {
     expiresIn: accessTokenExpiresIn,
     algorithm: "HS256",
   });
@@ -131,7 +131,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const { accessToken, refreshToken, accessTokenExpiresIn } = generateTokens(user.id, user.email, rememberMe);
+    const { accessToken, refreshToken, accessTokenExpiresIn } = generateTokens(user.id, user.email, user.role, rememberMe);
     await saveRefreshToken(refreshToken, user.id);
 
     res.json({
@@ -184,7 +184,7 @@ exports.refreshToken = async (req, res) => {
 
     await prisma.refreshToken.delete({ where: { token: refreshToken } });
 
-    const { accessToken, refreshToken: newRefreshToken, accessTokenExpiresIn } = generateTokens(decoded.id, storedToken.user.email);
+    const { accessToken, refreshToken: newRefreshToken, accessTokenExpiresIn } = generateTokens(decoded.id, storedToken.user.email, storedToken.user.role);
 
     await saveRefreshToken(newRefreshToken, decoded.id);
 

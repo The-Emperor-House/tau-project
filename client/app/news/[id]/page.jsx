@@ -82,7 +82,7 @@ export default function NewsDetail() {
         color: "#fff",
         minHeight: "100svh",
         width: "100%",
-        pt: { xs: "120px", md: "160px" },
+        pt: { xs: "120px", md: "calc(var(--nav-h) + 0px)" },
         display: "flex",          // ✅ กัน footer ลอย
         flexDirection: "column",  // ✅
       }}

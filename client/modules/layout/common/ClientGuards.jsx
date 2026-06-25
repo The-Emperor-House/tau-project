@@ -35,33 +35,9 @@ export default function ClientGuards() {
       }
     };
     document.addEventListener("dragstart", onDragStart, true);
-
-    // ใส่ draggable=false ให้ลิงก์ทั้งหมด (รวมไอคอนที่เป็นลิงก์)
-    const setNoDrag = (el) => {
-      try {
-        el.setAttribute("draggable", "false");
-        el.style.webkitUserDrag = "none"; // Safari/Chrome
-      } catch {}
-    };
-    const disableDragOnAnchors = (root = document) => {
-      root.querySelectorAll('a, [role="link"]').forEach(setNoDrag);
-      // กันรูปทุกตัวด้วย (สำรองจาก onDragStart)
-      root.querySelectorAll("img, svg").forEach(setNoDrag);
-    };
-    disableDragOnAnchors();
-
-    // จับลิงก์/รูปที่ถูกเพิ่มเข้ามาภายหลัง (เช่นจาก React state/SSR hydration)
-    const mo = new MutationObserver((muts) => {
-      for (const m of muts) {
-        m.addedNodes.forEach((n) => {
-          if (n.nodeType === 1) disableDragOnAnchors(n);
-        });
-      }
-    });
-    mo.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
+    // หมายเหตุ: ป้องกันการลากรูป/ลิงก์ด้วย CSS (-webkit-user-drag: none ใน globals.css)
+    // แทนการแก้ DOM attribute/style ตรงๆ ที่นี่ เพราะการ mutate node ที่ React ควบคุมอยู่
+    // (ผ่าน MutationObserver) ชิงจังหวะ hydration ทำให้เกิด hydration mismatch error
 
     // ❌ คัดลอก/ตัด
     const onCopy = (e) => e.preventDefault();

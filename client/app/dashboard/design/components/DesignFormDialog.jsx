@@ -2,7 +2,8 @@
 
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, MenuItem, InputLabel, Box, IconButton, Button, Stack
+  TextField, MenuItem, InputLabel, Box, IconButton, Button, Stack,
+  useMediaQuery, useTheme
 } from "@mui/material";
 import { Add as AddIcon, Close as CloseIcon } from "@mui/icons-material";
 
@@ -14,13 +15,16 @@ export default function DesignFormDialog({
   coverInputRef, imagesInputRef,
   onRemoveImage
 }) {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
     setCoverPreview(file ? URL.createObjectURL(file) : null);
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" fullScreen={fullScreen}>
       <DialogTitle>{formData?.id ? "Edit Design" : "Add New Design"}</DialogTitle>
       <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
         <TextField
@@ -44,9 +48,9 @@ export default function DesignFormDialog({
 
         <InputLabel shrink sx={{ mt: 2 }}>Cover Image</InputLabel>
         <input type="file" accept="image/*" ref={coverInputRef} onChange={handleCoverChange} style={{ display: "none" }} />
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, mt: 1 }}>
           {coverPreview ? (
-            <Box sx={{ position: "relative", width: 240, borderRadius: 2, overflow: "hidden", boxShadow: 1 }}>
+            <Box sx={{ position: "relative", width: { xs: "100%", sm: 240 }, borderRadius: 2, overflow: "hidden", boxShadow: 1 }}>
               <Box sx={{ pt: "56.25%" }} />
               <img src={coverPreview} alt="Cover Preview" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
               <IconButton

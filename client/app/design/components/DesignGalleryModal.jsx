@@ -1,12 +1,15 @@
 'use client';
 
-import { Dialog, IconButton, Box, Typography } from '@mui/material';
+import { Dialog, IconButton, Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import ImageGallery from 'react-image-gallery';
 import CloseIcon from '@mui/icons-material/Close';
 
 import 'react-image-gallery/styles/css/image-gallery.css';
 
 export default function DesignGalleryModal({ open, onClose, design }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   if (!design) return null;
 
   const images = design.images?.map((img) => ({
@@ -19,18 +22,27 @@ export default function DesignGalleryModal({ open, onClose, design }) {
       open={open}
       onClose={onClose}
       fullWidth
+      fullScreen={isMobile}
       maxWidth="md"
-      sx={{ '& .MuiDialog-paper': { borderRadius: 3 } }}
+      sx={{ '& .MuiDialog-paper': { borderRadius: { xs: 0, sm: 3 } } }}
     >
       <Box sx={{ position: 'relative', p: 2 }}>
         <IconButton
           onClick={onClose}
-          sx={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            zIndex: 10,
+            width: 44,
+            height: 44,
+            bgcolor: 'rgba(0,0,0,.06)',
+          }}
         >
           <CloseIcon />
         </IconButton>
 
-        <Typography variant="h6" textAlign="center" mb={2}>
+        <Typography variant="h6" textAlign="center" mb={2} sx={{ pr: 5 }}>
           {design.name}
         </Typography>
 

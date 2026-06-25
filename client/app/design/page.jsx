@@ -83,7 +83,7 @@ export default function DesignPage() {
         display: "flex",
         flexDirection: "column",
         gap: { xs: 4, md: 6 },
-        pt: { xs: "120px", md: "160px" },
+        pt: { xs: "120px", md: "calc(var(--nav-h) + 0px)" },
       }}
     >
       {/* หัว DESIGN ชิดขวา */}

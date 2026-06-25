@@ -26,6 +26,13 @@ export const metadata = {
   icons: { icon: '/favicon.ico' },
 };
 
+// จำเป็นสำหรับ mobile: ไม่กำหนด = browser ใช้ desktop viewport แล้วซูมหด UI ทั้งหน้า
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({ children }) {
   const enableGuards = process.env.NODE_ENV === "production";
 

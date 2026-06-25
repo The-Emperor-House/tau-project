@@ -81,9 +81,12 @@ export default function TypePage() {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: "auto auto",
+              gridTemplateColumns: { xs: "1fr", sm: "auto auto" },
+              justifyItems: { xs: "center", sm: "start" },
               alignItems: "end",
               columnGap: { xs: 2, sm: 2.5, md: 3, lg: 4 },
+              rowGap: { xs: 1, sm: 0 },
+              maxWidth: "100%",
             }}
           >
             <Typography
@@ -91,9 +94,9 @@ export default function TypePage() {
               sx={{
                 fontWeight: 700,
                 color: palette.accent2,
-                letterSpacing: { xs: ".20em", md: ".24em", lg: ".26em" },
+                letterSpacing: { xs: ".08em", sm: ".20em", md: ".24em", lg: ".26em" },
                 fontSize: {
-                  xs: "2.6rem",
+                  xs: "2.2rem",
                   sm: "3.4rem",
                   md: "6rem",
                   lg: "7rem",
@@ -112,7 +115,7 @@ export default function TypePage() {
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
-                alignItems: { xs: "flex-start", md: "flex-start" },
+                alignItems: { xs: "center", sm: "flex-start" },
                 gap: { xs: 0.5, md: 1 },
                 pb: { xs: 0.4, md: 0.8 },
               }}

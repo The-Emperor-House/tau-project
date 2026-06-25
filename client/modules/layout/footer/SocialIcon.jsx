@@ -17,7 +17,7 @@ export default function SocialIcon({ href, label, children }) {
       color="inherit"
       disableRipple
       sx={{
-        p: 0.5,
+        p: 1,
         ...hoverPrimaryMd,
         "&:focus-visible": (t) => ({
           outline: `2px solid ${t.palette.primary.main}`,

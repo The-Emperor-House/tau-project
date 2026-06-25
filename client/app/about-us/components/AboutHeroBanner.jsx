@@ -35,6 +35,7 @@ export default function AboutHeroBanner() {
           flexDirection: "column",
           alignItems: "center",
           px: 2,
+          pt: "var(--nav-h)",
         }}
       >
         <Typography 

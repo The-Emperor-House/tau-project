@@ -123,7 +123,7 @@ export default function FurnitureDetail() {
         bgcolor: BG,
         color: TEXT,
         minHeight: "100svh",
-        pt: { xs: "120px", md: "160px" },
+        pt: { xs: "120px", md: "calc(var(--nav-h) + 0px)" },
         pb: 8,
       }}
     >

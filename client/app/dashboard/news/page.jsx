@@ -158,13 +158,13 @@ export default function DashboardNews() {
                   <div className="flex gap-2 mt-auto pt-4">
                     <button
                       onClick={() => onEdit(it)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#cc8f2a] border border-[#cc8f2a]/40 rounded-lg hover:bg-[#cc8f2a]/10 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs text-[#cc8f2a] border border-[#cc8f2a]/40 rounded-lg hover:bg-[#cc8f2a]/10 transition-colors"
                     >
                       <EditIcon /> Edit
                     </button>
                     <button
                       onClick={() => onDelete(it.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-400 border border-rose-400/30 rounded-lg hover:bg-rose-400/10 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs text-rose-400 border border-rose-400/30 rounded-lg hover:bg-rose-400/10 transition-colors"
                     >
                       <TrashIcon /> Delete
                     </button>

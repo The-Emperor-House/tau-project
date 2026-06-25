@@ -9,7 +9,7 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: taurus
     ports:
-      - "3307:3306"
+      - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     command:
@@ -34,7 +34,7 @@ services:
       PMA_USER: root
       PMA_PASSWORD: ""
     ports:
-      - "8081:80"
+      - "8082:80"
 
 volumes:
   mysql_data:

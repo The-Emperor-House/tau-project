@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, Slide, TextField,
+  Button, Slide, TextField, useMediaQuery, useTheme,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import * as XLSX from "xlsx";
@@ -28,6 +28,8 @@ const formatContacts = (data) =>
 
 export default function ContactPage() {
   const { data: session, status } = useSession();
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [contacts, setContacts] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
@@ -135,7 +137,7 @@ export default function ContactPage() {
       )}
 
       {/* Grid */}
-      <div className="rounded-xl overflow-hidden border border-neutral-800">
+      <div className="rounded-xl overflow-x-auto border border-neutral-800" style={{ WebkitOverflowScrolling: "touch" }}>
         <DataGrid
           rows={filtered}
           columns={columns}
@@ -160,7 +162,7 @@ export default function ContactPage() {
       </div>
 
       {/* Detail dialog */}
-      <Dialog open={!!selected} onClose={() => setSelected(null)} fullWidth maxWidth="sm" TransitionComponent={Transition}>
+      <Dialog open={!!selected} onClose={() => setSelected(null)} fullWidth maxWidth="sm" fullScreen={fullScreen} TransitionComponent={Transition}>
         <DialogTitle sx={{ bgcolor: "#111", color: "#fff", borderBottom: "1px solid #262626", pb: 2 }}>
           รายละเอียด Contact
         </DialogTitle>

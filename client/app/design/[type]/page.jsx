@@ -56,7 +56,7 @@ export default function DesignTypePage() {
   }, [type]);
 
   return (
-    <Box sx={{ bgcolor: COLORS.bg, color: COLORS.text, minHeight: "100vh", pt: { xs: "120px", md: "160px" }, pb: { xs: 8, md: 10 } }}>
+    <Box sx={{ bgcolor: COLORS.bg, color: COLORS.text, minHeight: "100vh", pt: { xs: "120px", md: "calc(var(--nav-h) + 0px)" }, pb: { xs: 8, md: 10 } }}>
       <Box
         sx={{
           maxWidth: "1500px",
@@ -202,13 +202,14 @@ function MiniCarouselCell({ item, onClick }) {
       {pics.length > 1 && (
         <>
           <IconButton
-            size="small"
             onClick={prev}
             sx={{
               position: "absolute",
               top: "50%",
-              left: 10,
+              left: 6,
               transform: "translateY(-50%)",
+              width: 40,
+              height: 40,
               bgcolor: "rgba(0,0,0,.55)",
               color: "#fff",
               "&:hover": { bgcolor: "rgba(0,0,0,.75)" },
@@ -218,13 +219,14 @@ function MiniCarouselCell({ item, onClick }) {
           </IconButton>
 
           <IconButton
-            size="small"
             onClick={next}
             sx={{
               position: "absolute",
               top: "50%",
-              right: 10,
+              right: 6,
               transform: "translateY(-50%)",
+              width: 40,
+              height: 40,
               bgcolor: "rgba(0,0,0,.55)",
               color: "#fff",
               "&:hover": { bgcolor: "rgba(0,0,0,.75)" },

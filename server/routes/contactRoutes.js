@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/authMiddleware');
+const { authenticate, authorize } = require('../middleware/authMiddleware');
 const rateLimit = require('express-rate-limit');
 const contactController = require('../controllers/contactController');
 
@@ -13,7 +13,7 @@ const contactLimiter = rateLimit({
 // Public
 router.post('/', contactLimiter, contactController.submitContact);
 
-// Private
-router.get('/', authenticate, contactController.getContacts);
+// Private (เฉพาะแอดมิน — ข้อมูลลูกค้า)
+router.get('/', authenticate, authorize('ADMIN'), contactController.getContacts);
 
 module.exports = router;

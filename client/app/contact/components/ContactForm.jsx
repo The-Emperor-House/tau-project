@@ -141,8 +141,7 @@ export default function ContactForm() {
         onSubmit={handleSubmit}
         sx={{
           bgcolor: '#fff',
-          width: '100vw',
-          mx: 'calc(50% - 50vw)', // full-bleed
+          width: '100%',
           px: { xs: 3, md: 6 },
           py: { xs: 4, md: 6 },
         }}

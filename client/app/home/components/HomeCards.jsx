@@ -55,12 +55,12 @@ export default function HomeHero() {
           variant="body1"
           sx={{
             fontWeight: 300,
-            fontSize: { xs: "1rem", sm: "1.3rem", md: "1.6rem" },
+            fontSize: { xs: "0.75rem", sm: "1.3rem", md: "1.6rem" },
             opacity: 0.3,
             color: "#fff",
             textShadow: "0px 4px 12px rgba(0, 0, 0, 0.8)",
             letterSpacing: "0.05rem",
-            whiteSpace: "nowrap",
+            whiteSpace: { xs: "normal", sm: "nowrap" },
           }}
         >
           RECRAFTING SPACES. REVIVING LIVING.

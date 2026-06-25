@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Snackbar, Alert } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Snackbar, Alert, useMediaQuery, useTheme } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { useSession } from "next-auth/react";
 import useModalContext from "@/shared/hooks/useModalContext";
@@ -10,6 +10,8 @@ const TYPES = ["BUILT_IN", "LOOSE", "CUSTOM"];
 
 export default function DashboardFurniture() {
   const { data: session } = useSession();
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const { showLoading, hideLoading, confirm } = useModalContext();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -155,10 +157,10 @@ export default function DashboardFurniture() {
                     <p className="text-sm text-[#cc8f2a] mt-1">{it.price.toLocaleString("th-TH")} บาท</p>
                   )}
                   <div className="flex gap-2 mt-auto pt-4">
-                    <button onClick={() => handleEdit(it)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#cc8f2a] border border-[#cc8f2a]/40 rounded-lg hover:bg-[#cc8f2a]/10 transition-colors">
+                    <button onClick={() => handleEdit(it)} className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs text-[#cc8f2a] border border-[#cc8f2a]/40 rounded-lg hover:bg-[#cc8f2a]/10 transition-colors">
                       <EditIcon /> Edit
                     </button>
-                    <button onClick={() => handleDelete(it.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-400 border border-rose-400/30 rounded-lg hover:bg-rose-400/10 transition-colors">
+                    <button onClick={() => handleDelete(it.id)} className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs text-rose-400 border border-rose-400/30 rounded-lg hover:bg-rose-400/10 transition-colors">
                       <TrashIcon /> Delete
                     </button>
                   </div>
@@ -170,7 +172,7 @@ export default function DashboardFurniture() {
       </div>
 
       {/* Form Dialog */}
-      <Dialog open={openForm} onClose={() => setOpenForm(false)} fullWidth maxWidth="sm">
+      <Dialog open={openForm} onClose={() => setOpenForm(false)} fullWidth maxWidth="sm" fullScreen={fullScreen}>
         <DialogTitle sx={{ bgcolor: "#111", color: "#fff", borderBottom: "1px solid #262626" }}>
           {isEditing ? "Edit Furniture" : "Add Furniture"}
         </DialogTitle>

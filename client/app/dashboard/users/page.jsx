@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, useMediaQuery, useTheme } from "@mui/material";
 
 const ROLES = ["ADMIN", "EDITOR", "VIEWER"];
 
@@ -14,6 +14,8 @@ const ROLE_STYLE = {
 
 export default function UsersPage() {
   const { data: session } = useSession();
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -142,7 +144,7 @@ export default function UsersPage() {
                     <td className="px-4 py-3">
                       <button
                         onClick={() => openEdit(user)}
-                        className="px-3 py-1.5 text-xs text-[#cc8f2a] border border-[#cc8f2a]/30 rounded-lg hover:bg-[#cc8f2a]/10 transition-colors"
+                        className="px-3 py-2 min-h-[40px] text-xs text-[#cc8f2a] border border-[#cc8f2a]/30 rounded-lg hover:bg-[#cc8f2a]/10 transition-colors"
                       >
                         Edit
                       </button>
@@ -155,7 +157,7 @@ export default function UsersPage() {
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={!!selected} onClose={() => setSelected(null)} fullWidth maxWidth="xs">
+      <Dialog open={!!selected} onClose={() => setSelected(null)} fullWidth maxWidth="xs" fullScreen={fullScreen}>
         <DialogTitle sx={{ bgcolor: "#111", color: "#fff", borderBottom: "1px solid #262626" }}>
           แก้ไขผู้ใช้
         </DialogTitle>

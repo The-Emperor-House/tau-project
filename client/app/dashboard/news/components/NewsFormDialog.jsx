@@ -1,7 +1,8 @@
 "use client";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, InputLabel, Box, IconButton, Button, Stack
+  TextField, InputLabel, Box, IconButton, Button, Stack,
+  useMediaQuery, useTheme
 } from "@mui/material";
 import { Add as AddIcon, Close as CloseIcon } from "@mui/icons-material";
 
@@ -13,13 +14,16 @@ export default function NewsFormDialog({
   coverInputRef, imagesInputRef,
   onRemoveImage,
 }) {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
   const onCoverChange = (e) => {
     const file = e.target.files[0];
     setCoverPreview(file ? URL.createObjectURL(file) : null);
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" fullScreen={fullScreen}>
       <DialogTitle>{formData?.id ? "Edit News" : "Add News"}</DialogTitle>
       <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
         <TextField label="Heading 1" value={formData.heading1} onChange={(e)=>setFormData({...formData, heading1: e.target.value})} required fullWidth />
@@ -29,9 +33,9 @@ export default function NewsFormDialog({
 
         <InputLabel shrink sx={{ mt: 2 }}>Cover Image</InputLabel>
         <input type="file" accept="image/*" ref={coverInputRef} onChange={onCoverChange} style={{ display:"none" }} />
-        <Box sx={{ display:"flex", alignItems:"center", gap:1 }}>
+        <Box sx={{ display:"flex", flexWrap:"wrap", alignItems:"center", gap:1 }}>
           {coverPreview && (
-            <Box sx={{ position:"relative", width: 240, borderRadius:2, overflow:"hidden", boxShadow:1 }}>
+            <Box sx={{ position:"relative", width: { xs: "100%", sm: 240 }, borderRadius:2, overflow:"hidden", boxShadow:1 }}>
               <Box sx={{ pt: "56.25%" }} />
               <img src={coverPreview} alt="cover" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
               <IconButton size="small" onClick={()=>setCoverPreview(null)} sx={{ position:"absolute", top:4, right:4, bgcolor:"rgba(0,0,0,0.5)" }}>

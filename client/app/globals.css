@@ -22,6 +22,15 @@
 }
 
 /* ------------------------------
+   กัน horizontal scroll บนมือถือ
+   (absolute/negative-margin decorative elements มักดันความกว้างเกิน viewport)
+------------------------------ */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* ------------------------------
    Global touch/selection tweaks
 ------------------------------ */
 * { -webkit-tap-highlight-color: transparent; }
