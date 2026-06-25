@@ -6,7 +6,7 @@ const protectedRoutes = ["/dashboard", "/profile"];
 // 🚩 เส้นทางที่ไม่ควรเข้าเมื่อ login แล้ว
 const authRoutes = ["/auth/login", "/auth"];
 
-export async function middleware(req) {
+export async function proxy(req) {
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
