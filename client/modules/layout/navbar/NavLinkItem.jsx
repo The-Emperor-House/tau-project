@@ -1,64 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { Box } from "@mui/material";
-import { alpha } from "@mui/material/styles";
+import { cn } from "@/shared/lib/cn";
 
-export default function NavLinkItem({
-  href,
-  label,
-  active,
-  onClick,
-  dense = false, // เพิ่มโหมดแน่น
-}) {
+export default function NavLinkItem({ href, label, active, onClick, dense = false }) {
   return (
-    <Box
-      component={Link}
+    <Link
       href={href}
       onClick={onClick}
-      sx={(t) => ({
-        position: "relative",
-        display: "inline-flex",
-        alignItems: "center",
-        textDecoration: "none",
-        // ย่อ-ขยายอัตโนมัติ: max ~1.3rem, min ~0.95/0.9 ตามโหมด
-        fontSize: dense
-          ? "clamp(0.9rem, 0.9vw + 0.55rem, 1.15rem)"
-          : "clamp(0.95rem, 1.0vw + 0.65rem, 1.3rem)",
-        lineHeight: 1.6,
-        whiteSpace: "nowrap",         // กันตัดบรรทัดเมื่อมีหลายเมนู
-        wordBreak: "keep-all",
-        color: "common.white",
-        textShadow: `0 2px 4px ${alpha(t.palette.common.black, 0.6)}`,
-        transition: "color .25s ease",
-        px: dense ? 0.5 : 0.75,       // โหมดแน่นลด padding
-        py: 0.25,
-        borderRadius: 1,
-        "&:hover": { color: "primary.main" },
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: -6,
-          height: 2,
-          backgroundColor: t.palette.primary.main,
-          transform: "scaleX(0)",
-          transformOrigin: "left center",
-          transition: "transform .25s ease",
-          borderRadius: 1,
-        },
-        ...(active && {
-          color: "primary.main",
-          "&::after": { transform: "scaleX(1)" },
-        }),
-        "&:focus-visible": {
-          outline: `2px solid ${alpha(t.palette.primary.main, 0.5)}`,
-          outlineOffset: 2,
-        },
-      })}
+      className={cn(
+        "relative inline-flex items-center whitespace-nowrap no-underline text-white transition-colors duration-200 rounded px-2 py-0.5",
+        "hover:text-primary",
+        "after:absolute after:left-0 after:right-0 after:-bottom-1.5 after:h-0.5 after:bg-primary after:rounded after:transition-transform after:duration-200 after:origin-left",
+        active ? "text-primary after:scale-x-100" : "after:scale-x-0",
+        dense ? "text-[clamp(0.9rem,0.9vw+0.55rem,1.15rem)]" : "text-[clamp(0.95rem,1vw+0.65rem,1.3rem)]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
+      )}
+      style={{ textShadow: "0 2px 4px rgba(0,0,0,0.6)" }}
     >
       {label}
-    </Box>
+    </Link>
   );
 }

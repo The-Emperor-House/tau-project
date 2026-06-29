@@ -1,10 +1,11 @@
 "use client";
-import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, InputLabel, Box, IconButton, Button, Stack,
-  useMediaQuery, useTheme
-} from "@mui/material";
-import { Add as AddIcon, Close as CloseIcon } from "@mui/icons-material";
+
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { Plus, X } from "lucide-react";
 
 export default function NewsFormDialog({
   open, onClose, onSubmit,
@@ -14,66 +15,128 @@ export default function NewsFormDialog({
   coverInputRef, imagesInputRef,
   onRemoveImage,
 }) {
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
-
   const onCoverChange = (e) => {
     const file = e.target.files[0];
     setCoverPreview(file ? URL.createObjectURL(file) : null);
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" fullScreen={fullScreen}>
-      <DialogTitle>{formData?.id ? "Edit News" : "Add News"}</DialogTitle>
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-        <TextField label="Heading 1" value={formData.heading1} onChange={(e)=>setFormData({...formData, heading1: e.target.value})} required fullWidth />
-        <TextField label="Heading 2" value={formData.heading2} onChange={(e)=>setFormData({...formData, heading2: e.target.value})} fullWidth />
-        <TextField label="Body" value={formData.body} onChange={(e)=>setFormData({...formData, body: e.target.value})} fullWidth multiline minRows={4} />
-        <TextField label="Video URL (embed)" value={formData.videoUrl} onChange={(e)=>setFormData({...formData, videoUrl: e.target.value})} fullWidth />
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{formData?.id ? "Edit News" : "Add News"}</DialogTitle>
+        </DialogHeader>
 
-        <InputLabel shrink sx={{ mt: 2 }}>Cover Image</InputLabel>
-        <input type="file" accept="image/*" ref={coverInputRef} onChange={onCoverChange} style={{ display:"none" }} />
-        <Box sx={{ display:"flex", flexWrap:"wrap", alignItems:"center", gap:1 }}>
-          {coverPreview && (
-            <Box sx={{ position:"relative", width: { xs: "100%", sm: 240 }, borderRadius:2, overflow:"hidden", boxShadow:1 }}>
-              <Box sx={{ pt: "56.25%" }} />
-              <img src={coverPreview} alt="cover" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-              <IconButton size="small" onClick={()=>setCoverPreview(null)} sx={{ position:"absolute", top:4, right:4, bgcolor:"rgba(0,0,0,0.5)" }}>
-                <CloseIcon fontSize="small" sx={{ color:"#fff" }} />
-              </IconButton>
-            </Box>
-          )}
-          <Button variant="outlined" startIcon={<AddIcon />} onClick={()=>coverInputRef.current?.click()}>
-            {coverPreview ? "Change Cover" : "Add Cover"}
-          </Button>
-        </Box>
+        <div className="flex flex-col gap-4 mt-1">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="heading1">Heading 1 <span className="text-destructive">*</span></Label>
+            <Input
+              id="heading1"
+              value={formData.heading1}
+              onChange={(e) => setFormData({ ...formData, heading1: e.target.value })}
+              required
+            />
+          </div>
 
-        <InputLabel shrink sx={{ mt: 2 }}>Gallery Images</InputLabel>
-        <input type="file" accept="image/*" multiple ref={imagesInputRef}
-               onChange={(e)=>{ const files = Array.from(e.target.files); if(files.length) setImagesPreview(prev=>[...prev, ...files.map(f=>URL.createObjectURL(f))]); }}
-               style={{ display:"none" }} />
-        <Stack direction="row" spacing={1} flexWrap="wrap">
-          {imagesPreview.map((src, i)=>(
-            <Box key={i} sx={{ position:"relative", width:160, borderRadius:1, overflow:"hidden", boxShadow:1 }}>
-              <Box sx={{ pt: "56.25%" }} />
-              <img src={src} alt="" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-              <IconButton size="small" onClick={()=>onRemoveImage(i)} sx={{ position:"absolute", top:2, right:2, bgcolor:"rgba(0,0,0,0.5)" }}>
-                <CloseIcon fontSize="small" sx={{ color:"#fff" }} />
-              </IconButton>
-            </Box>
-          ))}
-          <Box onClick={()=>imagesInputRef.current?.click()}
-               sx={{ cursor:"pointer", width:160, borderRadius:1, border:"2px dashed #666", display:"flex", alignItems:"center", justifyContent:"center", color:"#aaa" }}>
-            <Box sx={{ pt:"56.25%", width:"100%", position:"relative" }}>
-              <AddIcon fontSize="large" style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)" }} />
-            </Box>
-          </Box>
-        </Stack>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="heading2">Heading 2</Label>
+            <Input
+              id="heading2"
+              value={formData.heading2}
+              onChange={(e) => setFormData({ ...formData, heading2: e.target.value })}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="body">Body</Label>
+            <Textarea
+              id="body"
+              value={formData.body}
+              onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+              rows={4}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="videoUrl">Video URL (embed)</Label>
+            <Input
+              id="videoUrl"
+              value={formData.videoUrl}
+              onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+            />
+          </div>
+
+          {/* Cover Image */}
+          <div className="flex flex-col gap-2">
+            <Label>Cover Image</Label>
+            <input type="file" accept="image/*" ref={coverInputRef} onChange={onCoverChange} className="hidden" />
+            <div className="flex flex-wrap items-center gap-2">
+              {coverPreview && (
+                <div className="relative w-full sm:w-60 rounded-lg overflow-hidden shadow">
+                  <div className="aspect-video relative">
+                    <img src={coverPreview} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCoverPreview(null)}
+                    className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 rounded p-0.5 text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+              <Button type="button" variant="outline" onClick={() => coverInputRef.current?.click()}>
+                <Plus className="w-4 h-4 mr-1" />
+                {coverPreview ? "Change Cover" : "Add Cover"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Gallery Images */}
+          <div className="flex flex-col gap-2">
+            <Label>Gallery Images</Label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              ref={imagesInputRef}
+              onChange={(e) => {
+                const files = Array.from(e.target.files);
+                if (files.length) setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+              }}
+              className="hidden"
+            />
+            <div className="flex flex-wrap gap-2">
+              {imagesPreview.map((src, i) => (
+                <div key={i} className="relative w-40 rounded overflow-hidden shadow">
+                  <div className="aspect-video relative">
+                    <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveImage(i)}
+                    className="absolute top-0.5 right-0.5 bg-black/50 hover:bg-black/70 rounded p-0.5 text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => imagesInputRef.current?.click()}
+                className="w-40 aspect-video rounded border-2 border-dashed border-neutral-400 hover:border-primary hover:text-primary text-neutral-400 flex items-center justify-center transition-colors"
+              >
+                <Plus className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" onClick={onSubmit} disabled={!coverPreview}>Save</Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={onSubmit} disabled={!coverPreview}>Save</Button>
-      </DialogActions>
     </Dialog>
   );
 }

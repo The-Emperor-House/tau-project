@@ -1,9 +1,10 @@
 "use client";
 
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Typography, Button
-} from "@mui/material";
+  Dialog, DialogContent, DialogDescription,
+  DialogFooter, DialogHeader, DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { Button } from "@/shared/components/ui/button";
 
 export default function ConfirmDialog({
   open,
@@ -11,40 +12,29 @@ export default function ConfirmDialog({
   message = "Are you sure?",
   confirmText = "Confirm",
   cancelText = "Cancel",
-  destructive = false,     // ❗️ถ้า true ใช้ปุ่มสี error
+  destructive = false,
   onClose,
 }) {
-  const confirmColor = destructive ? "error" : "primary";
-
   return (
-    <Dialog
-      open={open}
-      onClose={() => onClose?.(false)}   // ปิดด้วย backdrop/ESC => false
-      fullWidth
-      maxWidth="xs"
-    >
-      <DialogTitle>{title}</DialogTitle>
-
-      <DialogContent>
-        <Typography sx={{ mt: 0.5, color: "text.primary" }}>
-          {message}
-        </Typography>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose?.(false)}>
+      <DialogContent className="max-w-xs">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{message}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onClose?.(false)}>
+            {cancelText}
+          </Button>
+          <Button
+            variant={destructive ? "destructive" : "default"}
+            onClick={() => onClose?.(true)}
+            autoFocus
+          >
+            {confirmText}
+          </Button>
+        </DialogFooter>
       </DialogContent>
-
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={() => onClose?.(false)}>
-          {cancelText}
-        </Button>
-        <Button
-          variant="contained"
-          color={confirmColor}
-          onClick={() => onClose?.(true)}
-          autoFocus                           
-          sx={{ "&:hover": { bgcolor: `${confirmColor}.dark` } }}
-        >
-          {confirmText}
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }

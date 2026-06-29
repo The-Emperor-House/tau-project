@@ -1,49 +1,29 @@
 'use client';
 
-import { Dialog, DialogContent, DialogActions, Button, Typography } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import {
+  Dialog, DialogContent, DialogFooter,
+} from "@/shared/components/ui/dialog";
+import { Button } from "@/shared/components/ui/button";
+import { XCircle } from "lucide-react";
 
 export default function ErrorModal({ open, onClose, message }) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogContent
-        sx={{
-          textAlign: 'center',
-          p: 4,
-          bgcolor: 'background.paper', 
-        }}
-      >
-        <ErrorOutlineIcon
-          sx={{
-            fontSize: 80,
-            color: 'error.main',      
-            mb: 2,
-            animation: 'pop 240ms ease',
-            '@keyframes pop': {
-              from: { transform: 'scale(0.9)', opacity: 0 },
-              to: { transform: 'scale(1)', opacity: 1 },
-            },
-          }}
-        />
-        <Typography sx={{ color: 'text.primary' }}>{message}</Typography>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose?.()}>
+      <DialogContent className="max-w-xs text-center">
+        <div className="flex flex-col items-center gap-3 py-2">
+          <div className="w-20 h-20 rounded-full bg-destructive flex items-center justify-center animate-[pop_240ms_ease]">
+            <XCircle className="w-12 h-12 text-white" />
+          </div>
+          <p className="text-base font-semibold">
+            {typeof message === "string" ? message : "Error"}
+          </p>
+        </div>
+        <DialogFooter className="justify-center">
+          <Button variant="destructive" onClick={onClose} className="px-8">
+            Close
+          </Button>
+        </DialogFooter>
       </DialogContent>
-
-      <DialogActions
-        sx={{
-          justifyContent: 'center',
-          bgcolor: 'background.paper', 
-          pb: 3,
-        }}
-      >
-        <Button
-          variant="contained"
-          color="error"                    
-          onClick={onClose}
-          sx={{ minWidth: 120, '&:hover': { bgcolor: 'error.dark' } }}
-        >
-          Close
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }

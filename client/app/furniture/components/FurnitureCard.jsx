@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { Box, Card, Button, Typography, Skeleton } from "@mui/material";
 import Image from "next/image";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 
 const ACCENT = "#BFA68A";
-const PANEL = "#FFFFFF";
-const TEXT = "#111111";
+const FALLBACK = "/images/default-data.jpg";
 
 export default function FurnitureCard({ item, onClick }) {
   const srcCandidate = useMemo(
@@ -14,7 +13,7 @@ export default function FurnitureCard({ item, onClick }) {
       item?.coverUrl ||
       item?.imageUrl ||
       item?.images?.[0]?.imageUrl ||
-      "/images/default-data.jpg",
+      FALLBACK,
     [item]
   );
 
@@ -22,74 +21,69 @@ export default function FurnitureCard({ item, onClick }) {
   const [imgSrc, setImgSrc] = useState(srcCandidate);
   useEffect(() => setImgSrc(srcCandidate), [srcCandidate]);
 
-  const dims = [item?.width, item?.depth, item?.height]
-    .every((n) => typeof n === "number")
+  const dims = [item?.width, item?.depth, item?.height].every(
+    (n) => typeof n === "number"
+  )
     ? `W${item.width} x D${item.depth} x H${item.height} cm`
     : "";
 
-  const priceText = typeof item?.price === "number" ? `${item.price.toLocaleString("th-TH")} บาท` : "";
+  const priceText =
+    typeof item?.price === "number"
+      ? `${item.price.toLocaleString("th-TH")} บาท`
+      : "";
 
   return (
-    <Card elevation={0} sx={{ width: "100%", borderRadius: 0, boxShadow: "none", overflow: "hidden", bgcolor: "transparent" }}>
-      <Box sx={{ position: "relative", width: "100%", cursor: "pointer" }} onClick={() => onClick?.(item)}>
-        <Box sx={{ position: "relative", width: "100%", aspectRatio: "16 / 9" }}>
-          {!loaded && <Skeleton variant="rectangular" sx={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />}
-          <Image
-            src={imgSrc}
-            alt={item?.name || "furniture"}
-            fill
-            sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            style={{ objectFit: "cover" }}
-            unoptimized
-            onLoad={() => setLoaded(true)}
-            onError={() => {
-              if (imgSrc !== "/images/default-data.jpg") setImgSrc("/images/default-data.jpg");
-            }}
-          />
-        </Box>
-      </Box>
-
-      <Box sx={{ bgcolor: PANEL, px: { xs: 2.5, md: 3 }, py: { xs: 2.5, md: 3 } }}>
-        <Typography sx={{ color: TEXT, fontSize: { xs: "1.05rem", md: "1.15rem" }, fontWeight: 700 }}>
-          {item?.name || ""}
-        </Typography>
-        {item?.details && (
-          <Typography sx={{ color: TEXT, fontSize: { xs: ".95rem", md: "1rem" }, mt: .5 }}>
-            {item.details}
-          </Typography>
+    <div className="w-full overflow-hidden">
+      <div
+        className="relative w-full cursor-pointer aspect-video"
+        onClick={() => onClick?.(item)}
+      >
+        {!loaded && (
+          <Skeleton className="absolute inset-0 w-full h-full" />
         )}
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 1 }}>
+        <Image
+          src={imgSrc}
+          alt={item?.name || "furniture"}
+          fill
+          sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover"
+          unoptimized
+          onLoad={() => setLoaded(true)}
+          onError={() => {
+            if (imgSrc !== FALLBACK) setImgSrc(FALLBACK);
+          }}
+        />
+      </div>
+
+      <div className="bg-white px-5 md:px-6 py-5 md:py-6">
+        <p className="text-[#111] text-[1.05rem] md:text-[1.15rem] font-bold">
+          {item?.name || ""}
+        </p>
+        {item?.details && (
+          <p className="text-[#111] text-[0.95rem] md:text-[1rem] mt-1">
+            {item.details}
+          </p>
+        )}
+        <div className="flex flex-wrap gap-4 mt-2">
           {dims && (
-            <Typography sx={{ color: TEXT, fontSize: { xs: ".95rem", md: "1rem" } }}>
-              {dims}
-            </Typography>
+            <p className="text-[#111] text-[0.95rem] md:text-[1rem]">{dims}</p>
           )}
           {priceText && (
-            <Typography sx={{ color: TEXT, fontSize: { xs: ".95rem", md: "1rem" }, fontWeight: 700 }}>
+            <p className="text-[#111] text-[0.95rem] md:text-[1rem] font-bold">
               {priceText}
-            </Typography>
+            </p>
           )}
-        </Box>
-
-        <Button
+        </div>
+        <button
           onClick={() => onClick?.(item)}
-          fullWidth
-          sx={{
-            mt: { xs: 2, md: 2.5 },
-            py: { xs: 1.1, md: 1.2 },
-            borderRadius: 0,
-            bgcolor: ACCENT,
-            color: "#000",
-            textTransform: "none",
-            fontSize: { xs: "1rem", md: "1.05rem" },
-            fontWeight: 800,
-            letterSpacing: ".12em",
-            "&:hover": { bgcolor: "#a88e72", textDecoration: "underline" },
-          }}
+          className="mt-5 md:mt-6 w-full py-2.5 md:py-3 font-extrabold tracking-[0.12em] text-black transition-colors text-[1rem] md:text-[1.05rem]"
+          style={{ backgroundColor: ACCENT }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#a88e72")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = ACCENT)}
         >
           VIEW
-        </Button>
-      </Box>
-    </Card>
+        </button>
+      </div>
+    </div>
   );
 }

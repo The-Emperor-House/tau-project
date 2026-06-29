@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Box, Typography } from "@mui/material";
 
 const tiles = [
   {
@@ -21,112 +20,51 @@ const tiles = [
 
 function DesignTile({ t }) {
   return (
-    <Box
-      component={Link}
+    <Link
       href={t.link}
-      sx={{
-        display: "block",
-        width: "100%",
-        textDecoration: "none",
-        color: "inherit",
-        bgcolor: "#ffffff",
-        borderRadius: 1,
-        boxShadow: "0 6px 24px rgba(0,0,0,.18)",
-      }}
+      className="block w-full no-underline text-inherit bg-white rounded shadow-[0_6px_24px_rgba(0,0,0,0.18)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.28)] transition-shadow"
     >
-      {/* กรอบขาวรอบรูป */}
-      <Box sx={{ p: { xs: 2, md: 3 } }}>
-        <Box sx={{ position: "relative", width: "100%", overflow: "hidden" }}>
-          <Box sx={{ pt: { xs: "60%", md: "58%" } }} />
+      <div className="p-4 md:p-6">
+        <div className="relative w-full overflow-hidden" style={{ paddingTop: "58%" }}>
           <Image
             src={t.image}
             alt={t.title}
             fill
             sizes="(max-width: 1200px) 100vw, 600px"
-            style={{ objectFit: "cover" }}
+            className="object-cover"
             priority
           />
-        </Box>
-      </Box>
+        </div>
+      </div>
 
-      {/* แถบชื่อด้านล่าง */}
-      <Box
-        sx={{
-          px: { xs: 2.5, md: 4 },
-          py: { xs: 3, md: 4 },
-          bgcolor: "#ffffff",
-        }}
-      >
-        <Typography
-          component="h3"
-          sx={{
-            textAlign: "center",
-            fontWeight: 300,
-            letterSpacing: { xs: ".18em", md: ".28em" },
-            fontSize: { xs: "1.1rem", md: "2rem" },
-            lineHeight: 1.2,
-          }}
-        >
+      <div className="px-6 md:px-10 py-6 md:py-8 bg-white">
+        <h3 className="text-center font-light tracking-[0.18em] md:tracking-[0.28em] text-[1.1rem] md:text-[2rem] leading-tight">
           {t.title}
-        </Typography>
-      </Box>
-    </Box>
+        </h3>
+      </div>
+    </Link>
   );
 }
 
 export default function DesignPage() {
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "#404040",
-        display: "flex",
-        flexDirection: "column",
-        gap: { xs: 4, md: 6 },
-        pt: { xs: "120px", md: "calc(var(--nav-h) + 0px)" },
-      }}
+    <div
+      className="min-h-screen bg-[#404040] flex flex-col gap-8 md:gap-12"
+      style={{ paddingTop: "var(--page-top)" }}
     >
-      {/* หัว DESIGN ชิดขวา */}
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: "1400px",
-          mx: "auto",
-          px: { xs: 2, md: 4 },
-          textAlign: "right",
-        }}
-      >
-        <Typography
-          component="h1"
-          sx={{
-            color: "#fff",
-            fontWeight: 300,
-            letterSpacing: { xs: ".4em", md: ".6em" },
-            fontSize: { xs: "1.6rem", md: "3rem" },
-          }}
-        >
+      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 text-right">
+        <h1 className="text-white font-light tracking-[0.4em] md:tracking-[0.6em] text-[1.6rem] md:text-[3rem]">
           DESIGN
-        </Typography>
-      </Box>
+        </h1>
+      </div>
 
-      {/* การ์ด 2 ใบ */}
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: "1400px",
-          mx: "auto",
-          px: { xs: 2, md: 4 },
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-          gap: { xs: 3, md: 4 },
-        }}
-      >
+      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         {tiles.map((t) => (
           <DesignTile key={t.id} t={t} />
         ))}
-      </Box>
+      </div>
 
-      <Box sx={{ height: { xs: 24, md: 40 } }} />
-    </Box>
+      <div className="h-6 md:h-10" />
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Snackbar, Alert } from "@mui/material";
+import { toast } from "sonner";
 import useModalContext from "@/shared/hooks/useModalContext";
 import NewsFormDialog from "./components/NewsFormDialog";
 
@@ -16,7 +16,6 @@ export default function DashboardNews() {
   const [deleteImageIds, setDeleteImageIds] = useState(new Set());
   const coverInputRef = useRef(null);
   const imagesInputRef = useRef(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const { showLoading, hideLoading, confirm } = useModalContext();
 
   const fetchNews = async () => {
@@ -30,7 +29,7 @@ export default function DashboardNews() {
       const data = await res.json();
       setNews(Array.isArray(data) ? data : []);
     } catch {
-      setSnackbar({ open: true, message: "Failed to load news", severity: "error" });
+      toast.error("Failed to load news");
     } finally {
       setLoading(false);
     }
@@ -75,10 +74,10 @@ export default function DashboardNews() {
         headers: { Authorization: `Bearer ${session?.backendToken}` },
       });
       if (!res.ok) throw new Error();
-      setSnackbar({ open: true, message: "Deleted", severity: "success" });
+      toast.success("Deleted");
       fetchNews();
     } catch {
-      setSnackbar({ open: true, message: "Delete failed", severity: "error" });
+      toast.error("Delete failed");
     } finally {
       hideLoading();
     }
@@ -86,7 +85,7 @@ export default function DashboardNews() {
 
   const onSubmit = async () => {
     if (!formData.heading1.trim()) {
-      setSnackbar({ open: true, message: "Heading 1 is required", severity: "warning" });
+      toast.warning("Heading 1 is required");
       return;
     }
     const fd = new FormData();
@@ -109,10 +108,10 @@ export default function DashboardNews() {
       const session = await getSession();
       const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: fd });
       if (!res.ok) throw new Error();
-      setSnackbar({ open: true, message: isEditing ? "Updated" : "Created", severity: "success" });
+      toast.success(isEditing ? "Updated" : "Created");
       setOpenForm(false); fetchNews();
     } catch {
-      setSnackbar({ open: true, message: "Submit failed", severity: "error" });
+      toast.error("Submit failed");
     } finally {
       hideLoading();
     }
@@ -121,8 +120,7 @@ export default function DashboardNews() {
   const skeletons = Array.from({ length: 6 });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
+    <div className="p-6 max-w-[1200px] mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 className="text-xl font-semibold text-white">News & Events</h1>
         <button
@@ -133,11 +131,9 @@ export default function DashboardNews() {
         </button>
       </div>
 
-      {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {(loading ? skeletons : news).map((it, i) => (
           <div key={it?.id ?? i} className="rounded-xl overflow-hidden bg-neutral-900 border border-neutral-800 flex flex-col">
-            {/* Cover */}
             <div className="relative aspect-video bg-neutral-800">
               {!loading && it.coverUrl && (
                 <img src={it.coverUrl} alt={it.heading1} className="absolute inset-0 w-full h-full object-cover" />
@@ -190,12 +186,6 @@ export default function DashboardNews() {
         imagesInputRef={imagesInputRef}
         onRemoveImage={onRemoveImage}
       />
-
-      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: "100%" }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </div>
   );
 }

@@ -4,9 +4,7 @@ import { Providers } from '@/shared/providers/Providers';
 import MainNavbar from '@/modules/layout/navbar/MainNavbar';
 import Footer from '@/modules/layout/footer/Footer';
 import ClientGuards from "@/modules/layout/common/ClientGuards";
-import EmotionRegistry from '@/app/EmotionRegistry';
 
-// กำหนด fonts
 const poppins = Poppins({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
@@ -19,14 +17,12 @@ const prompt = Prompt({
   variable: '--font-prompt',
 });
 
-// กำหนด metadata สำหรับ SEO
 export const metadata = {
   title: 'Taurus: WE RENEW',
   description: 'เปลี่ยนบ้านหลังเก่าให้เป็นไปตามจินตนาการของคุณ',
   icons: { icon: '/favicon.ico' },
 };
 
-// จำเป็นสำหรับ mobile: ไม่กำหนด = browser ใช้ desktop viewport แล้วซูมหด UI ทั้งหน้า
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -38,20 +34,13 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="th" className={`${poppins.variable} ${prompt.variable}`}>
-      <head>
-        {/* จุดเสียบ Style ของ Emotion/MUI ให้ SSR/CSR ตรงกัน */}
-        <meta name="emotion-insertion-point" content="" />
-      </head>
       <body data-protect={enableGuards ? "on" : "off"}>
-        {/* ครอบทั้งแอปด้วย EmotionRegistry (มี CacheProvider ภายใน) */}
-        <EmotionRegistry>
-          <Providers>
-            <ClientGuards enabled={enableGuards} />
-            <MainNavbar />
-            <main>{children}</main>
-            <Footer />
-          </Providers>
-        </EmotionRegistry>
+        <Providers>
+          <ClientGuards enabled={enableGuards} />
+          <MainNavbar />
+          <main>{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

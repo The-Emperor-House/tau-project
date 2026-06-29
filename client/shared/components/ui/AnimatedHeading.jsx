@@ -2,7 +2,7 @@
 
 import { useInView } from "framer-motion";
 import { useMemo, useRef } from "react";
-import { Box } from "@mui/material";
+import { cn } from "@/shared/lib/cn";
 
 export default function AnimatedHeading({
   title = "PROJECT",
@@ -22,9 +22,7 @@ export default function AnimatedHeading({
   gap = { xs: 8, md: 16 },
   className = "",
   disableSelection = false,
-
   variant = "h2",
-  sx = {},
 }) {
   const headingRef = useRef(null);
   const isHeadingInView = useInView(headingRef, { margin: "-10%", amount: 0.3 });
@@ -40,14 +38,11 @@ export default function AnimatedHeading({
     return Boolean(subtitle);
   }, [showSubtitle, subtitle]);
 
-  // ใช้แท็กตาม variant
   const TitleTag = ["h1","h2","h3","h4","h5","h6"].includes(variant) ? variant : "h2";
 
-  // เส้นซ้าย/ขวา
   const commonLineStyle = {
     height: lineThickness,
     transition: "width 500ms ease, opacity 500ms ease, transform 500ms ease",
-    backgroundImage: `linear-gradient(to right, transparent, ${lineColor}, rgba(255,255,255,0))`,
   };
   const leftLineStyle = {
     ...commonLineStyle,
@@ -64,26 +59,22 @@ export default function AnimatedHeading({
     transform: isHeadingInView ? "translateX(0)" : "translateX(8px)",
   };
 
-  // คลาสตัวอักษร
   const titleClass = `${mobileSize} md:${desktopSize} font-light tracking-widest inline-flex items-center`;
   const subtitleClass = `mt-2 ${subtitleMobileSize} md:${subtitleDesktopSize} font-light tracking-[0.15rem]`;
 
   return (
-    <Box
+    <div
       ref={headingRef}
-      component="div"
-      sx={sx}
-      className={[
+      className={cn(
         "flex flex-col",
         containerAlign,
         disableSelection ? "select-none" : "",
         className,
-      ].join(" ")}
+      )}
       style={{ willChange: "opacity, transform" }}
     >
-      {/* Title + lines */}
       <TitleTag
-        className={`${titleClass} ${textColorClass}`}
+        className={cn(titleClass, textColorClass)}
         style={{
           color: titleColor,
           gap: `clamp(${gap.xs || 8}px, 2vw, ${gap.md || 16}px)`,
@@ -99,7 +90,6 @@ export default function AnimatedHeading({
         {showLines && <span style={rightLineStyle} />}
       </TitleTag>
 
-      {/* Subtitle */}
       {computedShowSubtitle && (
         <span
           className={subtitleClass}
@@ -114,6 +104,6 @@ export default function AnimatedHeading({
           {subtitle}
         </span>
       )}
-    </Box>
+    </div>
   );
 }

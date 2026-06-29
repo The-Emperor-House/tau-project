@@ -1,55 +1,19 @@
 "use client";
 
-import React from "react";
-import { Typography, Box } from "@mui/material";
 import AboutUsSection from "@/app/about-us/components/AboutUsSection";
 
 export default function AboutUsHomePageSection() {
   return (
-    <Box component="section" sx={{ py: 12 }}>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: { xs: "column", lg: "row" },    
-          justifyContent: { xs: "center", lg: "space-between" },
-          alignItems: { xs: "center", lg: "center" },
-          gap: { xs: 1.5, lg: 0 },
-          mb: 4,
-          px: { xs: 2, lg: 10 },
-        }}
-      >
-        {/* ABOUT US */}
-        <Typography
-          variant="h3"
-          sx={{
-            fontWeight: 100,
-            letterSpacing: "0.4rem",
-            color: "text.primary",
-            textAlign: { xs: "center", lg: "left" },          
-          }}
-        >
+    <section className="py-12 md:py-16">
+      <div className="flex flex-col lg:flex-row justify-center lg:justify-between items-center gap-1.5 lg:gap-0 mb-4 px-2 lg:px-10">
+        <h3 className="text-3xl font-thin tracking-[0.4rem] text-center lg:text-left">
           ABOUT US
-        </Typography>
-
-        {/* RECRAFTING ... */}
-        <Typography
-          variant="body1"
-          sx={{
-            fontWeight: 800,
-            color: "primary.main",
-            letterSpacing: "0.25rem",
-            textAlign: { xs: "center", lg: "right" },    
-            // ไล่สเกลฟอนต์ให้โตขึ้นตามขนาดหน้าจอ
-            fontSize: { xs: "1.25rem", sm: "1.35rem", md: "1.45rem", lg: "1.6rem" },
-            lineHeight: 1.2,
-            pr: { xs: 0, lg: 40 },
-          }}
-        >
+        </h3>
+        <p className="font-extrabold text-[#cc8f2a] tracking-[0.25rem] text-center lg:text-right text-xl sm:text-[1.35rem] md:text-[1.45rem] lg:text-[1.6rem] leading-tight lg:pr-40">
           RECRAFTING SPACES. REVIVING LIVING.
-        </Typography>
-      </Box>
-
+        </p>
+      </div>
       <AboutUsSection />
-    </Box>
+    </section>
   );
 }

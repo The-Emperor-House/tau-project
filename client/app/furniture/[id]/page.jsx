@@ -2,21 +2,11 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import {
-  Box,
-  Typography,
-  Grid,
-  Skeleton,
-  Dialog,
-  DialogContent,
-  IconButton,
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import ChevronLeft from "@mui/icons-material/ChevronLeft";
-import ChevronRight from "@mui/icons-material/ChevronRight";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const BG = "#404040";
-const TEXT = "#fff";
 const FALLBACK = "/images/default-data.jpg";
 
 export default function FurnitureDetail() {
@@ -26,11 +16,9 @@ export default function FurnitureDetail() {
   const [imgSrc, setImgSrc] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Lightbox state
   const [open, setOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
 
-  // รวบรวมรูปทั้งหมดเป็นอาเรย์ (ภาพปก + แกลเลอรี)
   const gallery = useMemo(() => {
     if (!item) return [];
     const pics = [];
@@ -41,7 +29,6 @@ export default function FurnitureDetail() {
     return pics;
   }, [item]);
 
-  // index ภาพปกใน gallery (ถ้ามี)
   const coverIndex = item?.coverUrl ? 0 : null;
 
   useEffect(() => {
@@ -64,7 +51,6 @@ export default function FurnitureDetail() {
     return () => ctrl.abort();
   }, [id]);
 
-  // ขนาด W x D x H
   const dims = useMemo(() => {
     if (!item) return "";
     const { width, depth, height } = item;
@@ -74,19 +60,15 @@ export default function FurnitureDetail() {
     return "";
   }, [item]);
 
-  // --- Lightbox controls ---
   const prev = useCallback(
-    () =>
-      setStartIndex((i) => (gallery.length ? (i - 1 + gallery.length) % gallery.length : 0)),
+    () => setStartIndex((i) => (gallery.length ? (i - 1 + gallery.length) % gallery.length : 0)),
     [gallery.length]
   );
   const next = useCallback(
-    () =>
-      setStartIndex((i) => (gallery.length ? (i + 1) % gallery.length : 0)),
+    () => setStartIndex((i) => (gallery.length ? (i + 1) % gallery.length : 0)),
     [gallery.length]
   );
 
-  // keyboard nav
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => {
@@ -98,7 +80,6 @@ export default function FurnitureDetail() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, next, prev]);
 
-  // touch swipe
   const touchRef = useState({ x: 0, t: 0 })[0];
   const onTouchStart = (e) => {
     const t = e.touches?.[0];
@@ -118,29 +99,17 @@ export default function FurnitureDetail() {
   };
 
   return (
-    <Box
-      sx={{
-        bgcolor: BG,
-        color: TEXT,
-        minHeight: "100svh",
-        pt: { xs: "120px", md: "calc(var(--nav-h) + 0px)" },
-        pb: 8,
-      }}
+    <div
+      className="text-white min-h-screen pb-16"
+      style={{ backgroundColor: BG, paddingTop: "var(--page-top)" }}
     >
-      <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, md: 3 } }}>
-        <Grid container spacing={{ xs: 2, md: 4 }}>
-          {/* ซ้าย: ภาพปก (คง layout เดิม) */}
-          <Grid size={{ xs: 12, md: 7 }}>
-            <Box
-              sx={{
-                position: "relative",
-                width: "100%",
-                aspectRatio: "16 / 9",
-                overflow: "hidden",
-                borderRadius: 2,
-                bgcolor: "#111",
-                cursor: gallery.length ? "zoom-in" : "default",
-              }}
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8">
+          {/* Cover image */}
+          <div className="md:col-span-7">
+            <div
+              className="relative w-full aspect-video overflow-hidden rounded-xl bg-neutral-900"
+              style={{ cursor: gallery.length ? "zoom-in" : "default" }}
               onClick={() => {
                 if (!gallery.length) return;
                 setStartIndex(coverIndex ?? 0);
@@ -148,195 +117,125 @@ export default function FurnitureDetail() {
               }}
             >
               {loading ? (
-                <Skeleton
-                  variant="rectangular"
-                  sx={{ position: "absolute", inset: 0 }}
-                />
+                <Skeleton className="absolute inset-0 w-full h-full" />
               ) : (
                 <img
                   src={imgSrc || FALLBACK}
                   alt={item?.name || "furniture"}
                   onError={() => setImgSrc(FALLBACK)}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
+                  className="absolute inset-0 w-full h-full object-cover block"
                 />
               )}
-            </Box>
-          </Grid>
+            </div>
+          </div>
 
-          {/* ขวา: รายละเอียด (คง layout เดิม) */}
-          <Grid size={{ xs: 12, md: 5 }}>
+          {/* Details */}
+          <div className="md:col-span-5">
             {loading ? (
-              <>
-                <Skeleton width="70%" height={36} sx={{ mb: 1 }} />
-                <Skeleton width="50%" height={24} sx={{ mb: 2 }} />
-                <Skeleton width="90%" height={18} />
-                <Skeleton width="80%" height={18} />
-              </>
+              <div className="space-y-3">
+                <Skeleton className="h-9 w-[70%]" />
+                <Skeleton className="h-6 w-[50%]" />
+                <Skeleton className="h-4 w-[90%]" />
+                <Skeleton className="h-4 w-[80%]" />
+              </div>
             ) : (
               <>
-                <Typography variant="h4" fontWeight={900} sx={{ mb: 1 }}>
-                  {item?.name}
-                </Typography>
-                <Typography
-                  sx={{
-                    color: "#BFA68A",
-                    fontWeight: 800,
-                    textTransform: "uppercase",
-                    letterSpacing: ".06em",
-                    mb: 1,
-                  }}
-                >
+                <h1 className="text-3xl font-black mb-2">{item?.name}</h1>
+                <p className="font-extrabold uppercase tracking-[0.06em] mb-2" style={{ color: "#BFA68A" }}>
                   {item?.type?.replace("_", "-")}
-                </Typography>
-                {dims && <Typography sx={{ mb: 1.5 }}>{dims}</Typography>}
+                </p>
+                {dims && <p className="mb-3">{dims}</p>}
                 {typeof item?.price === "number" && (
-                  <Typography sx={{ fontWeight: 800, mb: 2 }}>
+                  <p className="font-extrabold mb-4">
                     {item.price.toLocaleString("th-TH")} บาท
-                  </Typography>
+                  </p>
                 )}
                 {item?.details && (
-                  <Typography sx={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
-                    {item.details}
-                  </Typography>
+                  <p className="whitespace-pre-wrap leading-[1.8]">{item.details}</p>
                 )}
               </>
             )}
-          </Grid>
-        </Grid>
+          </div>
+        </div>
 
+        {/* Gallery */}
         {!loading && gallery.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-              Gallery ({gallery.length})
-            </Typography>
-
-            <Grid container spacing={2}>
+          <div className="mt-8">
+            <p className="font-bold text-lg mb-4">Gallery ({gallery.length})</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {item.images.map((img, i) => (
-                <Grid key={img?.id ?? i} size={{ xs: 6, sm: 4, md: 3 }}>
-                  <Box
-                    sx={{
-                      position: "relative",
-                      width: "100%",
-                      aspectRatio: "1 / 1",
-                      overflow: "hidden",
-                      borderRadius: 1,
-                      bgcolor: "#111",
-                      cursor: "zoom-in",
-                    }}
-                    onClick={() => {
-                      const base = coverIndex === 0 ? 1 : 0;
-                      setStartIndex(base + i);
-                      setOpen(true);
-                    }}
-                  >
-                    <img
-                      src={img.imageUrl || FALLBACK}
-                      alt=""
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.src = FALLBACK;
-                      }}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        display: "block",
-                      }}
-                    />
-                  </Box>
-                </Grid>
+                <div
+                  key={img?.id ?? i}
+                  className="relative w-full aspect-square overflow-hidden rounded bg-neutral-900 cursor-zoom-in"
+                  onClick={() => {
+                    const base = coverIndex === 0 ? 1 : 0;
+                    setStartIndex(base + i);
+                    setOpen(true);
+                  }}
+                >
+                  <img
+                    src={img.imageUrl || FALLBACK}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => { e.currentTarget.src = FALLBACK; }}
+                    className="absolute inset-0 w-full h-full object-cover block"
+                  />
+                </div>
               ))}
-            </Grid>
-          </Box>
+            </div>
+          </div>
         )}
-      </Box>
+      </div>
 
-      {/* Lightbox (ไม่แตะ layout ด้านบน ใช้ overlay แยก) */}
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        fullScreen
-        PaperProps={{ sx: { bgcolor: "#000", color: "#fff" } }}
-      >
-        <IconButton
-          aria-label="close"
-          onClick={() => setOpen(false)}
-          sx={{ position: "absolute", top: 8, right: 8, color: "#fff", zIndex: 2 }}
-        >
-          <CloseIcon />
-        </IconButton>
-
+      {/* Lightbox */}
+      <Dialog open={open} onOpenChange={(o) => !o && setOpen(false)}>
         <DialogContent
-          sx={{
-            p: 0,
-            position: "relative",
-            display: "grid",
-            placeItems: "center",
-            minHeight: "100dvh",
-            bgcolor: "#000",
-          }}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
+          showCloseButton={false}
+          className="max-w-none w-full h-screen p-0 bg-black border-none rounded-none"
         >
-          {gallery.length > 0 && (
-            <img
-              src={gallery[startIndex] || FALLBACK}
-              alt=""
-              onError={(e) => (e.currentTarget.src = FALLBACK)}
-              style={{
-                maxWidth: "100%",
-                maxHeight: "90vh",
-                objectFit: "contain",
-                display: "block",
-              }}
-            />
-          )}
+          <button
+            aria-label="close"
+            onClick={() => setOpen(false)}
+            className="absolute top-3 right-3 z-[2] w-10 h-10 rounded-full flex items-center justify-center text-white bg-black/40 hover:bg-black/60 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
-          {gallery.length > 1 && (
-            <>
-              <IconButton
-                aria-label="previous"
-                onClick={prev}
-                sx={{
-                  position: "absolute",
-                  left: 12,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "#fff",
-                  bgcolor: "rgba(0,0,0,.35)",
-                  "&:hover": { bgcolor: "rgba(0,0,0,.55)" },
-                }}
-              >
-                <ChevronLeft />
-              </IconButton>
-              <IconButton
-                aria-label="next"
-                onClick={next}
-                sx={{
-                  position: "absolute",
-                  right: 12,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "#fff",
-                  bgcolor: "rgba(0,0,0,.35)",
-                  "&:hover": { bgcolor: "rgba(0,0,0,.55)" },
-                }}
-              >
-                <ChevronRight />
-              </IconButton>
-            </>
-          )}
+          <div
+            className="relative grid place-items-center min-h-screen bg-black"
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+          >
+            {gallery.length > 0 && (
+              <img
+                src={gallery[startIndex] || FALLBACK}
+                alt=""
+                onError={(e) => (e.currentTarget.src = FALLBACK)}
+                className="max-w-full max-h-[90vh] object-contain block"
+              />
+            )}
+
+            {gallery.length > 1 && (
+              <>
+                <button
+                  aria-label="previous"
+                  onClick={prev}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white bg-black/35 hover:bg-black/55 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  aria-label="next"
+                  onClick={next}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white bg-black/35 hover:bg-black/55 transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
-    </Box>
+    </div>
   );
 }

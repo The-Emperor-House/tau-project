@@ -1,29 +1,17 @@
 'use client';
 
-import { Typography, Card, CardActionArea, CardContent, Box, Skeleton } from '@mui/material';
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-
-
-const overlayVariants = {
-  initial: { opacity: 0 },
-  hover: { opacity: 1 },
-};
+import { Skeleton } from '@/shared/components/ui/skeleton';
 
 const cardRevealVariants = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0 },
 };
 
-export default function DesignCategoryCard({
-  title,
-  image,
-  link,
-  index = 0,
-}) {
+export default function DesignCategoryCard({ title, image, link, index = 0 }) {
   const [loadingImage, setLoadingImage] = useState(true);
 
   return (
@@ -40,90 +28,31 @@ export default function DesignCategoryCard({
         damping: 20,
       }}
       whileHover={{ scale: 1.03 }}
-      style={{
-        width: '100%',
-        maxWidth: 500,
-        borderRadius: '12px',
-        overflow: 'hidden',
-        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
+      className="w-full max-w-[500px] rounded-xl overflow-hidden shadow-[0_4px_8px_rgba(0,0,0,0.1)] flex flex-col"
     >
-      <Card
-        sx={{
-          borderRadius: '24px',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 12px 32px rgba(0,0,0,0.2)',
-          maxWidth: 600,
-          minHeight: 400,
-          backgroundColor: '#fdfdfd',
-          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-          '&:hover': {
-            transform: 'translateY(-8px)',
-            boxShadow: '0 16px 48px rgba(0,0,0,0.25)',
-          },
-          }}
+      <Link
+        href={link}
+        className="no-underline flex flex-col flex-1 rounded-3xl overflow-hidden shadow-[0_12px_32px_rgba(0,0,0,0.2)] bg-[#fdfdfd] hover:-translate-y-2 hover:shadow-[0_16px_48px_rgba(0,0,0,0.25)] transition-all duration-300 min-h-[400px] max-w-[600px]"
       >
-        <Link href={link} passHref style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-          <CardActionArea sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-            {/* Image Layer: ใช้ Box เพื่อกำหนดขนาดและตำแหน่งของรูปภาพ */}
-            <Box sx={{ position: 'relative', width: '100%', paddingTop: '60%' }}> {/* ใช้ paddingTop เพื่อรักษาสัดส่วน 5:3 (Height = 60% of Width) */}
-              {loadingImage && (
-                <Skeleton
-                  variant="rectangular"
-                  sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-                />
-              )}
-              <Image
-                src={image}
-                alt={title}
-                fill
-                sizes="(max-width: 500px) 100vw, 500px"
-                style={{ objectFit: 'cover' }}
-                className={`transition-opacity duration-500 ${loadingImage ? 'opacity-0' : 'opacity-100'}`}
-                onLoad={() => setLoadingImage(false)}
-                priority={index === 0}
-              />
+        <div className="relative w-full" style={{ paddingTop: "60%" }}>
+          {loadingImage && (
+            <Skeleton className="absolute inset-0 w-full h-full" />
+          )}
+          <Image
+            src={image}
+            alt={title}
+            fill
+            sizes="(max-width: 500px) 100vw, 500px"
+            className={`object-cover transition-opacity duration-500 ${loadingImage ? 'opacity-0' : 'opacity-100'}`}
+            onLoad={() => setLoadingImage(false)}
+            priority={index === 0}
+          />
+        </div>
 
-              {/* Overlay (เฉพาะ darken เมื่อ Hover) */}
-              <motion.div
-                variants={overlayVariants}
-                initial="initial"
-                whileHover="hover"
-                whileTap="hover"
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                sx={{
-                  position: 'absolute',
-                  inset: 0,
-                  backgroundColor: 'rgba(0,0,0,0.0)', // เริ่มต้นโปร่งใส
-                  zIndex: 2,
-                }}
-              />
-            </Box>
-
-            {/* CardContent: สำหรับข้อความ Title ที่อยู่ด้านล่างรูปภาพ */}
-            <CardContent
-              sx={{
-                flexGrow: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Typography
-                variant="h4"
-                textAlign="center"
-                sx={{ fontWeight: 'light' }}
-              >
-                {title}
-              </Typography>
-            </CardContent>
-          </CardActionArea>
-        </Link>
-      </Card>
+        <div className="flex flex-1 items-center justify-center p-4">
+          <h4 className="text-center text-2xl font-light">{title}</h4>
+        </div>
+      </Link>
     </motion.div>
   );
 }

@@ -1,50 +1,29 @@
 'use client';
 
-import { Dialog, DialogContent, DialogActions, Button, Typography } from '@mui/material';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import {
+  Dialog, DialogContent, DialogFooter,
+} from "@/shared/components/ui/dialog";
+import { Button } from "@/shared/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 export default function WarningModal({ open, onClose, message }) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogContent
-        sx={{
-          textAlign: 'center',
-          p: 4,
-          bgcolor: 'background.paper',
-        }}
-      >
-        <WarningAmberIcon
-          sx={{
-            fontSize: 80,
-            color: 'warning.main',
-            mb: 2,
-            // เอฟเฟกต์โผล่นิดๆ
-            animation: 'pop 240ms ease',
-            '@keyframes pop': {
-              from: { transform: 'scale(0.9)', opacity: 0 },
-              to: { transform: 'scale(1)', opacity: 1 },
-            },
-          }}
-        />
-        <Typography sx={{ color: 'text.primary' }}>{message}</Typography>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose?.()}>
+      <DialogContent className="max-w-xs text-center">
+        <div className="flex flex-col items-center gap-3 py-2">
+          <div className="w-20 h-20 rounded-full bg-amber-500 flex items-center justify-center animate-[pop_240ms_ease]">
+            <AlertTriangle className="w-12 h-12 text-white" />
+          </div>
+          <p className="text-base font-semibold">
+            {typeof message === "string" ? message : "Warning"}
+          </p>
+        </div>
+        <DialogFooter className="justify-center">
+          <Button onClick={onClose} className="bg-amber-500 hover:bg-amber-600 text-white px-8">
+            Close
+          </Button>
+        </DialogFooter>
       </DialogContent>
-
-      <DialogActions
-        sx={{
-          justifyContent: 'center',
-          bgcolor: 'background.paper',
-          pb: 3,
-        }}
-      >
-        <Button
-          variant="contained"
-          color="warning"
-          onClick={onClose}
-          sx={{ minWidth: 120 }}
-        >
-          Close
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }

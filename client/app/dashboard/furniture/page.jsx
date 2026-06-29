@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, IconButton, Snackbar, Alert, useMediaQuery, useTheme } from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
+import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import useModalContext from "@/shared/hooks/useModalContext";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { X } from "lucide-react";
 
 const TYPES = ["BUILT_IN", "LOOSE", "CUSTOM"];
 
 export default function DashboardFurniture() {
   const { data: session } = useSession();
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const { showLoading, hideLoading, confirm } = useModalContext();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +27,6 @@ export default function DashboardFurniture() {
   const [coverPreview, setCoverPreview] = useState(null);
   const [imagesPreview, setImagesPreview] = useState([]);
   const [deleteImageIds, setDeleteImageIds] = useState(new Set());
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
   const fetchItems = async () => {
     setLoading(true);
@@ -33,7 +36,7 @@ export default function DashboardFurniture() {
       });
       setItems(res.ok ? (await res.json()) : []);
     } catch {
-      setSnackbar({ open: true, message: "Failed to load", severity: "error" });
+      toast.error("Failed to load");
     } finally {
       setLoading(false);
     }
@@ -71,10 +74,10 @@ export default function DashboardFurniture() {
         headers: { Authorization: `Bearer ${session?.backendToken}` },
       });
       if (!res.ok) throw new Error();
-      setSnackbar({ open: true, message: "Deleted", severity: "success" });
+      toast.success("Deleted");
       fetchItems();
     } catch {
-      setSnackbar({ open: true, message: "Failed to delete", severity: "error" });
+      toast.error("Failed to delete");
     } finally {
       hideLoading();
     }
@@ -94,7 +97,7 @@ export default function DashboardFurniture() {
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      setSnackbar({ open: true, message: "Name required", severity: "warning" });
+      toast.warning("Name required");
       return;
     }
     const form = new FormData();
@@ -111,10 +114,10 @@ export default function DashboardFurniture() {
     try {
       const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: form });
       if (!res.ok) throw new Error();
-      setSnackbar({ open: true, message: isEditing ? "Updated" : "Created", severity: "success" });
+      toast.success(isEditing ? "Updated" : "Created");
       setOpenForm(false); fetchItems();
     } catch {
-      setSnackbar({ open: true, message: "Failed to submit", severity: "error" });
+      toast.error("Failed to submit");
     } finally {
       hideLoading();
     }
@@ -123,7 +126,7 @@ export default function DashboardFurniture() {
   const skeletons = Array.from({ length: 6 });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-[1200px] mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 className="text-xl font-semibold text-white">Furniture</h1>
         <button
@@ -171,74 +174,91 @@ export default function DashboardFurniture() {
         ))}
       </div>
 
-      {/* Form Dialog */}
-      <Dialog open={openForm} onClose={() => setOpenForm(false)} fullWidth maxWidth="sm" fullScreen={fullScreen}>
-        <DialogTitle sx={{ bgcolor: "#111", color: "#fff", borderBottom: "1px solid #262626" }}>
-          {isEditing ? "Edit Furniture" : "Add Furniture"}
-        </DialogTitle>
-        <DialogContent sx={{ bgcolor: "#111", color: "#e5e5e5", display: "grid", gap: 2, pt: "20px !important" }}>
-          <TextField label="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} fullWidth required InputLabelProps={{ style: { color: "#737373" } }} inputProps={{ style: { color: "#fff" } }} sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&:hover fieldset": { borderColor: "#737373" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }} />
-          <TextField select label="Type" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} fullWidth InputLabelProps={{ style: { color: "#737373" } }} inputProps={{ style: { color: "#fff" } }} sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }}>
-            {TYPES.map((t) => <MenuItem key={t} value={t} sx={{ bgcolor: "#1a1a1a", color: "#fff", "&:hover": { bgcolor: "#262626" } }}>{t}</MenuItem>)}
-          </TextField>
-          <TextField label="Price (THB)" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} InputLabelProps={{ style: { color: "#737373" } }} inputProps={{ style: { color: "#fff" } }} sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }} />
-          <div className="grid grid-cols-3 gap-2">
-            {["width", "depth", "height"].map((k) => (
-              <TextField key={k} label={`${k.charAt(0).toUpperCase() + k.slice(1)} (cm)`} value={formData[k]} onChange={(e) => setFormData({ ...formData, [k]: e.target.value })} InputLabelProps={{ style: { color: "#737373" } }} inputProps={{ style: { color: "#fff" } }} sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }} />
-            ))}
-          </div>
-          <TextField label="Details" value={formData.details} onChange={(e) => setFormData({ ...formData, details: e.target.value })} multiline minRows={3} InputLabelProps={{ style: { color: "#737373" } }} inputProps={{ style: { color: "#fff" } }} sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }} />
+      <Dialog open={openForm} onOpenChange={(o) => !o && setOpenForm(false)}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{isEditing ? "Edit Furniture" : "Add Furniture"}</DialogTitle>
+          </DialogHeader>
 
-          {/* Cover */}
-          <div>
-            <p className="text-sm text-neutral-400 mb-2">Cover Image</p>
-            <input type="file" accept="image/*" ref={coverInputRef} onChange={(e) => { const f = e.target.files?.[0]; setCoverPreview(f ? URL.createObjectURL(f) : null); }} style={{ display: "none" }} />
-            {coverPreview ? (
-              <div className="relative w-48 rounded-lg overflow-hidden">
-                <img src={coverPreview} alt="cover" className="w-full aspect-video object-cover" />
-                <button onClick={() => { setCoverPreview(null); if (coverInputRef.current) coverInputRef.current.value = null; }} className="absolute top-1 right-1 p-1 bg-black/60 rounded-full">
-                  <CloseIcon sx={{ fontSize: 14, color: "#fff" }} />
-                </button>
-              </div>
-            ) : (
-              <button onClick={() => coverInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-400 border border-neutral-700 rounded-lg hover:border-neutral-500 transition-colors">
-                <PlusIcon /> Add Cover
-              </button>
-            )}
-          </div>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="f-name">Name <span className="text-destructive">*</span></Label>
+              <Input id="f-name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+            </div>
 
-          {/* Gallery */}
-          <div>
-            <p className="text-sm text-neutral-400 mb-2">Gallery Images</p>
-            <input type="file" accept="image/*" multiple ref={imagesInputRef} onChange={handleImagesChange} style={{ display: "none" }} />
-            <div className="flex flex-wrap gap-2">
-              {imagesPreview.map((src, idx) => (
-                <div key={idx} className="relative w-24 rounded-lg overflow-hidden">
-                  <img src={src} alt="" className="w-full aspect-video object-cover" />
-                  <button onClick={() => handleRemoveImage(idx)} className="absolute top-0.5 right-0.5 p-0.5 bg-black/60 rounded-full">
-                    <CloseIcon sx={{ fontSize: 12, color: "#fff" }} />
-                  </button>
+            <div className="flex flex-col gap-1.5">
+              <Label>Type</Label>
+              <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="f-price">Price (THB)</Label>
+              <Input id="f-price" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {["width", "depth", "height"].map((k) => (
+                <div key={k} className="flex flex-col gap-1.5">
+                  <Label htmlFor={`f-${k}`}>{k.charAt(0).toUpperCase() + k.slice(1)} (cm)</Label>
+                  <Input id={`f-${k}`} value={formData[k]} onChange={(e) => setFormData({ ...formData, [k]: e.target.value })} />
                 </div>
               ))}
-              <button onClick={() => imagesInputRef.current?.click()} className="w-24 aspect-video rounded-lg border-2 border-dashed border-neutral-700 flex items-center justify-center text-neutral-600 hover:border-neutral-500 transition-colors">
-                <PlusIcon />
-              </button>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="f-details">Details</Label>
+              <Textarea id="f-details" value={formData.details} onChange={(e) => setFormData({ ...formData, details: e.target.value })} rows={3} />
+            </div>
+
+            {/* Cover */}
+            <div className="flex flex-col gap-2">
+              <Label>Cover Image</Label>
+              <input type="file" accept="image/*" ref={coverInputRef} onChange={(e) => { const f = e.target.files?.[0]; setCoverPreview(f ? URL.createObjectURL(f) : null); }} className="hidden" />
+              {coverPreview ? (
+                <div className="relative w-48 rounded-lg overflow-hidden">
+                  <img src={coverPreview} alt="cover" className="w-full aspect-video object-cover" />
+                  <button type="button" onClick={() => { setCoverPreview(null); if (coverInputRef.current) coverInputRef.current.value = null; }} className="absolute top-1 right-1 p-1 bg-black/60 rounded-full text-white">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => coverInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground border border-border rounded-lg hover:border-foreground transition-colors w-fit">
+                  <PlusIcon /> Add Cover
+                </button>
+              )}
+            </div>
+
+            {/* Gallery */}
+            <div className="flex flex-col gap-2">
+              <Label>Gallery Images</Label>
+              <input type="file" accept="image/*" multiple ref={imagesInputRef} onChange={handleImagesChange} className="hidden" />
+              <div className="flex flex-wrap gap-2">
+                {imagesPreview.map((src, idx) => (
+                  <div key={idx} className="relative w-24 rounded-lg overflow-hidden">
+                    <img src={src} alt="" className="w-full aspect-video object-cover" />
+                    <button type="button" onClick={() => handleRemoveImage(idx)} className="absolute top-0.5 right-0.5 p-0.5 bg-black/60 rounded-full text-white">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+                <button type="button" onClick={() => imagesInputRef.current?.click()} className="w-24 aspect-video rounded-lg border-2 border-dashed border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                  <PlusIcon />
+                </button>
+              </div>
             </div>
           </div>
-        </DialogContent>
-        <DialogActions sx={{ bgcolor: "#111", borderTop: "1px solid #262626", px: 3, py: 2 }}>
-          <button onClick={() => setOpenForm(false)} className="px-4 py-2 text-sm text-neutral-400 hover:text-white transition-colors">Cancel</button>
-          <button onClick={handleSubmit} className="px-4 py-2 text-sm font-medium bg-[#cc8f2a] text-black rounded-lg hover:bg-[#b57b14] disabled:opacity-50 transition-colors">
-            {isEditing ? "Update" : "Create"}
-          </button>
-        </DialogActions>
-      </Dialog>
 
-      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: "100%" }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpenForm(false)}>Cancel</Button>
+            <Button type="button" onClick={handleSubmit}>{isEditing ? "Update" : "Create"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

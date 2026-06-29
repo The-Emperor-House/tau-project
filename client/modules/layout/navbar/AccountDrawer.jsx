@@ -1,37 +1,14 @@
 "use client";
 
-import {
-  Drawer,
-  Box,
-  IconButton,
-} from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import CloseIcon from "@mui/icons-material/Close";
-
+import { Sheet, SheetContent } from "@/shared/components/ui/sheet";
 import AccountPanel from "./AccountPanel";
 
 export default function AccountDrawer({ open, onClose, onLogout }) {
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
-      PaperProps={{
-        sx: (t) => ({
-          bgcolor: "grey.900",
-          color: "common.white",
-          width: "min(85vw, 320px)",
-          borderLeft: `1px solid ${alpha(t.palette.common.white, 0.12)}`,
-        }),
-      }}
-    >
-      <Box sx={{ display: "flex", justifyContent: "flex-end", p: 2 }}>
-        <IconButton onClick={onClose} sx={{ color: "common.white" }} aria-label="close account drawer">
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      <AccountPanel onClose={onClose} onLogout={onLogout} />
-    </Drawer>
+    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent side="right" className="bg-neutral-900 text-white border-l border-white/10 w-[min(85vw,320px)] p-0">
+        <AccountPanel onClose={onClose} onLogout={onLogout} />
+      </SheetContent>
+    </Sheet>
   );
 }

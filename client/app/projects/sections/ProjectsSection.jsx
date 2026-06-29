@@ -52,7 +52,7 @@ export default function ProjectsSection() {
       <>
         <AnimatedHeading
           variant="h1"
-          sx={{ mb: 4 }}
+          className="mb-4"
           title="PROJECT"
           subtitle="RECRAFTING SPACES. REVIVING LIVING."
           align="center"
@@ -74,7 +74,7 @@ export default function ProjectsSection() {
     <>
       <AnimatedHeading
         variant="h1"
-        sx={{ mb: 4 }}
+        className="mb-4"
         title="PROJECT"
         subtitle="RECRAFTING SPACES. REVIVING LIVING."
         align="center"

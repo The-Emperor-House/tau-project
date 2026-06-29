@@ -1,64 +1,38 @@
 "use client";
 
-import { Container, Box, Typography } from "@mui/material";
 import { ABOUT_INTRO_TITLE, ABOUT_INTRO_TEXT } from "../_data/aboutIntro";
 
 function Paragraphs({ text }) {
   const paras = text.trim().split(/\n\s*\n/);
   return (
-    <Box
-      sx={{
-        maxWidth: { xs: '58ch', md: '68ch' },
-        mx: 'auto',
-      }}
-    >
+    <div className="max-w-[58ch] md:max-w-[68ch] mx-auto">
       {paras.map((p, i) => (
-        <Typography
+        <p
           key={i}
-          variant="body2"
-          paragraph
-          sx={{
-            mt: i === 0 ? 1.5 : 0,
-            color: "#ab9685",
-            letterSpacing: '0.01rem',
-            fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.15rem' },
-
-            // ใส่ย่อบรรทัดแรก (ถ้าชอบสไตล์นี้)
-            textIndent: { md: '1.25rem' },
-
-            overflowWrap: 'anywhere',
-            wordBreak: 'break-word',
-            hyphens: 'auto',
-            WebkitHyphens: 'auto',
-            textWrap: 'pretty',
-
-            textRendering: 'optimizeLegibility',
-            WebkitFontSmoothing: 'antialiased',
-            MozOsxFontSmoothing: 'grayscale',
+          className="text-[#ab9685] tracking-[0.01rem] text-[0.95rem] sm:text-[1.05rem] md:text-[1.15rem] overflow-wrap-anywhere break-words hyphens-auto leading-relaxed"
+          style={{
+            marginTop: i === 0 ? "0.375rem" : 0,
+            marginBottom: "1rem",
+            textIndent: undefined,
+            WebkitHyphens: "auto",
+            textWrap: "pretty",
+            WebkitFontSmoothing: "antialiased",
           }}
         >
           {p}
-        </Typography>
+        </p>
       ))}
-    </Box>
+    </div>
   );
 }
 
 export default function AboutIntro() {
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 6, md: 10 } }}>
-      <Box sx={{ textAlign: "center", maxWidth: 800, mx: "auto" }}>
-        <Typography
-          variant="h5"
-          color="primary"
-          fontWeight="bold"
-          sx={{ mb: 2, letterSpacing: "0.1em" }}
-        >
-          {ABOUT_INTRO_TITLE}
-        </Typography>
-
-        <Paragraphs text={ABOUT_INTRO_TEXT} />
-      </Box>
-    </Container>
+    <div className="max-w-3xl mx-auto px-4 py-12 md:py-16 text-center">
+      <h5 className="text-[#cc8f2a] font-bold tracking-[0.1em] mb-4 text-lg md:text-xl">
+        {ABOUT_INTRO_TITLE}
+      </h5>
+      <Paragraphs text={ABOUT_INTRO_TEXT} />
+    </div>
   );
 }

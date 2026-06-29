@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Typography, Skeleton } from "@mui/material";
 import { useParams } from "next/navigation";
 
 import GridCard from "../components/GridCard";
@@ -14,15 +13,6 @@ export default function TypePage() {
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
 
-  const palette = {
-    bg: "#404040",
-    text: "#E7D6C6",
-    accent: "#ab9685",
-    faint: "rgba(255,255,255,0.08)",
-    accent2: "#BFA68A",
-    white: "#FFFFFF",
-  };
-
   useEffect(() => {
     if (!type) {
       setLoading(false);
@@ -32,9 +22,7 @@ export default function TypePage() {
     const load = async () => {
       setLoading(true);
       try {
-        const apiUrl = `${
-          process.env.NEXT_PUBLIC_API_URL
-        }/api/projects?type=${String(type).toUpperCase()}`;
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/projects?type=${String(type).toUpperCase()}`;
         const res = await fetch(apiUrl);
         const json = await res.json();
         if (Array.isArray(json)) setProjects(json);
@@ -49,178 +37,46 @@ export default function TypePage() {
     load();
   }, [type]);
 
-  const onProjectClick = (project) => setSelectedProject(project);
-  const onModalClose = () => setSelectedProject(null);
-
   return (
-    <Box
-      sx={{
-        position: "relative",
-        minHeight: "100vh",
-        bgcolor: palette.bg,
-        color: palette.text,
-      }}
-    >
-      <Box
-        sx={{
-          maxWidth: { xs: "100%", md: "1200px" },
-          mx: "auto",
-          px: { xs: 2, sm: 3, md: 4, lg: 6 },
-          pt: { xs: "140px", md: "270px" },
-          pb: { xs: 6, md: 10 },
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mb: { xs: 3, md: 6 },
-            px: { xs: 0, md: 2 },
-          }}
-        >
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "auto auto" },
-              justifyItems: { xs: "center", sm: "start" },
-              alignItems: "end",
-              columnGap: { xs: 2, sm: 2.5, md: 3, lg: 4 },
-              rowGap: { xs: 1, sm: 0 },
-              maxWidth: "100%",
-            }}
-          >
-            <Typography
-              component="div"
-              sx={{
-                fontWeight: 700,
-                color: palette.accent2,
-                letterSpacing: { xs: ".08em", sm: ".20em", md: ".24em", lg: ".26em" },
-                fontSize: {
-                  xs: "2.2rem",
-                  sm: "3.4rem",
-                  md: "6rem",
-                  lg: "7rem",
-                  xl: "7.6rem",
-                },
-                lineHeight: 1,
-                textTransform: "uppercase",
-                whiteSpace: "nowrap",
-              }}
-            >
+    <div className="relative min-h-screen bg-[#404040] text-[#E7D6C6]">
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6 pb-10 md:pb-16" style={{ paddingTop: "var(--page-top)" }}>
+        {/* Header */}
+        <div className="flex justify-center mb-6 md:mb-10 px-0 md:px-2">
+          <div className="grid grid-cols-1 sm:grid-cols-[auto_auto] justify-items-center sm:justify-items-start items-end gap-x-6 md:gap-x-10 gap-y-2 sm:gap-y-0">
+            <span className="font-bold text-[#BFA68A] tracking-[.08em] sm:tracking-[.20em] md:tracking-[.24em] lg:tracking-[.26em] text-[2.2rem] sm:text-[3.4rem] md:text-[6rem] lg:text-[7rem] xl:text-[7.6rem] leading-none uppercase whitespace-nowrap">
               PROJECT
-            </Typography>
-
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: { xs: "center", sm: "flex-start" },
-                gap: { xs: 0.5, md: 1 },
-                pb: { xs: 0.4, md: 0.8 },
-              }}
-            >
-              <Typography
-                component="div"
-                sx={{
-                  color: palette.white,
-                  fontWeight: 300,
-                  letterSpacing: { xs: ".42em", md: ".50em", lg: ".56em" },
-                  fontSize: {
-                    xs: "1.25rem",
-                    sm: "1.4rem",
-                    md: "2.1rem",
-                    lg: "2.35rem",
-                  },
-                  lineHeight: 1,
-                  textTransform: "uppercase",
-                  whiteSpace: "nowrap",
-                }}
-              >
+            </span>
+            <div className="flex flex-col justify-center items-center sm:items-start gap-1 md:gap-2 pb-1 md:pb-2">
+              <span className="text-white font-light tracking-[.18em] sm:tracking-[.42em] md:tracking-[.50em] lg:tracking-[.56em] text-[1.1rem] sm:text-[1.4rem] md:text-[2.1rem] lg:text-[2.35rem] leading-tight uppercase text-center sm:text-left">
                 {(typeof type === "string" ? type : "").toUpperCase()}
-              </Typography>
-
-              <Typography
-                component="div"
-                sx={{
-                  color: palette.accent2,
-                  fontWeight: 300,
-                  letterSpacing: { xs: ".36em", md: ".40em", lg: ".44em" },
-                  fontSize: {
-                    xs: "0.95rem",
-                    sm: "1rem",
-                    md: "1.15rem",
-                    lg: "1.3rem",
-                  },
-                  lineHeight: 1.15,
-                  textTransform: "uppercase",
-                  whiteSpace: "nowrap",
-                  opacity: 0.95,
-                }}
-              >
+              </span>
+              <span className="text-[#BFA68A] font-light tracking-[.14em] sm:tracking-[.36em] md:tracking-[.40em] lg:tracking-[.44em] text-[0.85rem] sm:text-[1rem] md:text-[1.15rem] lg:text-[1.3rem] leading-tight uppercase opacity-95 text-center sm:text-left">
                 PORTFOLIO
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
+              </span>
+            </div>
+          </div>
+        </div>
 
-        <Box
-          sx={{
-            position: "relative",
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: 'repeat(2, 1fr)',
-              md: 'repeat(2, 1fr)',
-              lg: 'repeat(2, 1fr)',
-              xl: 'repeat(3, 1fr)',
-            },
-            gap: { xs: 3, md: 4, lg: 5 },
-            alignItems: "stretch",
-          }}
-        >
+        {/* Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 lg:gap-10 items-stretch">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (
-                <Box key={i}>
-                  {/* skeleton 4:3 */}
-                  <Box sx={{ position: "relative", width: "100%" }}>
-                    <Box sx={{ pt: "75%" }} />
-                    <Skeleton
-                      variant="rectangular"
-                      sx={{
-                        position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
-                        bgcolor: "rgba(255,255,255,0.08)",
-                      }}
-                    />
-                  </Box>
-                  <Skeleton
-                    width="70%"
-                    height={28}
-                    sx={{
-                      mt: 1.5,
-                      mx: "auto",
-                      bgcolor: "rgba(255,255,255,0.08)",
-                    }}
-                  />
-                </Box>
+                <div key={i}>
+                  <div className="relative w-full pt-[75%] bg-white/8 animate-pulse" />
+                  <div className="mt-3 mx-auto h-6 w-[70%] bg-white/8 animate-pulse" />
+                </div>
               ))
             : projects.map((project, i) => (
-                <Box
-                  key={project.id ?? i}
-                  sx={{ display: "flex", flexDirection: "column" }}
-                >
-                  <GridCard data={project} onClick={onProjectClick} />
-                </Box>
+                <div key={project.id ?? i} className="flex flex-col">
+                  <GridCard data={project} onClick={() => setSelectedProject(project)} />
+                </div>
               ))}
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {selectedProject && (
-        <GalleryModal open onClose={onModalClose} data={selectedProject} />
+        <GalleryModal open onClose={() => setSelectedProject(null)} data={selectedProject} />
       )}
-    </Box>
+    </div>
   );
 }

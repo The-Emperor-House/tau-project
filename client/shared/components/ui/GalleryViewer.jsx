@@ -1,17 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import {
-  Box,
-  IconButton,
-  Dialog,
-  DialogContent,
-  useMediaQuery,
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import ChevronLeft from "@mui/icons-material/ChevronLeft";
-import ChevronRight from "@mui/icons-material/ChevronRight";
-import { useTheme } from "@mui/material/styles";
+  Dialog, DialogContent,
+} from "@/shared/components/ui/dialog";
 
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
@@ -26,9 +19,6 @@ export default function GalleryViewer({
   const imgs = (images || []).filter(Boolean);
   const [index, setIndex] = useState(clamp(initialIndex, 0, Math.max(0, imgs.length - 1)));
   const [open, setOpen] = useState(false);
-
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const trackRef = useRef(null);
   const touchRef = useRef({ x: 0, y: 0, t: 0 });
 
@@ -36,7 +26,6 @@ export default function GalleryViewer({
     setIndex((i) => clamp(i, 0, Math.max(0, imgs.length - 1)));
   }, [imgs.length]);
 
-  // keyboard nav in lightbox
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => {
@@ -50,9 +39,7 @@ export default function GalleryViewer({
 
   const prev = () => setIndex((i) => (i - 1 + imgs.length) % imgs.length);
   const next = () => setIndex((i) => (i + 1) % imgs.length);
-  const openLightbox = () => setOpen(true);
 
-  // swipe handlers
   const onTouchStart = (e) => {
     const t = e.touches?.[0];
     if (!t) return;
@@ -74,191 +61,106 @@ export default function GalleryViewer({
   if (!imgs.length) return null;
 
   return (
-    <Box>
-      {/* Viewer (inline) */}
-      <Box
-        sx={{
-          position: "relative",
-          width: "100%",
-          aspectRatio,
-          overflow: "hidden",
-          borderRadius: 2,
-          bgcolor: "#111",
-        }}
+    <div>
+      {/* Inline viewer */}
+      <div
+        className="relative w-full overflow-hidden rounded-lg bg-[#111]"
+        style={{ aspectRatio }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
         <img
           src={imgs[index]}
           alt=""
-          onClick={openLightbox}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            cursor: "zoom-in",
-            display: "block",
-          }}
+          onClick={() => setOpen(true)}
+          className="absolute inset-0 w-full h-full object-cover cursor-zoom-in block"
           loading="eager"
         />
 
-        {/* Prev / Next */}
         {imgs.length > 1 && (
           <>
-            <IconButton
+            <button
               aria-label="previous"
               onClick={prev}
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: 8,
-                transform: "translateY(-50%)",
-                color: "#fff",
-                bgcolor: "rgba(0,0,0,.35)",
-                "&:hover": { bgcolor: "rgba(0,0,0,.55)" },
-              }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/35 text-white hover:bg-black/55 transition-colors"
             >
-              <ChevronLeft />
-            </IconButton>
-            <IconButton
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
               aria-label="next"
               onClick={next}
-              sx={{
-                position: "absolute",
-                top: "50%",
-                right: 8,
-                transform: "translateY(-50%)",
-                color: "#fff",
-                bgcolor: "rgba(0,0,0,.35)",
-                "&:hover": { bgcolor: "rgba(0,0,0,.55)" },
-              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/35 text-white hover:bg-black/55 transition-colors"
             >
-              <ChevronRight />
-            </IconButton>
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </>
         )}
-      </Box>
+      </div>
 
       {/* Thumbnails */}
       {imgs.length > 1 && (
-        <Box
+        <div
           ref={trackRef}
-          sx={{
-            mt: 1.5,
-            display: "flex",
-            gap: 1,
-            overflowX: "auto",
-            WebkitOverflowScrolling: "touch",
-            pb: 0.5,
-          }}
+          className="mt-3 flex gap-2 overflow-x-auto pb-1"
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
           {thumbs.map(({ src, i }) => (
-            <Box
+            <div
               key={`${src}-${i}`}
               onClick={() => setIndex(i)}
-              sx={{
-                position: "relative",
+              className="relative flex-none overflow-hidden rounded cursor-pointer"
+              style={{
                 height: thumbHeight,
                 aspectRatio: "1 / 1",
-                borderRadius: 1,
-                overflow: "hidden",
                 outline: i === index ? "2px solid #BFA68A" : "1px solid rgba(255,255,255,.15)",
-                cursor: "pointer",
-                flex: "0 0 auto",
               }}
             >
               <img
                 src={src}
                 alt=""
                 loading="lazy"
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                className="w-full h-full object-cover block"
               />
-            </Box>
+            </div>
           ))}
-        </Box>
+        </div>
       )}
 
       {/* Lightbox */}
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        fullScreen={fullScreen}
-        maxWidth="lg"
-        PaperProps={{
-          sx: {
-            bgcolor: "#000",
-            color: "#fff",
-          },
-        }}
-      >
-        <IconButton
-          aria-label="close"
-          onClick={() => setOpen(false)}
-          sx={{ position: "absolute", top: 8, right: 8, color: "#fff", zIndex: 1 }}
-        >
-          <CloseIcon />
-        </IconButton>
+      <Dialog open={open} onOpenChange={(o) => !o && setOpen(false)}>
         <DialogContent
-          sx={{
-            p: 0,
-            position: "relative",
-            display: "grid",
-            placeItems: "center",
-            minHeight: fullScreen ? "100dvh" : 600,
-            bgcolor: "#000",
-          }}
+          className="max-w-5xl w-full bg-black text-white border-none p-0 sm:p-0"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          <img
-            src={imgs[index]}
-            alt=""
-            style={{
-              maxWidth: "100%",
-              maxHeight: "90vh",
-              objectFit: "contain",
-              display: "block",
-            }}
-          />
+          <div className="relative grid place-items-center min-h-[60vh] sm:min-h-[600px] bg-black">
+            <img
+              src={imgs[index]}
+              alt=""
+              className="max-w-full max-h-[90vh] object-contain block"
+            />
 
-          {imgs.length > 1 && (
-            <>
-              <IconButton
-                aria-label="previous"
-                onClick={prev}
-                sx={{
-                  position: "absolute",
-                  left: 12,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "#fff",
-                  bgcolor: "rgba(0,0,0,.35)",
-                  "&:hover": { bgcolor: "rgba(0,0,0,.55)" },
-                }}
-              >
-                <ChevronLeft />
-              </IconButton>
-              <IconButton
-                aria-label="next"
-                onClick={next}
-                sx={{
-                  position: "absolute",
-                  right: 12,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "#fff",
-                  bgcolor: "rgba(0,0,0,.35)",
-                  "&:hover": { bgcolor: "rgba(0,0,0,.55)" },
-                }}
-              >
-                <ChevronRight />
-              </IconButton>
-            </>
-          )}
+            {imgs.length > 1 && (
+              <>
+                <button
+                  aria-label="previous"
+                  onClick={prev}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/35 text-white hover:bg-black/55 transition-colors z-10"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  aria-label="next"
+                  onClick={next}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/35 text-white hover:bg-black/55 transition-colors z-10"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
-    </Box>
+    </div>
   );
 }

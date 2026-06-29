@@ -1,6 +1,5 @@
 "use client";
 
-import { Box, Typography } from "@mui/material";
 import Carousel from "./home/carousel/Carousel";
 import HeroText from "./home/hero/HeroText";
 
@@ -16,56 +15,21 @@ export default function HomeHero() {
   }));
 
   return (
-    <Box sx={{ position: "relative", height: { xs: "88vh", md: "100vh" } }}>
-      {/* เลเยอร์ภาพสไลด์ */}
-      <Carousel
-        slides={slides}
-        height={{ xs: "88vh", md: "100vh" }}
-        delay={5000}
-      />
+    <div className="relative h-[88vh] md:h-screen">
+      <Carousel slides={slides} height="100%" delay={5000} />
 
-      {/* เลเยอร์ข้อความ (คงที่ ไม่เลื่อนตามสไลด์) */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: { xs: "6%", sm: "8%", md: "10%" },
-          transform: "translateY(-50%)",
-          maxWidth: { xs: "90%", sm: "70%", md: "50%" },
-          zIndex: 2,
-        }}
-      >
+      <div className="absolute top-1/2 left-[6%] sm:left-[8%] md:left-[10%] -translate-y-1/2 max-w-[90%] sm:max-w-[70%] md:max-w-1/2 z-[2]">
         <HeroText />
-      </Box>
+      </div>
 
-      {/* Tagline ล่างจอ */}
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: { xs: 16, md: 24 },
-          left: "50%",
-          transform: "translateX(-50%)",
-          textAlign: "center",
-          width: "100%",
-          zIndex: 2,
-          px: 2,
-        }}
-      >
-        <Typography
-          variant="body1"
-          sx={{
-            fontWeight: 300,
-            fontSize: { xs: "0.75rem", sm: "1.3rem", md: "1.6rem" },
-            opacity: 0.3,
-            color: "#fff",
-            textShadow: "0px 4px 12px rgba(0, 0, 0, 0.8)",
-            letterSpacing: "0.05rem",
-            whiteSpace: { xs: "normal", sm: "nowrap" },
-          }}
+      <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 text-center w-full z-[2] px-2">
+        <p
+          className="font-light text-white opacity-30 tracking-[0.05rem] text-center px-4"
+          style={{ fontSize: "clamp(0.85rem, 2vw, 1.5rem)", textShadow: "0px 4px 12px rgba(0,0,0,0.8)" }}
         >
           RECRAFTING SPACES. REVIVING LIVING.
-        </Typography>
-      </Box>
-    </Box>
+        </p>
+      </div>
+    </div>
   );
 }

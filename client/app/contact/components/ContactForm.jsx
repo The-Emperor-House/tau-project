@@ -1,23 +1,14 @@
 'use client';
 
-import {
-  Box,
-  TextField,
-  Typography,
-  Checkbox,
-  FormControlLabel,
-  Button,
-  FormGroup,
-  Snackbar,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import { useState } from 'react';
+import { toast } from 'sonner';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/shared/components/ui/dialog';
+import { Button } from '@/shared/components/ui/button';
+
+const PAGE_BG = '#404040';
+const ACCENT = '#ab9685';
 
 const initialState = {
   fullName: '',
@@ -37,12 +28,8 @@ const services = {
   construction: { label: 'ก่อสร้าง โครงสร้าง', value: 'CONSTRUCTION' },
 };
 
-const PAGE_BG = '#404040';
-const ACCENT = '#ab9685';
-
 export default function ContactForm() {
   const [formData, setFormData] = useState(initialState);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [privacyOpen, setPrivacyOpen] = useState(false);
 
   const validateForm = () => {
@@ -79,7 +66,7 @@ export default function ContactForm() {
     e.preventDefault();
     const errorMsg = validateForm();
     if (errorMsg) {
-      setSnackbar({ open: true, message: errorMsg, severity: 'error' });
+      toast.error(errorMsg);
       return;
     }
 
@@ -105,101 +92,62 @@ export default function ContactForm() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('ส่งข้อมูลไม่สำเร็จ');
-      setSnackbar({ open: true, message: 'ส่งข้อมูลสำเร็จ', severity: 'success' });
+      toast.success('ส่งข้อมูลสำเร็จ');
       setFormData(initialState);
     } catch (err) {
-      setSnackbar({ open: true, message: err.message || 'เกิดข้อผิดพลาด', severity: 'error' });
+      toast.error(err.message || 'เกิดข้อผิดพลาด');
     }
   };
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        bgcolor: PAGE_BG,
-        minHeight: '100dvh',
-        pt: { xs: '170px', md: '270px' },
-      }}
+    <div
+      className="w-full min-h-dvh"
+      style={{ backgroundColor: PAGE_BG, paddingTop: 'var(--page-top)' }}
     >
       {/* Top Bar */}
-      <Box
-        sx={{
-          color: ACCENT,
-          py: { xs: 2.5, md: 3 },
-          textAlign: 'center',
-          letterSpacing: '.6rem',
-          fontSize: { xs: '1.6rem', md: '2rem' },
-          fontWeight: 600,
-        }}
+      <div
+        className="py-6 md:py-8 text-center font-semibold tracking-[.6rem]"
+        style={{ color: ACCENT, fontSize: 'clamp(1.6rem, 4vw, 2rem)' }}
       >
         CONTACT&nbsp;US
-      </Box>
+      </div>
 
-      {/* White full-bleed form area */}
-      <Box
-        component="form"
+      {/* White form area */}
+      <form
         onSubmit={handleSubmit}
-        sx={{
-          bgcolor: '#fff',
-          width: '100%',
-          px: { xs: 3, md: 6 },
-          py: { xs: 4, md: 6 },
-        }}
+        className="bg-white w-full px-4 md:px-8 py-10 md:py-16"
       >
-        <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+        <div className="max-w-[1200px] mx-auto">
           {/* 2 columns */}
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-              columnGap: { xs: 4, md: 10 },
-              rowGap: 4,
-            }}
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 md:gap-x-16 gap-y-6">
             {/* Left */}
-            <Box>
+            <div>
               <Field label="ชื่อ-นามสกุล ติดต่อกลับ" name="fullName" value={formData.fullName} onChange={handleChange} />
               <Field label="อีเมล" name="email" value={formData.email} onChange={handleChange} />
               <Field label="เบอร์โทรติดต่อ" name="phone" value={formData.phone} onChange={handleChange} />
 
-              <Typography sx={{ mt: 3, mb: 1.5, fontSize: { xs: 20, md: 24 }, fontWeight: 600 }}>
-                แจ้งความต้องการ
-              </Typography>
+              <p className="mt-6 mb-4 text-xl md:text-2xl font-semibold">แจ้งความต้องการ</p>
 
-              <FormGroup sx={{ gap: 1.5 }}>
+              <div className="flex flex-col gap-4">
                 {Object.keys(formData.services).map(k => (
-                  <FormControlLabel
-                    key={k}
-                    control={
-                      <Checkbox
-                        name={k}
-                        checked={formData.services[k]}
-                        onChange={handleChange}
-                        sx={{
-                          color: '#000',
-                          '&.Mui-checked': { color: '#000' },
-                          '& .MuiSvgIcon-root': { fontSize: 30 },
-                        }}
-                      />
-                    }
-                    label={
-                      <Typography sx={{ fontSize: { xs: 20, md: 22 } }}>{services[k].label}</Typography>
-                    }
-                    sx={{ m: 0 }}
-                  />
+                  <label key={k} className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name={k}
+                      checked={formData.services[k]}
+                      onChange={handleChange}
+                      className="w-7 h-7 accent-black cursor-pointer shrink-0"
+                    />
+                    <span className="text-xl md:text-[1.375rem]">{services[k].label}</span>
+                  </label>
                 ))}
-              </FormGroup>
-            </Box>
+              </div>
+            </div>
 
             {/* Right */}
-            <Box>
+            <div>
               <Field label="งบประมาณ" name="budget" value={formData.budget} onChange={handleChange} />
-              <Field
-                label="ขนาดพื้นที่ใช้สอย / ขนาดที่ดิน"
-                name="areaSize"
-                value={formData.areaSize}
-                onChange={handleChange}
-              />
+              <Field label="ขนาดพื้นที่ใช้สอย / ขนาดที่ดิน" name="areaSize" value={formData.areaSize} onChange={handleChange} />
               <Field label="สถานที่ก่อสร้าง" name="location" value={formData.location} onChange={handleChange} />
               <Field
                 label="รายละเอียดข้อมูลเพิ่มเติม"
@@ -207,91 +155,46 @@ export default function ContactForm() {
                 value={formData.details}
                 onChange={handleChange}
                 multiline
-                minRows={5}
+                rows={5}
               />
-            </Box>
-          </Box>
+            </div>
+          </div>
 
           {/* Accept + Submit */}
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              mt: { xs: 4, md: 6 },
-              flexWrap: 'wrap',
-              justifyContent: 'space-between',
-            }}
-          >
-            <FormControlLabel
-              control={
-                <Checkbox
-                  name="accept"
-                  checked={formData.accept}
-                  onChange={handleChange}
-                  sx={{ color: '#000', '&.Mui-checked': { color: '#000' }, '& .MuiSvgIcon-root': { fontSize: 34 } }}
-                />
-              }
-              label={
-                <Typography sx={{ fontSize: { xs: 14, md: 22 } }}>
-                  ยอมรับข้อตกลงในการใช้งานและนโยบายความเป็นส่วนตัว&nbsp;
-                  {/* ปุ่มเปิด popup */}
-                  <Button
-                    type="button"
-                    onClick={() => setPrivacyOpen(true)}
-                    sx={{
-                      p: 0,
-                      minWidth: 0,
-                      color: 'inherit',
-                      textDecoration: 'underline',
-                      fontSize: { xs: 16, md: 22 },
-                      '&:hover': { backgroundColor: 'transparent' },
-                    }}
-                  >
-                    นโยบายความเป็นส่วนตัว
-                  </Button>
-                </Typography>
-              }
-              sx={{ m: 0, flex: 1 }}
-            />
+          <div className="flex flex-col md:flex-row items-center gap-4 mt-10 md:mt-16 flex-wrap justify-between">
+            <label className="flex items-center gap-3 cursor-pointer flex-1">
+              <input
+                type="checkbox"
+                name="accept"
+                checked={formData.accept}
+                onChange={handleChange}
+                className="w-8 h-8 accent-black cursor-pointer shrink-0"
+              />
+              <span className="text-base md:text-[1.375rem]">
+                ยอมรับข้อตกลงในการใช้งานและนโยบายความเป็นส่วนตัว&nbsp;
+                <button
+                  type="button"
+                  onClick={() => setPrivacyOpen(true)}
+                  className="underline text-[1rem] md:text-[1.375rem] hover:opacity-70 transition-opacity"
+                >
+                  นโยบายความเป็นส่วนตัว
+                </button>
+              </span>
+            </label>
 
-            <Button
+            <button
               type="submit"
-              disableElevation
-              sx={{
-                bgcolor: ACCENT,
-                color: '#fff',
-                px: { xs: 4, md: 6 },
-                py: { xs: 1.2, md: 1.4 },
-                borderRadius: 9999,
-                fontWeight: 700,
-                fontSize: { xs: 18, md: 20 },
-                letterSpacing: '.02em',
-                '&:hover': { bgcolor: '#9a8574' },
-              }}
+              className="rounded-full font-bold text-white transition-colors px-8 md:px-12 py-3 md:py-4 text-lg md:text-xl shrink-0"
+              style={{ backgroundColor: ACCENT }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#9a8574')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = ACCENT)}
             >
               ส่งข้อมูล
-            </Button>
-          </Box>
-        </Box>
-      </Box>
+            </button>
+          </div>
+        </div>
+      </form>
 
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
-      {/* Privacy Policy Dialog */}
       <PrivacyDialog
         open={privacyOpen}
         onClose={() => setPrivacyOpen(false)}
@@ -300,74 +203,79 @@ export default function ContactForm() {
           setPrivacyOpen(false);
         }}
       />
-    </Box>
+    </div>
   );
 }
 
-/* ------- ช่องกรอกแบบเส้นใต้หนา (สไตล์ภาพตัวอย่าง) ------- */
-function Field(props) {
-  const { label, ...rest } = props;
+function Field({ label, name, value, onChange, multiline, rows }) {
   return (
-    <TextField
-      variant="standard"
-      fullWidth
-      label={label}
-      InputLabelProps={{ shrink: true, sx: { fontSize: { xs: 20, md: 22 } } }}
-      sx={{
-        my: { xs: 2.2, md: 2.6 },
-        '& .MuiInputBase-root': { fontSize: { xs: 20, md: 22 } },
-        '& .MuiInput-underline:before': { borderBottomWidth: 2, borderColor: '#ccc' },
-        '& .MuiInput-underline:hover:before': { borderBottomWidth: 2, borderColor: '#999' },
-        '& .MuiInput-underline:after': { borderBottomWidth: 2, borderColor: '#000' },
-      }}
-      {...rest}
-    />
+    <div className="my-6">
+      <label
+        htmlFor={name}
+        className="block text-xl md:text-[1.375rem] font-medium mb-1 text-black/70"
+      >
+        {label}
+      </label>
+      {multiline ? (
+        <textarea
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          rows={rows || 4}
+          className="w-full border-b-2 border-[#ccc] focus:border-black outline-none bg-transparent text-xl md:text-[1.375rem] pt-1 pb-1 resize-none transition-colors"
+        />
+      ) : (
+        <input
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          className="w-full border-b-2 border-[#ccc] hover:border-[#999] focus:border-black outline-none bg-transparent text-xl md:text-[1.375rem] pt-1 pb-1 transition-colors"
+        />
+      )}
+    </div>
   );
 }
 
-/* ------- Dialog นโยบายความเป็นส่วนตัว ------- */
 function PrivacyDialog({ open, onClose, onAccept }) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle sx={{ pr: 6 }}>
-        นโยบายความเป็นส่วนตัว
-        <IconButton
-          onClick={onClose}
-          aria-label="close"
-          sx={{ position: 'absolute', right: 12, top: 12 }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers sx={{ maxHeight: '70vh' }}>
-        {/* --- เนื้อหาตัวอย่าง ปรับแก้ได้ตามจริง --- */}
-        <Typography paragraph>
-          เราให้ความสำคัญกับข้อมูลส่วนบุคคลของคุณ ข้อมูลที่คุณให้ผ่านฟอร์มการติดต่อจะถูกใช้เพื่อ
-          ติดต่อกลับ จัดทำใบเสนอราคา จัดนัดหมาย และนำไปปรับปรุงคุณภาพงานบริการของเรา
-          โดยจะไม่เปิดเผยต่อบุคคลที่สาม เว้นแต่จำเป็นต่อการให้บริการหรือเป็นไปตามกฎหมาย
-        </Typography>
-        <Typography paragraph>
-          ประเภทข้อมูลที่เก็บ ได้แก่ ชื่อ–นามสกุล อีเมล เบอร์โทร ข้อมูลโครงการ (งบประมาณ พื้นที่
-          สถานที่ก่อสร้าง) และรายละเอียดเพิ่มเติม
-        </Typography>
-        <Typography paragraph>
-          คุณสามารถขอเข้าถึง/แก้ไข/ลบข้อมูล หรือเพิกถอนความยินยอมได้
-          โดยติดต่อช่องทางที่ระบุไว้ในเว็บไซต์ของเรา
-        </Typography>
-        <Typography paragraph>
-          การกดยอมรับนโยบายนี้ถือเป็นการอนุญาตให้เราเก็บและใช้ข้อมูลตามวัตถุประสงค์ที่ระบุ
-        </Typography>
+    <Dialog open={open} onOpenChange={o => !o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90dvh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>นโยบายความเป็นส่วนตัว</DialogTitle>
+        </DialogHeader>
+
+        <div className="overflow-y-auto flex-1 pr-1 space-y-4 text-base leading-relaxed border-t border-b py-4 my-2">
+          <p>
+            เราให้ความสำคัญกับข้อมูลส่วนบุคคลของคุณ ข้อมูลที่คุณให้ผ่านฟอร์มการติดต่อจะถูกใช้เพื่อ
+            ติดต่อกลับ จัดทำใบเสนอราคา จัดนัดหมาย และนำไปปรับปรุงคุณภาพงานบริการของเรา
+            โดยจะไม่เปิดเผยต่อบุคคลที่สาม เว้นแต่จำเป็นต่อการให้บริการหรือเป็นไปตามกฎหมาย
+          </p>
+          <p>
+            ประเภทข้อมูลที่เก็บ ได้แก่ ชื่อ–นามสกุล อีเมล เบอร์โทร ข้อมูลโครงการ (งบประมาณ พื้นที่
+            สถานที่ก่อสร้าง) และรายละเอียดเพิ่มเติม
+          </p>
+          <p>
+            คุณสามารถขอเข้าถึง/แก้ไข/ลบข้อมูล หรือเพิกถอนความยินยอมได้
+            โดยติดต่อช่องทางที่ระบุไว้ในเว็บไซต์ของเรา
+          </p>
+          <p>
+            การกดยอมรับนโยบายนี้ถือเป็นการอนุญาตให้เราเก็บและใช้ข้อมูลตามวัตถุประสงค์ที่ระบุ
+          </p>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>ปิด</Button>
+          <Button
+            onClick={onAccept}
+            style={{ backgroundColor: '#ab9685' }}
+            className="hover:opacity-90"
+          >
+            ยอมรับและปิด
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose}>ปิด</Button>
-        <Button
-          variant="contained"
-          onClick={onAccept}
-          sx={{ bgcolor: '#ab9685', '&:hover': { bgcolor: '#9a8574' } }}
-        >
-          ยอมรับและปิด
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }

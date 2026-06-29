@@ -1,48 +1,27 @@
 "use client";
 
 import {
-  Dialog,
-  DialogContent,
-  Stack,
-  CircularProgress,
-  Typography,
-} from "@mui/material";
+  Dialog, DialogContent,
+} from "@/shared/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 
 export default function LoadingDialog({
   open,
   text = "Loading...",
   blocking = true,
   onClose,
-  size = 28,
 }) {
-  const handleClose = (event, reason) => {
-    if (blocking && (reason === "backdropClick" || reason === "escapeKeyDown")) return;
-    onClose?.(event, reason);
+  const handleOpenChange = (o) => {
+    if (!o && !blocking) onClose?.();
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      fullWidth
-      maxWidth="xs"
-      keepMounted
-      sx={{
-        zIndex: (t) => t.zIndex.modal + 10,
-      }}
-      disableEnforceFocus
-      PaperProps={{ sx: { p: 3, borderRadius: 3 } }}
-      slotProps={{
-        backdrop: {
-          sx: { zIndex: (t) => t.zIndex.modal + 9, bgcolor: "rgba(0,0,0,0.35)" },
-        },
-      }}
-    >
-      <DialogContent>
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <CircularProgress size={size} />
-          <Typography color="text.secondary">{text}</Typography>
-        </Stack>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-xs" showCloseButton={false}>
+        <div className="flex items-center gap-3 py-2">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground shrink-0" />
+          <p className="text-sm text-muted-foreground">{text}</p>
+        </div>
       </DialogContent>
     </Dialog>
   );

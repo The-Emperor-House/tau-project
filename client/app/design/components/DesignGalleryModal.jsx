@@ -1,67 +1,47 @@
 'use client';
 
-import { Dialog, IconButton, Box, Typography, useMediaQuery, useTheme } from '@mui/material';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog';
+import { X } from 'lucide-react';
 import ImageGallery from 'react-image-gallery';
-import CloseIcon from '@mui/icons-material/Close';
-
 import 'react-image-gallery/styles/css/image-gallery.css';
 
 export default function DesignGalleryModal({ open, onClose, design }) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
   if (!design) return null;
 
-  const images = design.images?.map((img) => ({
-    original: img.imageUrl,
-    thumbnail: img.thumbnailUrl || img.imageUrl,
-  })) || [];
+  const images =
+    design.images?.map((img) => ({
+      original: img.imageUrl,
+      thumbnail: img.thumbnailUrl || img.imageUrl,
+    })) || [];
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      fullScreen={isMobile}
-      maxWidth="md"
-      sx={{ '& .MuiDialog-paper': { borderRadius: { xs: 0, sm: 3 } } }}
-    >
-      <Box sx={{ position: 'relative', p: 2 }}>
-        <IconButton
-          onClick={onClose}
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            zIndex: 10,
-            width: 44,
-            height: 44,
-            bgcolor: 'rgba(0,0,0,.06)',
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-
-        <Typography variant="h6" textAlign="center" mb={2} sx={{ pr: 5 }}>
-          {design.name}
-        </Typography>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-3xl w-full p-4 sm:rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-center pr-6">{design.name}</DialogTitle>
+        </DialogHeader>
 
         {images.length > 0 ? (
           <ImageGallery
             items={images}
-            showThumbnails={true}
+            showThumbnails
             showPlayButton={false}
             showFullscreenButton={false}
-            showNav={true}
+            showNav
             slideDuration={450}
             thumbnailPosition="bottom"
           />
         ) : (
-          <Typography textAlign="center" color="text.secondary" sx={{ p: 4 }}>
+          <p className="text-center text-muted-foreground py-8">
             ไม่มีภาพเพิ่มเติมสำหรับ Design นี้
-          </Typography>
+          </p>
         )}
-      </Box>
+      </DialogContent>
     </Dialog>
   );
 }

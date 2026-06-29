@@ -10,7 +10,7 @@ export default function DashboardPage() {
       <div className="absolute inset-0 bg-[radial-gradient(100%_60%_at_50%_0%,rgba(255,255,255,0.06),rgba(255,255,255,0)_60%)]" />
 
       {/* คอนเทนต์ */}
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-4" style={{ paddingTop: "var(--page-top)" }}>
         <UserProfileCard />
       </div>
     </div>

@@ -1,72 +1,43 @@
-import { Box, Stack, Typography, Button } from "@mui/material";
 import { motion } from "framer-motion";
 
+const servicesMain = [
+  { title: "REBUILD", subtitle: "สร้างใหม่" },
+  { title: "RENOVATE", subtitle: "ปรับปรุง ต่อเติม - ซ่อมแซม" },
+  { title: "REDESIGN & DECORATE", subtitle: "ออกแบบตกแต่งภายใน" },
+];
+
 export default function ServiceBlock() {
-  const servicesMain = [
-    { title: "REBUILD", subtitle: "สร้างใหม่" },
-    { title: "RENOVATE", subtitle: "ปรับปรุง ต่อเติม - ซ่อมแซม" },
-    { title: "REDESIGN & DECORATE", subtitle: "ออกแบบตกแต่งภายใน" },
-  ];
-
   return (
-    <Box sx={{ textAlign: "center", mt: { xs: 4, md: 8 }, }}>
-      <Typography
-        variant="h4"
-        color="black"
-        fontWeight="light"
-        mb={4}
-        sx={{ letterSpacing: "0.4rem" }}
-      >
+    <div className="text-center mt-4 md:mt-8">
+      <h4 className="text-black font-light tracking-[0.4rem] mb-8 text-2xl md:text-3xl">
         OUR SERVICE
-      </Typography>
+      </h4>
 
-      <Stack spacing={{ xs: 3, md: 4 }} alignItems="center" width="100%">
+      <div className="flex flex-col items-center gap-6 md:gap-8 w-full">
         {servicesMain.map((item, idx) => (
-          <Stack
-            key={idx}
-            spacing={{ xs: 1, md: 1.25 }}
-            alignItems="center"
-            sx={{ width: "auto" }}
-          >
-            <Button
-              variant="contained"
-              disableElevation
-              component={motion.button}
+          <div key={idx} className="flex flex-col items-center gap-2 md:gap-3">
+            <motion.button
               whileHover={{ scale: 1.03 }}
-              sx={{
-                display: "inline-flex",
-                width: "auto",
-                minWidth: 0,
-                minHeight: { xs: 60, md: 80 },
-                px: { xs: 5, md: 7 },
-                bgcolor: "#f5ede5",
-                color: "black",
-                fontWeight: 700,
-                letterSpacing: "0.35em",
-                textAlign: "center",
-                fontSize: { xs: "0.95rem", md: "1.05rem" },
-                borderRadius: "9999px",
-                "&:hover": { bgcolor: "#e5dbcf" },
+              className="inline-flex items-center justify-center font-bold tracking-[0.35em] text-center cursor-pointer text-black transition-colors rounded-full"
+              style={{
+                backgroundColor: "#f5ede5",
+                minHeight: "clamp(60px, 8vw, 80px)",
+                paddingLeft: "clamp(1.25rem, 4vw, 1.75rem)",
+                paddingRight: "clamp(1.25rem, 4vw, 1.75rem)",
+                fontSize: "clamp(0.95rem, 2vw, 1.05rem)",
               }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#e5dbcf")}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#f5ede5")}
             >
               {item.title}
-            </Button>
+            </motion.button>
 
-            <Typography
-              variant="subtitle2"
-              sx={{
-                fontWeight: 600,
-                textAlign: "center",
-                letterSpacing: "0.2em",
-                fontSize: { xs: "0.9rem", md: "1rem" },
-                opacity: 0.9,
-              }}
-            >
+            <p className="font-semibold text-center tracking-[0.2em] text-[0.9rem] md:text-[1rem] opacity-90">
               {item.subtitle}
-            </Typography>
-          </Stack>
+            </p>
+          </div>
         ))}
-      </Stack>
-    </Box>
+      </div>
+    </div>
   );
 }

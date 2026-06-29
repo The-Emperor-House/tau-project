@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Box } from "@mui/material";
+import { cn } from "@/shared/lib/cn";
 
 export default function LogoSwap({
   href = "/",
@@ -23,21 +23,17 @@ export default function LogoSwap({
   }, [accentSrc]);
 
   return (
-    <Box
-      component={Link}
+    <Link
       href={href}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      sx={{
-        position: "relative",
-        display: showOnXs ? "flex" : { xs: "none", md: "flex" },
-        alignItems: "center",
-        textDecoration: "none",
-        width,
-        height,
-      }}
+      className={cn(
+        "relative flex items-center no-underline",
+        !showOnXs && "hidden md:flex"
+      )}
+      style={{ width, height }}
     >
-      <Box sx={{ position: "relative", width, height }}>
+      <div className="relative" style={{ width, height }}>
         <Image
           src={lightSrc}
           alt="Taurus Logo"
@@ -45,17 +41,9 @@ export default function LogoSwap({
           height={height}
           priority
           draggable={false}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            transition: "opacity .25s ease",
-            opacity: hover ? 0 : 1,
-          }}
+          className="absolute inset-0 w-full h-full object-contain transition-opacity duration-200"
+          style={{ opacity: hover ? 0 : 1 }}
         />
-
         <Image
           src={accentSrc}
           alt=""
@@ -63,17 +51,10 @@ export default function LogoSwap({
           width={width}
           height={height}
           draggable={false}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            transition: "opacity .25s ease",
-            opacity: hover ? 1 : 0,
-          }}
+          className="absolute inset-0 w-full h-full object-contain transition-opacity duration-200"
+          style={{ opacity: hover ? 1 : 0 }}
         />
-      </Box>
-    </Box>
+      </div>
+    </Link>
   );
 }

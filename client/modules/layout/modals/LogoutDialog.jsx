@@ -1,19 +1,10 @@
 "use client";
 
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Typography,
-  Slide,
-} from "@mui/material";
-import { forwardRef, useEffect } from "react";
-
-const Transition = forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+  Dialog, DialogContent, DialogDescription,
+  DialogFooter, DialogHeader, DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { Button } from "@/shared/components/ui/button";
 
 export default function LogoutDialog({
   open,
@@ -23,48 +14,22 @@ export default function LogoutDialog({
   confirmText = "Log Out",
   cancelText = "Cancel",
 }) {
-  // ปิดด้วย ESC → ส่ง false (ยกเลิก)
-  useEffect(() => {
-    const handleEsc = (event) => {
-      if (event.key === "Escape") onClose?.(false);
-    };
-    if (open) document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
-  }, [open, onClose]);
-
-  const handleCancel = () => onClose?.(false);
-  const handleConfirm = () => onClose?.(true);
-
   return (
-    <Dialog
-      open={open}
-      onClose={handleCancel}
-      TransitionComponent={Transition}
-      keepMounted
-      fullWidth
-      maxWidth="xs"
-      sx={{
-        "& .MuiPaper-root": { borderRadius: 3 },
-        backdropFilter: "blur(4px)",
-      }}
-    >
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent>
-        <Typography color="text.secondary">{message}</Typography>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose?.(false)}>
+      <DialogContent className="max-w-xs">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{message}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onClose?.(false)}>
+            {cancelText}
+          </Button>
+          <Button variant="default" onClick={() => onClose?.(true)}>
+            {confirmText}
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleCancel}>{cancelText}</Button>
-        <Button
-          onClick={handleConfirm}
-          variant="contained"
-          sx={{
-            bgcolor: "primary.main",
-            "&:hover": { bgcolor: "primary.dark" },
-          }}
-        >
-          {confirmText}
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }

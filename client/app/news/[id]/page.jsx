@@ -2,13 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { Box, Typography, Grid, Skeleton, Alert, Divider } from "@mui/material";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import MediaEmbed from "@/shared/components/ui/MediaEmbed";
 
 const FALLBACK_COVER = "/images/default-news.jpg";
 const ACCENT = "#cc8f2a";
 
-/* ทำ URL ให้ใช้ได้ทุกกรณี */
 function resolveUrl(u) {
   if (!u) return null;
   if (u.startsWith("https://")) return u;
@@ -21,7 +20,6 @@ function resolveUrl(u) {
   return u;
 }
 
-/* label ซ้าย เช่น "TAURUS :" จาก heading1 */
 function extractLabel(h1 = "") {
   const s = String(h1).trim();
   if (!s) return "NEWS :";
@@ -29,7 +27,6 @@ function extractLabel(h1 = "") {
   return `${s.split(/\s+/)[0].toUpperCase()} :`;
 }
 
-/* วันที่หัวใหญ่กลางหน้า (ใช้ createdAt เดี่ยว ๆ) */
 function formatDateLine(d) {
   const dt = new Date(d);
   const day = dt.getDate();
@@ -76,206 +73,105 @@ export default function NewsDetail() {
   );
 
   return (
-    <Box
-      sx={{
-        bgcolor: "#000",
-        color: "#fff",
-        minHeight: "100svh",
-        width: "100%",
-        pt: { xs: "120px", md: "calc(var(--nav-h) + 0px)" },
-        display: "flex",          // ✅ กัน footer ลอย
-        flexDirection: "column",  // ✅
-      }}
+    <div
+      className="bg-black text-white min-h-screen w-full flex flex-col"
+      style={{ paddingTop: "var(--page-top)" }}
     >
-      <Box
-        sx={{
-          maxWidth: 1200,
-          mx: "auto",
-          px: { xs: 2, md: 3 },
-          pb: 8,
-          flex: 1,                // ✅ ดันให้คอนเทนต์กินพื้นที่ที่เหลือ
-          width: "100%",
-        }}
-      >
-        {err && <Alert severity="error" sx={{ mb: 2 }}>{err}</Alert>}
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6 pb-16 flex-1 w-full">
+        {err && (
+          <div className="mb-4 px-4 py-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg">
+            {err}
+          </div>
+        )}
 
-        {/* เส้นคั่น + วันที่ตัวใหญ่กลางหน้า */}
-        <Divider sx={{ borderColor: "rgba(255,255,255,0.12)", mb: 1.5 }} />
-        <Typography
-          sx={{
-            textAlign: "center",
-            fontWeight: 800,
-            letterSpacing: ".08em",
-            fontSize: { xs: "1.2rem", md: "1.8rem" },
-            textTransform: "uppercase",
-            mb: { xs: 2, md: 3 },
-            whiteSpace: "nowrap",            // ✅ ป้องกันยาวเกิน
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-          title={dateLine}
-        >
-          {loading ? <Skeleton width={260} sx={{ mx: "auto" }} /> : dateLine}
-        </Typography>
+        {/* Date line */}
+        <hr className="border-white/12 mb-3" />
+        <p className="text-center font-extrabold tracking-[0.08em] text-[1.2rem] md:text-[1.8rem] uppercase mb-6 md:mb-8 truncate">
+          {loading ? <Skeleton className="w-64 h-8 mx-auto" /> : dateLine}
+        </p>
 
-        {/* ===== 2 คอลัมน์: ซ้ายสื่อหลัก / ขวาข้อความ ===== */}
-        <Grid container spacing={{ xs: 2, md: 4 }}>
-          {/* ซ้าย: วิดีโอถ้ามี ไม่งั้นรูปปก */}
-          <Grid size={{ xs: 12, md: 8 }}>
-            <Box
-              sx={{
-                position: "relative",
-                width: "100%",
-                aspectRatio: "16 / 9",
-                overflow: "hidden",
-                borderRadius: 2,
-                bgcolor: "#111",
-              }}
-            >
+        {/* 2-column layout */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8">
+          {/* Left: media */}
+          <div className="md:col-span-8">
+            <div className="relative w-full aspect-video overflow-hidden rounded-xl bg-neutral-900">
               {loading ? (
-                <Skeleton variant="rectangular" sx={{ position: "absolute", inset: 0 }} />
+                <Skeleton className="absolute inset-0 w-full h-full" />
               ) : item?.videoUrl ? (
-                <Box sx={{ position: "absolute", inset: 0 }}>
+                <div className="absolute inset-0">
                   <MediaEmbed url={item.videoUrl} />
-                </Box>
+                </div>
               ) : (
                 <img
                   src={imgSrc || FALLBACK_COVER}
                   alt={item?.heading1 || "news cover"}
                   onError={() => setImgSrc(FALLBACK_COVER)}
-                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  className="absolute inset-0 w-full h-full object-cover block"
                   loading="eager"
                 />
               )}
-            </Box>
-          </Grid>
+            </div>
+          </div>
 
-          {/* ขวา: label + title + body (ย่อหน้า) */}
-          <Grid size={{ xs: 12, md: 4 }}>
+          {/* Right: text */}
+          <div className="md:col-span-4">
             {loading ? (
-              <>
-                <Skeleton width="35%" height={28} sx={{ mb: 1 }} />
-                <Skeleton width="80%" height={42} sx={{ mb: 2 }} />
-                <Skeleton width="100%" height={18} />
-                <Skeleton width="95%" height={18} />
-                <Skeleton width="90%" height={18} />
-              </>
+              <div className="space-y-3">
+                <Skeleton className="h-7 w-[35%]" />
+                <Skeleton className="h-10 w-[80%]" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-[95%]" />
+                <Skeleton className="h-4 w-[90%]" />
+              </div>
             ) : (
               <>
-                {/* label — 1 บรรทัด */}
-                <Typography
-                  sx={{
-                    color: ACCENT,
-                    fontWeight: 800,
-                    letterSpacing: ".06em",
-                    textTransform: "uppercase",
-                    fontSize: { xs: "1rem", md: "1.15rem" },
-                    mb: 1,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 1,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                  title={extractLabel(item?.heading1)}
+                <p
+                  className="font-extrabold tracking-[0.06em] uppercase text-[1rem] md:text-[1.15rem] mb-2 truncate"
+                  style={{ color: ACCENT }}
                 >
                   {extractLabel(item?.heading1)}
-                </Typography>
-
-                {/* หัวข้อ — 3 บรรทัด */}
-                <Typography
-                  sx={{
-                    fontWeight: 900,
-                    fontSize: { xs: "1.6rem", md: "2rem" },
-                    lineHeight: 1.15,
-                    mb: 2,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    wordBreak: "break-word",
-                  }}
-                  title={item?.heading2 || item?.heading1 || "-"}
-                >
+                </p>
+                <p className="font-black text-[1.6rem] md:text-[2rem] leading-tight mb-4 line-clamp-3 break-words">
                   {item?.heading2 || item?.heading1 || "-"}
-                </Typography>
-
-                {/* เนื้อหา — ปล่อยเต็ม แต่กันคำยาว ๆ แตกบรรทัด */}
+                </p>
                 {item?.body && (
-                  <Typography
-                    sx={{
-                      whiteSpace: "pre-wrap",
-                      lineHeight: 1.9,
-                      overflowWrap: "anywhere", // ✅ กันคำติดกันยาวๆ
-                    }}
-                  >
+                  <p className="whitespace-pre-wrap leading-[1.9] overflow-wrap-anywhere">
                     {item.body}
-                  </Typography>
+                  </p>
                 )}
               </>
             )}
-          </Grid>
-        </Grid>
+          </div>
+        </div>
 
-        {/* ===== Gallery ด้านล่าง ===== */}
+        {/* Gallery */}
         {!loading && (item?.images?.length ?? 0) > 0 && (
-          <Box sx={{ position: "relative", zIndex: 0, mt: 4 }}>
-            <Typography
-              variant="h6"
-              fontWeight={700}
-              sx={{
-                mb: 2,
-                display: "-webkit-box",
-                WebkitLineClamp: 1,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-              title={`Gallery (${item.images.length})`}
-            >
+          <div className="relative z-0 mt-8">
+            <p className="font-bold text-lg mb-4 truncate">
               Gallery ({item.images.length})
-            </Typography>
-            <Grid container spacing={2}>
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {item.images.map((img, i) => {
                 const src = resolveUrl(img?.imageUrl);
                 return (
-                  <Grid size={{ xs: 6, sm: 4, md: 3 }} key={img?.id ?? i}>
-                    <Box
-                      sx={{
-                        position: "relative",
-                        width: "100%",
-                        aspectRatio: "1 / 1",
-                        overflow: "hidden",
-                        borderRadius: 1,
-                        bgcolor: "#111",
-                      }}
-                    >
-                      <img
-                        src={src || FALLBACK_COVER}
-                        alt=""
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.src = FALLBACK_COVER;
-                        }}
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          display: "block",
-                        }}
-                      />
-                    </Box>
-                  </Grid>
+                  <div
+                    key={img?.id ?? i}
+                    className="relative w-full aspect-square overflow-hidden rounded bg-neutral-900"
+                  >
+                    <img
+                      src={src || FALLBACK_COVER}
+                      alt=""
+                      loading="lazy"
+                      onError={(e) => { e.currentTarget.src = FALLBACK_COVER; }}
+                      className="absolute inset-0 w-full h-full object-cover block"
+                    />
+                  </div>
                 );
               })}
-            </Grid>
-          </Box>
+            </div>
+          </div>
         )}
-      </Box>
-      {/* Footer ของแอปจะตามอยู่ข้างล่าง เพราะเราใช้ flex column + flex:1 ด้านบน */}
-    </Box>
+      </div>
+    </div>
   );
 }

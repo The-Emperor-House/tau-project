@@ -1,20 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Skeleton,
-  ToggleButtonGroup,
-  ToggleButton,
-} from "@mui/material";
-import Grid from "@mui/material/Grid";
-import FurnitureCard from "./components/FurnitureCard";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import FurnitureCard from "./components/FurnitureCard";
 
-const BG = "#404040";
-const TEXT = "#fff";
 const ACCENT = "#BFA68A";
+const TYPES = ["ALL", "BUILT_IN", "LOOSE", "CUSTOM"];
+const TYPE_LABELS = { ALL: "ALL", BUILT_IN: "BUILT-IN", LOOSE: "LOOSE", CUSTOM: "CUSTOM" };
 
 export default function FurnitureListPage() {
   const router = useRouter();
@@ -44,96 +37,65 @@ export default function FurnitureListPage() {
   }, [type]);
 
   return (
-    <Box
-      sx={{
-        bgcolor: BG,
-        color: TEXT,
-        minHeight: "100svh",
-        pt: { xs: "120px", md: "calc(var(--nav-h) + 0px)" },
-        pb: 8,
-      }}
+    <div
+      className="bg-[#404040] text-white min-h-screen pb-16"
+      style={{ paddingTop: "var(--page-top)" }}
     >
-      <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, md: 3 } }}>
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6">
         {/* Header */}
-        <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, md: 3 } }}>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "1fr auto 1fr",
-              alignItems: "center",
-              gap: 2,
-              mb: 3,
-            }}
-          >
-            <Typography
-              sx={{
-                gridColumn: "2",
-                justifySelf: "center",
-                fontWeight: 200,
-                letterSpacing: { xs: ".12em", md: ".16em" },
-                fontSize: { xs: "1.6rem", md: "2.2rem" },
-                textTransform: "uppercase",
-                lineHeight: 1,
-              }}
-            >
-              Furniture
-            </Typography>
-          </Box>
-        </Box>
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 mb-6">
+          <div />
+          <p className="text-center font-extralight tracking-[0.12em] md:tracking-[0.16em] text-[1.6rem] md:text-[2.2rem] uppercase leading-none">
+            Furniture
+          </p>
+          <div />
+        </div>
 
         {/* Filter */}
-        <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
-          <ToggleButtonGroup
-            value={type}
-            exclusive
-            onChange={(_, v) => v && setType(v)}
-            sx={{
-              "& .MuiToggleButton-root": {
-                color: TEXT,
-                borderColor: "rgba(255,255,255,.2)",
-              },
-              "& .Mui-selected": {
-                bgcolor: ACCENT,
-                color: TEXT,
-                "&:hover": { bgcolor: "rgba(191,166,138,.8)" },
-              },
-            }}
-          >
-            <ToggleButton value="ALL">ALL</ToggleButton>
-            <ToggleButton value="BUILT_IN">BUILT-IN</ToggleButton>
-            <ToggleButton value="LOOSE">LOOSE</ToggleButton>
-            <ToggleButton value="CUSTOM">CUSTOM</ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
+        <div className="flex justify-center mb-8">
+          <div className="flex border border-white/20 rounded overflow-hidden">
+            {TYPES.map((t) => (
+              <button
+                key={t}
+                onClick={() => setType(t)}
+                className="px-4 py-2 text-sm font-medium transition-colors"
+                style={{
+                  backgroundColor: type === t ? ACCENT : "transparent",
+                  color: type === t ? "#111" : "#fff",
+                  borderRight: t !== "CUSTOM" ? "1px solid rgba(255,255,255,0.2)" : undefined,
+                }}
+                onMouseEnter={(e) => {
+                  if (type !== t) e.currentTarget.style.backgroundColor = "rgba(191,166,138,0.15)";
+                }}
+                onMouseLeave={(e) => {
+                  if (type !== t) e.currentTarget.style.backgroundColor = "transparent";
+                }}
+              >
+                {TYPE_LABELS[t]}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Grid */}
-        <Grid container spacing={3}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
-                  <Skeleton
-                    variant="rectangular"
-                    sx={{
-                      width: "100%",
-                      aspectRatio: "16 / 9",
-                      mb: 1.5,
-                      bgcolor: "rgba(255,255,255,.08)",
-                    }}
-                  />
-                  <Skeleton width="80%" height={24} />
-                  <Skeleton width="60%" height={20} />
-                </Grid>
+                <div key={i}>
+                  <Skeleton className="w-full aspect-video mb-3 bg-white/10" />
+                  <Skeleton className="h-6 w-[80%] bg-white/10" />
+                  <Skeleton className="h-5 w-[60%] mt-1.5 bg-white/10" />
+                </div>
               ))
             : items.map((it) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={it.id}>
-                  <FurnitureCard
-                    item={it}
-                    onClick={() => router.push(`/furniture/${it.id}`)}
-                  />
-                </Grid>
+                <FurnitureCard
+                  key={it.id}
+                  item={it}
+                  onClick={() => router.push(`/furniture/${it.id}`)}
+                />
               ))}
-        </Grid>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,16 +1,14 @@
 'use client';
 
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  CircularProgress,
-} from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useModalContext } from '../../../shared/hooks/useModalContext';
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 export default function ChangePasswordDialog({ open, onClose, user, token }) {
   const { showModal, closeModal } = useModalContext();
@@ -44,33 +42,22 @@ export default function ChangePasswordDialog({ open, onClose, user, token }) {
     setIsSubmitting(true);
     const minDelay = 500;
     const startTime = Date.now();
-
     try {
       showModal('loading', { message: 'กำลังเปลี่ยนรหัสผ่าน...' });
-
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/change-password`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(form),
       });
-
       const elapsed = Date.now() - startTime;
       if (elapsed < minDelay) await new Promise((r) => setTimeout(r, minDelay - elapsed));
-
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: 'เกิดข้อผิดพลาด' }));
         throw new Error(err.message || 'เกิดข้อผิดพลาด');
       }
-
       closeModal();
       showModal('success', { message: 'เปลี่ยนรหัสผ่านสำเร็จ!' });
-
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      setTimeout(() => { onClose(); }, 1000);
     } catch (error) {
       closeModal();
       showModal('error', { message: error.message || 'เกิดข้อผิดพลาด' });
@@ -88,62 +75,54 @@ export default function ChangePasswordDialog({ open, onClose, user, token }) {
     });
   };
 
+  const handleClose = () => { setFormError({}); onClose(); };
+
   return (
-    <Dialog
-      open={open}
-      onClose={() => {
-        setFormError({});
-        onClose();
-      }}
-      fullWidth
-      maxWidth="sm"
-      PaperProps={{
-        sx: (theme) => ({
-          bgcolor: theme.palette.background.paper,
-          color: theme.palette.text.primary,
-        }),
-      }}
-    >
-      <DialogTitle sx={{ fontWeight: 700 }}>เปลี่ยนรหัสผ่าน</DialogTitle>
-      <DialogContent component="form" onSubmit={handleSubmit} sx={{ pt: 2 }}>
-        <TextField
-          label="รหัสผ่านเดิม"
-          name="oldPassword"
-          type="password"
-          value={form.oldPassword}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          error={!!formError.oldPassword}
-          helperText={formError.oldPassword}
-        />
-        <TextField
-          label="รหัสผ่านใหม่"
-          name="newPassword"
-          type="password"
-          value={form.newPassword}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          error={!!formError.newPassword}
-          helperText={formError.newPassword}
-        />
+    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="font-bold">เปลี่ยนรหัสผ่าน</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-1">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="oldPassword">รหัสผ่านเดิม</Label>
+            <Input
+              id="oldPassword"
+              name="oldPassword"
+              type="password"
+              value={form.oldPassword}
+              onChange={handleChange}
+              className={formError.oldPassword ? "border-destructive" : ""}
+            />
+            {formError.oldPassword && <p className="text-sm text-destructive">{formError.oldPassword}</p>}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="newPassword">รหัสผ่านใหม่</Label>
+            <Input
+              id="newPassword"
+              name="newPassword"
+              type="password"
+              value={form.newPassword}
+              onChange={handleChange}
+              className={formError.newPassword ? "border-destructive" : ""}
+            />
+            {formError.newPassword && <p className="text-sm text-destructive">{formError.newPassword}</p>}
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
+              ยกเลิก
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="font-semibold">
+              {isSubmitting ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />กำลังบันทึก...</>
+              ) : "บันทึก"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={() => { setFormError({}); onClose(); }} disabled={isSubmitting}>
-          ยกเลิก
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          color="primary"
-          disabled={isSubmitting}
-          startIcon={isSubmitting && <CircularProgress size={20} />}
-          sx={{ fontWeight: 600 }}
-        >
-          {isSubmitting ? 'กำลังบันทึก...' : 'บันทึก'}
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }

@@ -1,23 +1,20 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Box, Card, Button, Typography, Skeleton } from '@mui/material';
 import Image from 'next/image';
+import { Skeleton } from '@/shared/components/ui/skeleton';
+
+const ACCENT = '#BFA68A';
+const FALLBACK = '/images/default-data.jpg';
 
 export default function GridCard({ data, onClick }) {
-  const palette = {
-    accent: '#BFA68A',
-    panel: '#FFFFFF',
-    text: '#111111',
-  };
-
   const srcCandidate = useMemo(
     () =>
       data?.coverUrl ||
       data?.imageUrl ||
       data?.images?.[0]?.imageUrl ||
       data?.image ||
-      '/images/default-data.jpg',
+      FALLBACK,
     [data]
   );
 
@@ -35,82 +32,54 @@ export default function GridCard({ data, onClick }) {
       : data?.area || '';
 
   return (
-    <Card
-      elevation={0}
-      sx={{ width: '100%', borderRadius: 0, boxShadow: 'none', overflow: 'hidden', bgcolor: 'transparent' }}
-    >
-      <Box sx={{ position: 'relative', width: '100%', cursor: 'pointer' }} onClick={() => onClick?.(data)}>
-        {/* 4:3 */}
-        <Box sx={{ pt: '75%' }} />
+    <div className="w-full overflow-hidden">
+      <div
+        className="relative w-full cursor-pointer"
+        style={{ paddingTop: '75%' }}
+        onClick={() => onClick?.(data)}
+      >
         {!loaded && (
-          <Skeleton variant="rectangular" sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+          <Skeleton className="absolute inset-0 w-full h-full" />
         )}
         <Image
           src={imgSrc}
           alt={data?.name || data?.title || 'project cover'}
           fill
           sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          style={{ objectFit: 'cover' }}
+          className="object-cover"
           unoptimized
           onLoad={() => setLoaded(true)}
           onError={() => {
-            if (imgSrc !== '/images/default-data.jpg') setImgSrc('/images/default-data.jpg');
+            if (imgSrc !== FALLBACK) setImgSrc(FALLBACK);
           }}
         />
-      </Box>
+      </div>
 
-      <Box sx={{ bgcolor: palette.panel, px: { xs: 3, md: 3.5 }, py: { xs: 3, md: 3.25 }, textAlign: 'center' }}>
-        <Typography sx={{ color: palette.text, fontSize: { xs: '1.05rem', md: '1.15rem' }, lineHeight: 1.7 }}>
+      <div className="bg-white px-6 md:px-7 py-6 md:py-7 text-center">
+        <p className="text-[#111] text-[1.05rem] md:text-[1.15rem] leading-[1.7]">
           {data?.name || ''}
-        </Typography>
-
+        </p>
         {data?.details && (
-          <Typography
-            sx={{
-              color: palette.text,
-              fontSize: { xs: '1.05rem', md: '1.15rem' },
-              lineHeight: 1.7,
-              whiteSpace: 'pre-line',
-              mt: 0.25,
-            }}
-          >
+          <p className="text-[#111] text-[1.05rem] md:text-[1.15rem] leading-[1.7] whitespace-pre-line mt-1">
             {data.details}
-          </Typography>
+          </p>
         )}
-
         {area && (
-          <Typography
-            sx={{
-              mt: 1,
-              color: palette.text,
-              fontWeight: 800,
-              fontSize: { xs: '1.25rem', md: '1.35rem' },
-              letterSpacing: '.01em',
-            }}
-          >
+          <p className="mt-2 text-[#111] font-extrabold text-[1.25rem] md:text-[1.35rem] tracking-tight">
             {area}
-          </Typography>
+          </p>
         )}
-
-        <Button
+        <button
           onClick={() => onClick?.(data)}
-          fullWidth
-          sx={{
-            mt: { xs: 2.2, md: 2.6 },
-            py: { xs: 1.3, md: 1.4 },
-            borderRadius: '999px',
-            bgcolor: palette.accent,
-            color: '#fff',
-            textTransform: 'none',
-            fontSize: { xs: '1.05rem', md: '1.1rem' },
-            fontWeight: 600,
-            '&:hover': { bgcolor: '#a99076', textDecoration: 'underline' },
-          }}
+          className="mt-5 md:mt-6 w-full py-3 md:py-3.5 rounded-full text-white font-semibold text-[1.05rem] md:text-[1.1rem] transition-colors"
+          style={{ backgroundColor: ACCENT }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#a99076')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = ACCENT)}
           aria-label="View project"
         >
           View
-        </Button>
-      </Box>
-    </Card>
+        </button>
+      </div>
+    </div>
   );
 }

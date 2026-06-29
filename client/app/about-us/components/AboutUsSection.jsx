@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Box, Typography, Button } from "@mui/material";
 import { motion } from "framer-motion";
 import AboutBlock from "./AboutBlock";
 import ServiceBlock from "./ServiceBlock";
 import IconListBlock from "./IconListBlock";
 
 const servicesList = ["สร้างใหม่", "ปรับปรุงต่อเติม - ซ่อมแซม", "ออกแบบตกแต่งภายใน"];
+const categories = ["HOME", "CONDOMINIUM", "HOTEL", "OFFICE"];
 
 const fadeInUpVariant = {
   hidden: { opacity: 0, y: 50 },
@@ -26,130 +26,74 @@ const fadeInUpVariant = {
 };
 
 export default function AboutUsSection() {
-  const categories = [
-    { name: "HOME" },
-    { name: "CONDOMINIUM" },
-    { name: "HOTEL" },
-    { name: "OFFICE" },
-  ];
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 md:px-8 lg:px-16">
       {/* 1) ABOUT */}
-      <Box className="relative">
+      <div className="relative">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={fadeInUpVariant}
           custom={1}
-          style={{ width: "100%", height: "100%" }}
+          className="w-full h-full"
         >
           <AboutBlock />
         </motion.div>
-
         <div className="hidden md:block absolute right-[-12px] top-0 h-full w-px bg-black/20" />
-      </Box>
+      </div>
 
       {/* 2) SERVICE */}
-      <Box className="relative">
+      <div className="relative">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={fadeInUpVariant}
           custom={2}
-          style={{ width: "100%", height: "100%" }}
+          className="w-full h-full"
         >
           <ServiceBlock />
         </motion.div>
-      </Box>
+      </div>
 
       {/* 3) ICON LIST */}
-      <Box>
+      <div>
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={fadeInUpVariant}
           custom={3}
-          style={{ width: "100%", height: "100%" }}
+          className="w-full h-full"
         >
           <IconListBlock />
         </motion.div>
-      </Box>
+      </div>
 
       {/* BOTTOM TEXT + READ MORE */}
-      <Box className="md:col-span-3 mt-26">
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            alignItems: { xs: "center", md: "center" },
-            justifyContent: { xs: "center", md: "space-between" },
-            gap: 2,
-            textAlign: { xs: "center", md: "left" },
-          }}
-        >
-          {/* ซ้าย: ข้อความ 2 บรรทัด */}
-          <Box sx={{ width: "100%" }}>
-            <Typography
-              variant="body1"
-              sx={{
-                fontWeight: 500,
-                mb: 1,
-                letterSpacing: "0.05rem",
-                fontSize: { xs: "0.8rem", sm: "1rem", md: "1.2rem" },
-                ml: { xs: 0, md: 6 },
-              }}
-            >
+      <div className="md:col-span-3 mt-26">
+        <div className="flex flex-col md:flex-row items-center justify-center md:justify-between gap-4 text-center md:text-left">
+          <div className="w-full">
+            <p className="font-medium tracking-[0.05rem] text-[0.8rem] sm:text-[1rem] md:text-[1.2rem] md:ml-6 mb-1 break-words" style={{ wordBreak: "break-word" }}>
               {servicesList.join(" | ")}
-            </Typography>
+            </p>
+            <p className="font-light text-black tracking-[0.05rem] text-[0.95rem] sm:text-[1rem] md:text-[1.2rem] opacity-80 md:ml-12 break-words" style={{ wordBreak: "break-word" }}>
+              {categories.join(" | ")}
+            </p>
+          </div>
 
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 300,
-                color: "#000",
-                letterSpacing: "0.05rem",
-                fontSize: { xs: "0.95rem", sm: "1rem", md: "1.2rem" },
-                opacity: 0.8,
-                ml: { xs: 0, md: 13 },
-              }}
-            >
-              {categories.map((c) => c.name).join(" | ")}
-            </Typography>
-          </Box>
-
-          {/* ขวา: ปุ่ม */}
-          <Button
-            component={Link}
+          <Link
             href="/about-us"
-            variant="contained"
-            disableElevation
-            sx={{
-              bgcolor: "#ab9685",
-              color: "#ffffff",
-              borderRadius: "9999px",
-              letterSpacing: "0.25rem",
-              fontWeight: 800,
-              px: 3.5,
-              py: 1.1,
-              textTransform: "uppercase",
-              "&:hover": { bgcolor: "#9b8575" },
-              "&:active": { bgcolor: "#8f7a69" },
-              "&:focus-visible": {
-                outline: "2px solid rgba(171,150,133,.5)",
-                outlineOffset: 2,
-              },
-              alignSelf: { xs: "center", md: "unset" },
-              mt: { xs: 1.5, md: 0 },
-            }}
+            className="inline-flex items-center px-7 py-2.5 rounded-full font-extrabold tracking-[0.25rem] uppercase text-white transition-colors shrink-0 mt-2 md:mt-0"
+            style={{ backgroundColor: "#ab9685" }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#9b8575")}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#ab9685")}
           >
             READ&nbsp;MORE
-          </Button>
-        </Box>
-      </Box>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

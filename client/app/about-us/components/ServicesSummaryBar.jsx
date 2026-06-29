@@ -1,22 +1,14 @@
 "use client";
 
-import { Box, Typography } from "@mui/material";
-
-export default function ServicesSummaryBar({
-  services = [],
-  categories = [],
-}) {
+export default function ServicesSummaryBar({ services = [], categories = [] }) {
   return (
-    <Box sx={{ textAlign: "center", pb: { xs: 6, md: 8 } }}>
-      <Typography variant="body1" sx={{ fontWeight: 500, mb: 1.5, letterSpacing: "0.05rem" }}>
+    <div className="text-center pb-12 md:pb-16">
+      <p className="font-medium mb-3 tracking-[0.05rem] break-words" style={{ wordBreak: "break-word" }}>
         {services.join(" | ")}
-      </Typography>
-      <Typography
-        variant="body2"
-        sx={{ fontWeight: 300, color: "#000", letterSpacing: "0.05rem" }}
-      >
+      </p>
+      <p className="font-light text-black tracking-[0.05rem] text-sm break-words" style={{ wordBreak: "break-word" }}>
         {categories.map(c => c.name).join(" | ")}
-      </Typography>
-    </Box>
+      </p>
+    </div>
   );
 }

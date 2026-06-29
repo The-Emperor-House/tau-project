@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Box, Typography, Button, Skeleton, Alert, Divider } from "@mui/material";
-import Grid from "@mui/material/Grid";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import MediaEmbed from "@/shared/components/ui/MediaEmbed";
 
 const ACCENT = "#BFA68A";
@@ -23,8 +22,11 @@ const resolveUrl = (u) => {
   return u;
 };
 const dateLine = (d) =>
-  d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }).toUpperCase() : "";
-
+  d
+    ? new Date(d)
+        .toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+        .toUpperCase()
+    : "";
 const extractLabel = (h1 = "") => {
   const s = String(h1).trim();
   if (!s) return "NEWS :";
@@ -44,7 +46,9 @@ export default function NewsListPage() {
       try {
         setLoading(true);
         setErr("");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/news`, { signal: ctrl.signal });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/news`, {
+          signal: ctrl.signal,
+        });
         const data = res.ok ? await res.json() : [];
         const sorted = Array.isArray(data)
           ? [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -61,85 +65,65 @@ export default function NewsListPage() {
 
   const pageItems = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
-    return allItems.slice(start, end);
+    return allItems.slice(start, start + PAGE_SIZE);
   }, [allItems, page]);
 
   const totalPages = Math.max(1, Math.ceil(allItems.length / PAGE_SIZE));
   const canNext = page < totalPages;
 
   return (
-    <Box
-      sx={{
-        bgcolor: "#404040",
-        color: "#fff",
-        minHeight: "100svh",
-        pt: { xs: "140px", md: "250px" },
-        display: "flex",            // 👈 ทำเป็นคอลัมน์ทั้งหน้า
-        flexDirection: "column",    // 👈 เพื่อดัน footer ไปล่าง
-      }}
+    <div
+      className="bg-[#404040] text-white min-h-screen flex flex-col"
+      style={{ paddingTop: "var(--page-top)" }}
     >
-      <Box
-        sx={{
-          maxWidth: 1200,
-          mx: "auto",
-          px: { xs: 2, md: 3 },
-          pb: 8,
-          flex: 1,                 // 👈 กินพื้นที่ที่เหลือ (footer จะไม่ลอย)
-          width: "100%",
-        }}
-      >
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6 pb-16 flex-1 w-full">
         {/* Header */}
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 2, mb: 4 }}>
-          <Box sx={{ height: 1, bgcolor: "rgba(0, 0, 0, 1)" }} />
-          <Typography
-            sx={{
-              fontWeight: 900,
-              letterSpacing: ".12em",
-              fontSize: { xs: "1.6rem", md: "2.4rem" },
-              textTransform: "uppercase",
-              textAlign: "center",
-            }}
-          >
-            News & Events
-          </Typography>
-          <Box sx={{ height: 1, bgcolor: "rgba(0, 0, 0, 1)" }} />
-        </Box>
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 mb-8">
+          <div className="h-px bg-black" />
+          <p className="font-black tracking-[0.12em] text-[1.6rem] md:text-[2.4rem] uppercase text-center">
+            News &amp; Events
+          </p>
+          <div className="h-px bg-black" />
+        </div>
 
-        {err && <Alert severity="error" sx={{ mb: 2 }}>{err}</Alert>}
+        {err && (
+          <div className="mb-4 px-4 py-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg">
+            {err}
+          </div>
+        )}
 
-        {/* รายการข่าว */}
+        {/* Items */}
         {loading && allItems.length === 0
           ? Array.from({ length: PAGE_SIZE }).map((_, i) => (
-              <Box key={i} sx={{ mb: 5 }}>
-                <Grid container spacing={{ xs: 2, md: 4 }}>
-                  <Grid size={{ xs: 12, md: 7 }}>
-                    <Box sx={{ border: `10px solid ${FRAME}`, borderRadius: 1 }}>
-                      <Box sx={{ position: "relative", aspectRatio: "16 / 9", bgcolor: "#111" }}>
-                        <Skeleton variant="rectangular" sx={{ position: "absolute", inset: 0 }} />
-                      </Box>
-                    </Box>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 5 }}>
-                    <Skeleton width="70%" height={32} sx={{ mb: 1 }} />
-                    <Skeleton width="35%" height={22} sx={{ mb: 2 }} />
-                    <Skeleton width="80%" height={20} />
-                    <Skeleton width="65%" height={20} />
-                    <Skeleton width="50%" height={20} sx={{ mb: 2 }} />
-                    <Skeleton width={160} height={40} />
-                  </Grid>
-                </Grid>
-              </Box>
+              <div key={i} className="mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8">
+                  <div className="md:col-span-7">
+                    <div style={{ border: `10px solid ${FRAME}`, borderRadius: 4 }}>
+                      <div className="relative aspect-video bg-neutral-900">
+                        <Skeleton className="absolute inset-0 w-full h-full" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="md:col-span-5 space-y-2">
+                    <Skeleton className="h-8 w-[70%]" />
+                    <Skeleton className="h-5 w-[35%]" />
+                    <Skeleton className="h-4 w-[80%]" />
+                    <Skeleton className="h-4 w-[65%]" />
+                    <Skeleton className="h-4 w-[50%]" />
+                    <Skeleton className="h-10 w-40 mt-2" />
+                  </div>
+                </div>
+              </div>
             ))
           : pageItems.map((it) => {
               const cover = resolveUrl(it.coverUrl) || FALLBACK_COVER;
               return (
-                <Box key={it.id} sx={{ mb: 6 }}>
-                  <Grid container spacing={{ xs: 2, md: 4 }} alignItems="flex-start">
-                    {/* ซ้าย: media */}
-                    <Grid size={{ xs: 12, md: 7 }}>
-                      <Box sx={{ border: `10px solid ${FRAME}`, borderRadius: 1 }}>
-                        <Box sx={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden", bgcolor: "#111" }}>
+                <div key={it.id} className="mb-10">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 items-start">
+                    {/* Media */}
+                    <div className="md:col-span-7">
+                      <div style={{ border: `10px solid ${FRAME}`, borderRadius: 4 }}>
+                        <div className="relative aspect-video overflow-hidden bg-neutral-900">
                           {it.videoUrl ? (
                             <MediaEmbed url={it.videoUrl} />
                           ) : (
@@ -147,133 +131,64 @@ export default function NewsListPage() {
                               src={cover}
                               alt={it.heading1 || "news cover"}
                               onError={(e) => (e.currentTarget.src = FALLBACK_COVER)}
-                              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                              className="absolute inset-0 w-full h-full object-cover"
                             />
                           )}
-                        </Box>
-                      </Box>
-                    </Grid>
+                        </div>
+                      </div>
+                    </div>
 
-                    {/* ขวา: texts */}
-                    <Grid size={{ xs: 12, md: 5 }}>
-                      {/* วันที่ — 1 บรรทัด */}
-                      <Typography
-                        sx={{
-                          fontWeight: 800,
-                          fontSize: { xs: "1rem", md: "1.1rem" },
-                          mb: 1,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                        title={dateLine(it.createdAt)}
-                      >
+                    {/* Text */}
+                    <div className="md:col-span-5">
+                      <p className="font-extrabold text-[1rem] md:text-[1.1rem] mb-2 truncate">
                         {dateLine(it.createdAt)}
-                      </Typography>
-
-                      {/* หมวด (label) — 1 บรรทัด */}
-                      <Typography
-                        sx={{
-                          color: ACCENT,
-                          fontWeight: 800,
-                          letterSpacing: ".06em",
-                          textTransform: "uppercase",
-                          display: "-webkit-box",
-                          WebkitLineClamp: 1,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                        title={extractLabel(it.heading1)}
+                      </p>
+                      <p
+                        className="font-extrabold tracking-[0.06em] uppercase mb-1 truncate"
+                        style={{ color: ACCENT }}
                       >
                         {extractLabel(it.heading1)}
-                      </Typography>
-
-                      {/* หัวข้อหลัก — 2 บรรทัด */}
-                      <Typography
-                        sx={{
-                          fontWeight: 900,
-                          fontSize: { xs: "1.2rem", md: "1.4rem" },
-                          lineHeight: 1.25,
-                          mb: 1.5,
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                        title={it.heading2 || it.heading1}
-                      >
+                      </p>
+                      <p className="font-black text-[1.2rem] md:text-[1.4rem] leading-tight mb-3 line-clamp-2">
                         {it.heading2 || it.heading1}
-                      </Typography>
-
-                      {/* เนื้อหา — 3 บรรทัด (เลิก slice แบบเดิม) */}
+                      </p>
                       {it.body && (
-                        <Typography
-                          sx={{
-                            color: "rgba(255,255,255,.85)",
-                            lineHeight: 1.7,
-                            mb: 2,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                          title={it.body}
-                        >
+                        <p className="text-white/85 leading-relaxed mb-4 line-clamp-3">
                           {it.body}
-                        </Typography>
+                        </p>
                       )}
-
-                      <Button
-                        component={Link}
+                      <Link
                         href={`/news/${it.id}`}
-                        variant="contained"
-                        sx={{
-                          px: 3,
-                          py: 1.2,
-                          borderRadius: 999,
-                          bgcolor: ACCENT,
-                          color: "#000",
-                          fontWeight: 800,
-                          letterSpacing: ".12em",
-                          "&:hover": { bgcolor: "#a88e72" },
-                        }}
+                        className="inline-flex items-center px-6 py-3 rounded-full font-extrabold tracking-[0.12em] text-black transition-colors"
+                        style={{ backgroundColor: ACCENT }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#a88e72")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = ACCENT)}
                       >
                         READ MORE
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </Box>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               );
             })}
 
-        {/* ปุ่ม Next */}
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4, gap: 2 }}>
-          <Button
+        {/* Pagination */}
+        <div className="flex justify-end mt-8 gap-4">
+          <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={!canNext || loading}
-            endIcon={<span style={{ fontSize: 18 }}>→</span>}
-            sx={{
-              px: 4,
-              py: 1.4,
-              borderRadius: 999,
-              bgcolor: canNext ? ACCENT : "rgba(255,255,255,.2)",
+            className="px-8 py-3.5 rounded-full font-extrabold tracking-[0.18em] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: canNext ? ACCENT : "rgba(255,255,255,.2)",
               color: canNext ? "#000" : "rgba(255,255,255,.6)",
-              fontWeight: 800,
-              letterSpacing: ".18em",
-              textTransform: "none",
-              "&:hover": canNext ? { bgcolor: "#a88e72" } : {},
             }}
           >
-            Next
-          </Button>
-        </Box>
+            Next →
+          </button>
+        </div>
 
-        <Divider sx={{ mt: 6, borderColor: "rgba(255,255,255,.12)" }} />
-      </Box>
-      {/* Footer ของแอปจะตามมาข้างล่าง และชิดล่างเพราะ flex layout ด้านบน */}
-    </Box>
+        <hr className="mt-12 border-white/12" />
+      </div>
+    </div>
   );
 }

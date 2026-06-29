@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { Box } from "@mui/material";
 import { useState } from "react";
 
 const dimToBg = (dim) =>
@@ -21,9 +20,10 @@ export default function BackgroundImage({
 }) {
   const [loaded, setLoaded] = useState(false);
   const dimBg = dimToBg(dim);
+  const dimValue = typeof dimBg === "string" ? dimBg : dimBg.md || dimBg.xs || "rgba(0,0,0,0)";
 
   return (
-    <Box sx={{ position: "absolute", inset: 0, zIndex: 0 }}>
+    <div className="absolute inset-0 z-0">
       <Image
         src={src}
         alt={alt}
@@ -42,29 +42,18 @@ export default function BackgroundImage({
       />
 
       {gradient && (
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 1,
-            pointerEvents: "none",
-            background:
-              "linear-gradient(135deg, rgba(0,0,0,.45), transparent 50%, rgba(0,0,0,.2))",
-          }}
+        <div
+          className="absolute inset-0 z-[1] pointer-events-none"
+          style={{ background: "linear-gradient(135deg, rgba(0,0,0,.45), transparent 50%, rgba(0,0,0,.2))" }}
         />
       )}
 
       {((typeof dim === "number" && dim > 0) || typeof dim === "object") && (
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 1,
-            pointerEvents: "none",
-            backgroundColor: dimBg,
-          }}
+        <div
+          className="absolute inset-0 z-[1] pointer-events-none"
+          style={{ backgroundColor: dimValue }}
         />
       )}
-    </Box>
+    </div>
   );
 }

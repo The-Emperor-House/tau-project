@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Snackbar, Alert } from "@mui/material";
+import { toast } from "sonner";
 import useModalContext from "@/shared/hooks/useModalContext";
 import ProjectSection from "./components/ProjectSection";
 import ProjectFormDialog from "./components/ProjectFormDialog";
@@ -21,7 +21,6 @@ export default function DashboardProjects() {
   const [deleteImageIds, setDeleteImageIds] = useState(new Set());
   const coverInputRef = useRef(null);
   const imagesInputRef = useRef(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const { showLoading, hideLoading, confirm } = useModalContext();
 
   const splitGroups = (arr) => {
@@ -42,7 +41,7 @@ export default function DashboardProjects() {
       const data = await res.json();
       splitGroups(data || []);
     } catch {
-      setSnackbar({ open: true, message: "Failed to load projects", severity: "error" });
+      toast.error("Failed to load projects");
     } finally {
       setLoading(false);
     }
@@ -80,10 +79,10 @@ export default function DashboardProjects() {
         headers: { Authorization: `Bearer ${session?.backendToken}` },
       });
       if (!res.ok) throw new Error();
-      setSnackbar({ open: true, message: "Deleted", severity: "success" });
+      toast.success("Deleted");
       fetchProjects();
     } catch {
-      setSnackbar({ open: true, message: "Failed to delete", severity: "error" });
+      toast.error("Failed to delete");
     } finally {
       hideLoading();
     }
@@ -91,7 +90,7 @@ export default function DashboardProjects() {
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      setSnackbar({ open: true, message: "Name is required", severity: "warning" });
+      toast.warning("Name is required");
       return;
     }
     const form = new FormData();
@@ -114,10 +113,10 @@ export default function DashboardProjects() {
       const session = await getSession();
       const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: form });
       if (!res.ok) throw new Error();
-      setSnackbar({ open: true, message: isEditing ? "Updated" : "Created", severity: "success" });
+      toast.success(isEditing ? "Updated" : "Created");
       setOpenForm(false); fetchProjects();
     } catch {
-      setSnackbar({ open: true, message: "Failed to submit", severity: "error" });
+      toast.error("Failed to submit");
     } finally {
       hideLoading();
     }
@@ -131,7 +130,7 @@ export default function DashboardProjects() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-[1200px] mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 className="text-xl font-semibold text-white">Project Management</h1>
         <button
@@ -156,12 +155,6 @@ export default function DashboardProjects() {
         coverInputRef={coverInputRef} imagesInputRef={imagesInputRef}
         onRemoveImage={onRemoveImage}
       />
-
-      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: "100%" }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </div>
   );
 }

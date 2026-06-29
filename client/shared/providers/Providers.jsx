@@ -1,15 +1,17 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
-import { ThemeProvider } from '@/shared/theme';
+import { TooltipProvider } from '@/shared/components/ui/tooltip';
+import { Toaster } from 'sonner';
 import ModalProvider from "@/modules/layout/modals/ModalProvider";
 
 export function Providers({ children }) {
   return (
     <SessionProvider refetchInterval={0}>
-      <ThemeProvider>
+      <TooltipProvider>
         <ModalProvider>{children}</ModalProvider>
-      </ThemeProvider>
+        <Toaster position="bottom-center" richColors />
+      </TooltipProvider>
     </SessionProvider>
   );
 }

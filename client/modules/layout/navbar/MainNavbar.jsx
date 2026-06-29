@@ -1,23 +1,12 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import {
-  AppBar,
-  Toolbar,
-  Box,
-  IconButton,
-  Avatar,
-  Button,
-  Tooltip,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import LoginIcon from "@mui/icons-material/Login";
-
 import { useSession, signIn } from "next-auth/react";
 import { useLogout } from "@/shared/hooks/useLogout";
+import { Menu, LogIn, User } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Button } from "@/shared/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip";
 
 import LogoSwap from "./LogoSwap";
 import NavLinks from "./NavLinks";
@@ -32,10 +21,6 @@ export default function MainNavbar() {
   const { data: session, status } = useSession();
   const isAuthed = status === "authenticated";
   const { logout } = useLogout();
-
-  const theme = useTheme();
-  const isLgUp = useMediaQuery(theme.breakpoints.up("lg"));
-  const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
 
   const navLinks = useMemo(
     () => [
@@ -69,101 +54,71 @@ export default function MainNavbar() {
     setIsAccountOpen(false);
   };
 
-  const logoW = isLgUp ? 200 : isMdUp ? 160 : 110;
-  const logoH = isLgUp ? 120 : isMdUp ? 96 : 70;
-
   return (
-    <AppBar
+    <header
       id="main-navbar"
-      position="absolute"
-      sx={{
-        backgroundColor: "transparent",
-        boxShadow: "none",
-        top: "50px",
-        zIndex: (t) => t.zIndex.appBar + 1,
-      }}
+      className="absolute left-0 right-0 z-50 bg-transparent"
+      style={{ top: "var(--announcement-h, 50px)" }}
     >
-      <Toolbar
-        sx={{
-          justifyContent: "space-between",
-          alignItems: "center",
-          px: { xs: 2, md: 3, lg: 4 },
-          py: 1,
-          maxWidth: 1400,
-          mx: "auto",
-          width: "100%",
-        }}
-      >
-        <Box sx={{ flexShrink: 0 }}>
-          <LogoSwap width={logoW} height={logoH} showOnXs />
-        </Box>
+      <div className="flex items-center justify-between px-4 md:px-6 lg:px-8 py-2 max-w-[1400px] mx-auto w-full">
+        {/* Logo */}
+        <LogoSwap
+          width={110}
+          height={70}
+          showOnXs
+          className="shrink-0 md:w-[160px] md:h-[96px] lg:w-[200px] lg:h-[120px]"
+        />
 
-        <Box
-          sx={{
-            display: { xs: "none", md: "flex" },
-            alignItems: "center",
-            gap: { md: 1, lg: 1.5 },
-            ml: "auto",
-            "& a, & .MuiButtonBase-root": {
-              fontSize: { md: "0.95rem", lg: "1.2rem" },
-              letterSpacing: { md: ".02rem", lg: ".03rem" },
-              px: { md: 0.5, lg: 1 },
-              whiteSpace: "nowrap",
-            },
-          }}
-        >
-          <NavLinks
-            links={navLinks}
-            onSmoothScroll={handleSmoothScroll}
-            dense={!isLgUp}
-          />
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-2 lg:gap-3 ml-auto">
+          <NavLinks links={navLinks} onSmoothScroll={handleSmoothScroll} />
 
           {isAuthed ? (
-            <IconButton
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsAccountOpen(true)}
-              sx={{ color: "common.white" }}
+              className="text-white hover:text-white hover:bg-white/10 ml-1"
               aria-label="open account menu"
             >
               {session?.user?.image ? (
-                <Avatar
-                  src={session.user.image}
-                  alt={session.user.name || "Profile"}
-                  sx={{ width: 32, height: 32 }}
-                />
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={session.user.image} alt={session.user.name || "Profile"} />
+                  <AvatarFallback>{session.user.name?.charAt(0)}</AvatarFallback>
+                </Avatar>
               ) : (
-                <AccountCircleIcon />
+                <User className="w-5 h-5" />
               )}
-            </IconButton>
+            </Button>
           ) : (
-            <Tooltip title="Login">
-              <IconButton
-                aria-label="login"
-                onClick={() => signIn()}
-                sx={{
-                  color: "common.white",
-                  "&:hover": {
-                    bgcolor: (t) => t.palette.action.hover,
-                  },
-                }}
-              >
-                <LoginIcon />
-              </IconButton>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => signIn()}
+                  className="text-white hover:text-white hover:bg-white/10 ml-1"
+                  aria-label="login"
+                >
+                  <LogIn className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Login</TooltipContent>
             </Tooltip>
           )}
-        </Box>
+        </div>
 
-        <IconButton
-          sx={{
-            display: { xs: "flex", md: "none" },
-            color: "common.white",
-            ml: "auto",
-          }}
+        {/* Mobile menu button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden text-white hover:text-white hover:bg-white/10 ml-auto"
           onClick={() => setIsMobileMenuOpen(true)}
           aria-label="open menu"
         >
-          <MenuIcon />
-        </IconButton>
-      </Toolbar>
+          <Menu className="w-6 h-6" />
+        </Button>
+      </div>
 
       <MobileNavDrawer
         open={isMobileMenuOpen}
@@ -176,20 +131,15 @@ export default function MainNavbar() {
               onLogout={handleLogout}
             />
           ) : (
-            <Box sx={{ p: 2 }}>
+            <div className="p-4">
               <Button
-                fullWidth
-                variant="contained"
-                color="primary"
-                startIcon={<LoginIcon />}
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  signIn();
-                }}
+                className="w-full"
+                onClick={() => { setIsMobileMenuOpen(false); signIn(); }}
               >
+                <LogIn className="w-4 h-4 mr-2" />
                 Login
               </Button>
-            </Box>
+            </div>
           )
         }
       />
@@ -201,6 +151,6 @@ export default function MainNavbar() {
           onLogout={handleLogout}
         />
       )}
-    </AppBar>
+    </header>
   );
 }

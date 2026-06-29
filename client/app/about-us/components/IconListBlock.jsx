@@ -1,74 +1,45 @@
-import { Box, Stack, Typography } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import LightbulbIcon from "@mui/icons-material/Lightbulb";
-import HandshakeIcon from "@mui/icons-material/Handshake";
-import EngineeringIcon from "@mui/icons-material/Engineering";
-import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import { Search, Lightbulb, Handshake, HardHat, ClipboardCheck } from "lucide-react";
 import { motion } from "framer-motion";
 
+const servicesDetail = [
+  { icon: Search, text: "Survey Area" },
+  { icon: Lightbulb, text: "Concept Design & Estimate Price" },
+  { icon: Handshake, text: "Perspective & Sign Contract" },
+  { icon: HardHat, text: "Construction In Progress & Material Approve" },
+  { icon: ClipboardCheck, text: "Handover" },
+];
+
 export default function IconListBlock() {
-  const servicesDetail = [
-    { icon: <SearchIcon />, text: "Survey Area" },
-    { icon: <LightbulbIcon />, text: "Concept Design & Estimate Price" },
-    { icon: <HandshakeIcon />, text: "Perspective & Sign Contract" },
-    { icon: <EngineeringIcon />, text: "Construction In Progress & Material Approve" },
-    { icon: <AssignmentTurnedInIcon />, text: "Handover" },
-  ];
-
   return (
-    <Box sx={{ textAlign: "center", mt: 4 }}>
-      <Stack spacing={{ xs: 3, md: 4 }} direction="column" alignItems="center" sx={{ width: "100%" }}>
-        {servicesDetail.map((item, idx) => (
-          <Stack
+    <div className="text-center mt-4 flex flex-col items-center gap-6 md:gap-8 w-full">
+      {servicesDetail.map((item, idx) => {
+        const Icon = item.icon;
+        return (
+          <motion.div
             key={idx}
-            direction="row"
-            alignItems="center"
-            spacing={{ xs: 2.5, md: 3 }}
-            component={motion.div}
             whileHover={{ scale: 1.03 }}
-            sx={{
-              width: "100%",
-              maxWidth: { xs: 480, md: 560 },   // กว้างขึ้น
-              mx: "auto",
-              minHeight: { xs: 80, md: 92 },    // สูงขึ้นเล็กน้อยให้ดูโปร่ง
-            }}
+            className="flex flex-row items-center gap-6 md:gap-8 w-full max-w-[480px] md:max-w-[560px] mx-auto min-h-[80px] md:min-h-[92px]"
           >
-            {/* ICON */}
-            <Box
-              sx={{
-                bgcolor: "#ab9685",
-                borderRadius: "50%",
-                width: { xs: 72, md: 84 },       // วงใหญ่ขึ้น
-                height: { xs: 72, md: 84 },
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                "& svg": {                        // ขนาดไอคอนใหญ่ขึ้น
-                  fontSize: { xs: 34, md: 40 },
-                },
+            <div
+              className="flex items-center justify-center rounded-full shrink-0"
+              style={{
+                backgroundColor: "#ab9685",
+                width: "clamp(72px, 10vw, 84px)",
+                height: "clamp(72px, 10vw, 84px)",
               }}
             >
-              {item.icon}
-            </Box>
+              <Icon
+                className="text-white"
+                style={{ width: "clamp(34px, 5vw, 40px)", height: "clamp(34px, 5vw, 40px)" }}
+              />
+            </div>
 
-            {/* TEXT */}
-            <Typography
-              variant="body1"
-              color="black"
-              sx={{
-                textAlign: "left",
-                fontSize: { xs: "1.05rem", md: "1.2rem" }, // ตัวอักษรใหญ่ขึ้น
-                lineHeight: 1.5,
-                letterSpacing: "0.02rem",
-                wordBreak: "break-word",
-              }}
-            >
+            <p className="text-left text-black text-[1.05rem] md:text-[1.2rem] leading-[1.5] tracking-[0.02rem] break-words">
               {item.text}
-            </Typography>
-          </Stack>
-        ))}
-      </Stack>
-    </Box>
+            </p>
+          </motion.div>
+        );
+      })}
+    </div>
   );
 }

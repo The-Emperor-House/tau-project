@@ -20,14 +20,14 @@ cd database
 docker compose up -d
 ```
 
-> phpMyAdmin → http://localhost:8081
+> phpMyAdmin → http://localhost:8082
 
 ---
 
 ## การเชื่อมต่อ
 
 ### ผ่าน phpMyAdmin
-เปิด http://localhost:8081 — login อัตโนมัติ (ไม่ต้องกรอก password)
+เปิด http://localhost:8082 — login อัตโนมัติ (ไม่ต้องกรอก password)
 
 ### ผ่าน MySQL Client / DBeaver / TablePlus
 | Field | Value |

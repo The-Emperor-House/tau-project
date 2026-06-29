@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, useMediaQuery, useTheme } from "@mui/material";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 
 const ROLES = ["ADMIN", "EDITOR", "VIEWER"];
 
@@ -14,15 +19,12 @@ const ROLE_STYLE = {
 
 export default function UsersPage() {
   const { data: session } = useSession();
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", role: "" });
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -60,27 +62,20 @@ export default function UsersPage() {
         body: JSON.stringify({ name: editForm.name, role: editForm.role }),
       });
       if (!res.ok) throw new Error("บันทึกไม่สำเร็จ");
-      setToast({ message: "อัปเดตผู้ใช้สำเร็จ", type: "success" });
+      toast.success("อัปเดตผู้ใช้สำเร็จ");
       setSelected(null);
       fetchUsers();
     } catch (err) {
-      setToast({ message: err.message, type: "error" });
+      toast.error(err.message);
     } finally {
       setSaving(false);
     }
   };
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   const skeletons = Array.from({ length: 8 });
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      {/* Header */}
+    <div className="p-6 max-w-[1200px] mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white">Users</h1>
@@ -88,12 +83,10 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="mb-4 px-4 py-3 text-sm text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg">{error}</div>
       )}
 
-      {/* Table */}
       <div className="rounded-xl overflow-hidden border border-neutral-800">
         <table className="w-full text-sm">
           <thead>
@@ -156,54 +149,47 @@ export default function UsersPage() {
         </table>
       </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!selected} onClose={() => setSelected(null)} fullWidth maxWidth="xs" fullScreen={fullScreen}>
-        <DialogTitle sx={{ bgcolor: "#111", color: "#fff", borderBottom: "1px solid #262626" }}>
-          แก้ไขผู้ใช้
-        </DialogTitle>
-        <DialogContent sx={{ bgcolor: "#111", color: "#e5e5e5", pt: "20px !important", display: "grid", gap: 2 }}>
-          <TextField
-            label="ชื่อ"
-            value={editForm.name}
-            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-            fullWidth
-            InputLabelProps={{ style: { color: "#737373" } }}
-            inputProps={{ style: { color: "#fff" } }}
-            sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }}
-          />
-          <TextField
-            select
-            label="Role"
-            value={editForm.role}
-            onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-            fullWidth
-            InputLabelProps={{ style: { color: "#737373" } }}
-            inputProps={{ style: { color: "#fff" } }}
-            sx={{ "& .MuiOutlinedInput-root": { "& fieldset": { borderColor: "#404040" }, "&.Mui-focused fieldset": { borderColor: "#cc8f2a" } } }}
-          >
-            {ROLES.map((r) => (
-              <MenuItem key={r} value={r} sx={{ bgcolor: "#1a1a1a", color: "#fff", "&:hover": { bgcolor: "#262626" } }}>{r}</MenuItem>
-            ))}
-          </TextField>
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="max-w-xs bg-[#111] border-[#262626] text-[#e5e5e5]">
+          <DialogHeader>
+            <DialogTitle className="text-white border-b border-[#262626] pb-2">แก้ไขผู้ใช้</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 pt-1">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="u-name" className="text-neutral-400">ชื่อ</Label>
+              <Input
+                id="u-name"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="bg-[#0a0a0a] border-[#404040] text-white focus-visible:ring-[#cc8f2a]"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-neutral-400">Role</Label>
+              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
+                <SelectTrigger className="bg-[#0a0a0a] border-[#404040] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-[#404040] text-white">
+                  {ROLES.map((r) => (
+                    <SelectItem key={r} value={r} className="focus:bg-[#262626] focus:text-white">{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="border-t border-[#262626] pt-3 gap-2">
+            <Button variant="ghost" className="text-neutral-400 hover:text-white" onClick={() => setSelected(null)}>ยกเลิก</Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving || !editForm.name.trim()}
+              className="bg-[#cc8f2a] text-black hover:bg-[#b57b14] disabled:opacity-50"
+            >
+              {saving ? "กำลังบันทึก..." : "บันทึก"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions sx={{ bgcolor: "#111", borderTop: "1px solid #262626", px: 3, py: 2 }}>
-          <button onClick={() => setSelected(null)} className="px-4 py-2 text-sm text-neutral-400 hover:text-white transition-colors">ยกเลิก</button>
-          <button
-            onClick={handleSave}
-            disabled={saving || !editForm.name.trim()}
-            className="px-4 py-2 text-sm font-medium bg-[#cc8f2a] text-black rounded-lg hover:bg-[#b57b14] disabled:opacity-50 transition-colors"
-          >
-            {saving ? "กำลังบันทึก..." : "บันทึก"}
-          </button>
-        </DialogActions>
       </Dialog>
-
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-3 rounded-lg text-sm font-medium shadow-xl z-50 ${toast.type === "success" ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}>
-          {toast.message}
-        </div>
-      )}
     </div>
   );
 }

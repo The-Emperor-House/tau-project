@@ -1,6 +1,5 @@
 "use client";
 
-import { Box } from "@mui/material";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import BackgroundImage from "../hero/BackgroundImage";
@@ -9,20 +8,19 @@ import "swiper/css/autoplay";
 
 export default function Carousel({
   slides = [],
-  overlayPaddingLeft = { xs: 24, md: 56 },
   height = "100vh",
   delay = 5000,
 }) {
   if (!slides.length) {
     return (
-      <Box sx={{ display: "grid", placeItems: "center", width: "100%", height: "80vh", bgcolor: "black", color: "common.white" }}>
+      <div className="grid place-items-center w-full bg-black text-white" style={{ height: "80vh" }}>
         No slides
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ position: "relative", width: "100%", height, bgcolor: "black", overflow: "hidden" }}>
+    <div className="relative w-full overflow-hidden bg-black" style={{ height }}>
       <Swiper
         modules={[Autoplay]}
         slidesPerView={1}
@@ -41,23 +39,12 @@ export default function Carousel({
               priority={s.priority}
               objectPosition={s.objectPosition}
             />
-
-            <Box
-              sx={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                pl: overlayPaddingLeft,
-              }}
-            >
+            <div className="absolute inset-0 z-[2] flex items-center justify-center">
               {s.content}
-            </Box>
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>
-    </Box>
+    </div>
   );
-} 
+}

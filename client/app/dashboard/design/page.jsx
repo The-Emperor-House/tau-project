@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { Snackbar, Alert } from "@mui/material";
+import { toast } from "sonner";
 import SectionBlock from "./components/SectionBlock";
 import DesignFormDialog from "./components/DesignFormDialog";
 import useModalContext from "@/shared/hooks/useModalContext";
@@ -20,7 +20,6 @@ export default function DashboardDesign() {
   const [deleteImageIds, setDeleteImageIds] = useState(new Set());
   const coverInputRef = useRef(null);
   const imagesInputRef = useRef(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const { showLoading, hideLoading, confirm } = useModalContext();
 
   const fetchDesigns = async () => {
@@ -36,7 +35,7 @@ export default function DashboardDesign() {
       setArchitectural(data.filter((d) => d.type === "ARCHITECTURAL"));
       setInterior(data.filter((d) => d.type === "INTERIOR"));
     } catch {
-      setSnackbar({ open: true, message: "Failed to load designs", severity: "error" });
+      toast.error("Failed to load designs");
     } finally {
       setLoading(false);
     }
@@ -74,10 +73,10 @@ export default function DashboardDesign() {
         headers: { Authorization: `Bearer ${session?.backendToken}` },
       });
       if (!res.ok) throw new Error();
-      setSnackbar({ open: true, message: "Deleted", severity: "success" });
+      toast.success("Deleted");
       fetchDesigns();
     } catch {
-      setSnackbar({ open: true, message: "Failed to delete", severity: "error" });
+      toast.error("Failed to delete");
     } finally {
       hideLoading();
     }
@@ -85,7 +84,7 @@ export default function DashboardDesign() {
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      setSnackbar({ open: true, message: "Name is required", severity: "warning" });
+      toast.warning("Name is required");
       return;
     }
     const form = new FormData();
@@ -106,10 +105,10 @@ export default function DashboardDesign() {
       const session = await getSession();
       const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: form });
       if (!res.ok) throw new Error();
-      setSnackbar({ open: true, message: isEditing ? "Updated" : "Created", severity: "success" });
+      toast.success(isEditing ? "Updated" : "Created");
       setOpenForm(false); fetchDesigns();
     } catch {
-      setSnackbar({ open: true, message: "Failed to submit", severity: "error" });
+      toast.error("Failed to submit");
     } finally {
       hideLoading();
     }
@@ -123,7 +122,7 @@ export default function DashboardDesign() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-[1200px] mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 className="text-xl font-semibold text-white">Design Management</h1>
         <button
@@ -147,11 +146,6 @@ export default function DashboardDesign() {
         onRemoveImage={onRemoveImage}
       />
 
-      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: "100%" }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </div>
   );
 }

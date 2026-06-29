@@ -1,9 +1,9 @@
-name: taurus
+name: tau-project
 
 services:
   db:
     image: mysql:8.0
-    container_name: taurus_mysql
+    container_name: tau-project_mysql
     restart: unless-stopped
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
@@ -23,7 +23,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin:latest
-    container_name: taurus_phpmyadmin
+    container_name: tau-project_phpmyadmin
     restart: unless-stopped
     depends_on:
       db:
@@ -38,4 +38,4 @@ services:
 
 volumes:
   mysql_data:
-    name: taurus_mysql_data
+    name: tau-project_mysql_data

@@ -1,98 +1,77 @@
 "use client";
 
-import { Box, Typography, Container } from "@mui/material";
-import Grid from "@mui/material/Grid";
 import Image from "next/image";
 import { serviceItems } from "../_data/services";
 
 const BG = "#f2e8df";
 const ACC = "#b89d8b";
 const BODY = "#8b7e72";
-const DIV = "rgba(0,0,0,0.06)";
 
 function Heading({ item, align = "left" }) {
+  const textAlign =
+    align === "center"
+      ? "text-center"
+      : align === "right"
+      ? "text-right"
+      : "text-left";
+
   return (
-    <Box
-      sx={{ textAlign: { xs: "center", md: align }, mb: { xs: 2.5, md: 3.5 } }}
-    >
-      <Typography
-        component="div"
-        sx={{
-          fontSize: { xs: "4.5rem", md: "7.5rem" }, // ↑ ใหญ่ขึ้น
-          fontWeight: 700,
+    <div className={`mb-6 md:mb-8 ${textAlign} text-center md:${textAlign}`}>
+      <div
+        className="font-bold leading-none mb-3"
+        style={{
+          fontSize: "clamp(4.5rem, 7.5vw, 7.5rem)",
           color: ACC,
-          lineHeight: 1,
-          mb: 1.2,
         }}
       >
         {item.no}
-      </Typography>
-      <Typography
-        variant="h6"
-        sx={{
-          letterSpacing: ".6rem",
-          fontWeight: 800,
-          color: "#4e4e4e",
-          textIndent: ".6rem",
-          fontSize: { xs: "1.05rem", md: "1.25rem" }, // ↑
-        }}
+      </div>
+      <h6
+        className="font-extrabold tracking-[.6rem] text-[1.05rem] md:text-[1.25rem]"
+        style={{ color: "#4e4e4e", textIndent: ".6rem" }}
       >
         {item.title}
-      </Typography>
-      <Typography
-        variant="h6"
-        sx={{
-          mt: 0.6,
-          color: ACC,
-          fontWeight: 800,
-          letterSpacing: ".12rem",
-          fontSize: { xs: "1.05rem", md: "1.2rem" }, // ↑
-        }}
+      </h6>
+      <h6
+        className="mt-1.5 font-extrabold tracking-[.12rem] text-[1.05rem] md:text-[1.2rem]"
+        style={{ color: ACC }}
       >
         {item.subtitleTH}
-      </Typography>
-    </Box>
+      </h6>
+    </div>
   );
 }
 
 function Image16x9({ src, alt, objectPosition = "center" }) {
   return (
-    <Box sx={{ position: "relative" }}>
-      <Box
-        sx={{
-          position: "relative",
-          width: "100%",
-          borderRadius: 2,
-          overflow: "hidden",
-        }}
-      >
-        <Box sx={{ pt: { xs: "56.25%", md: "62.5%" } }} />
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          sizes="(max-width: 900px) 100vw, 33vw"
-          style={{ objectFit: "cover", objectPosition }}
-        />
-      </Box>
-    </Box>
+    <div className="relative w-full rounded-lg overflow-hidden" style={{ paddingTop: "clamp(56.25%, 62.5%, 62.5%)" }}>
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(max-width: 900px) 100vw, 33vw"
+        className="object-cover"
+        style={{ objectPosition }}
+      />
+    </div>
   );
 }
 
 function TextBody({ children, align = "left" }) {
+  const textAlign =
+    align === "center"
+      ? "text-center"
+      : align === "right"
+      ? "text-right"
+      : "text-left";
+
   return (
-    <Typography
-      variant="body1"
-      sx={{
-        color: BODY,
-        lineHeight: 2.05,
-        letterSpacing: ".025rem",
-        fontSize: { xs: "1rem", md: "1.1rem" },
-        textAlign: { xs: "center", md: align },
-      }}
+    <p
+      className={`leading-[2.05] tracking-[.025rem] text-[1rem] md:text-[1.1rem] text-center md:${textAlign}`}
+      style={{ color: BODY }}
     >
       {children}
-    </Typography>
+    </p>
   );
 }
 
@@ -102,100 +81,60 @@ export default function ServiceShowcase() {
   const s3 = serviceItems[2];
 
   return (
-    <Box
-      sx={{
-        bgcolor: BG,
-        minHeight: { xs: "100dvh", md: "100vh" },
-        width: "100%",
-        py: { xs: 8, md: 12 },
-      }}
+    <div
+      className="w-full min-h-screen py-12 md:py-20"
+      style={{ backgroundColor: BG }}
     >
-      <Container maxWidth="xl">
-        <Box sx={{ mb: { xs: 6, md: 8 } }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 3, mb: 1.5 }}>
-            <Box sx={{ flex: 1, height: 2, bgcolor: DIV }} />
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                letterSpacing: ".06em",
-                color: "#3a3a3a",
-                textAlign: "center",
-                fontSize: { xs: "1.4rem", md: "1.8rem" },
-              }}
-            >
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8">
+        {/* Header */}
+        <div className="mb-10 md:mb-14">
+          <div className="flex items-center gap-6 mb-3">
+            <div className="flex-1 h-px" style={{ backgroundColor: "rgba(0,0,0,0.06)" }} />
+            <h5 className="font-bold tracking-[.06em] text-center text-[1.4rem] md:text-[1.8rem] text-[#3a3a3a] whitespace-nowrap">
               บริการรีโนเวทแบบครบวงจร
-            </Typography>
-            <Box sx={{ flex: 1, height: 2, bgcolor: DIV }} />
-          </Box>
-          <Typography
-            variant="h6"
-            sx={{
-              textAlign: "center",
-              letterSpacing: ".1em", // ↑
-              color: "#3a3a3a",
-              fontSize: { xs: "1rem", md: "1.15rem" }, // ↑
-            }}
-          >
+            </h5>
+            <div className="flex-1 h-px" style={{ backgroundColor: "rgba(0,0,0,0.06)" }} />
+          </div>
+          <p className="text-center tracking-[.1em] text-[1rem] md:text-[1.15rem] text-[#3a3a3a]">
             สร้างใหม่ | ปรับปรุงต่อเติม - ซ่อมแซม | ออกแบบตกแต่งภายใน
-          </Typography>
-        </Box>
+          </p>
+        </div>
 
-        {/* กล่องเดียว ครอบทั้ง 3 ส่วน */}
-        <Box
-          sx={{
-            bgcolor: BG,
-            p: { xs: 4, md: 6 },
-          }}
+        {/* 3 columns */}
+        <div
+          className="p-6 md:p-10 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12"
+          style={{ backgroundColor: BG }}
         >
-          <Grid container columns={12} spacing={{ xs: 4, md: 6 }}>
-            {/* ↑ spacing */}
-            {/* คอลัมน์ 1 */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Box sx={{ height: "100%", pr: { md: 3 }, pb: { xs: 3, md: 0 } }}>
-                <Heading item={s1} align="left" />
-                <TextBody align="left">{s1.descriptionTH}</TextBody>
-                <Box sx={{ mt: 3 }}>
-                  <Image16x9
-                    src={s1.image}
-                    alt={s1.title}
-                    objectPosition="left"
-                  />
-                </Box>
-              </Box>
-            </Grid>
+          {/* Column 1 — image below */}
+          <div className="flex flex-col pr-0 md:pr-6 pb-6 md:pb-0">
+            <Heading item={s1} align="left" />
+            <TextBody align="left">{s1.descriptionTH}</TextBody>
+            <div className="mt-6">
+              <Image16x9 src={s1.image} alt={s1.title} objectPosition="left" />
+            </div>
+          </div>
 
-            {/* คอลัมน์ 2 (รูปก่อน) */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Box sx={{ height: "100%", px: { md: 3 }, py: { xs: 3, md: 0 } }}>
-                <Box sx={{ mb: { xs: 2.5, md: 8 } }}>
-                  <Image16x9 src={s2.image} alt={s2.title} />
-                </Box>
+          {/* Column 2 — image above */}
+          <div className="flex flex-col px-0 md:px-6 py-6 md:py-0">
+            <div className="mb-6 md:mb-14">
+              <Image16x9 src={s2.image} alt={s2.title} />
+            </div>
+            <Heading item={s2} align="center" />
+            <div className="mt-6">
+              <TextBody align="center">{s2.descriptionTH}</TextBody>
+            </div>
+          </div>
 
-                <Heading item={s2} align="center" />
-                <Box sx={{ mt: 3 }}>
-                  <TextBody align="center">{s2.descriptionTH}</TextBody>
-                </Box>
-              </Box>
-            </Grid>
-
-            {/* คอลัมน์ 3 */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Box sx={{ height: "100%", pl: { md: 3 }, pt: { xs: 3, md: 0 } }}>
-                <Heading item={s3} align="right" />
-                <TextBody align="right">{s3.descriptionTH}</TextBody>
-                <Box sx={{ mt: 3 }}>
-                  <Image16x9
-                    src={s3.image}
-                    alt={s3.title}
-                    objectPosition="right"
-                  />
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
-        </Box>
-      </Container>
-    </Box>
+          {/* Column 3 — image below */}
+          <div className="flex flex-col pl-0 md:pl-6 pt-6 md:pt-0">
+            <Heading item={s3} align="right" />
+            <TextBody align="right">{s3.descriptionTH}</TextBody>
+            <div className="mt-6">
+              <Image16x9 src={s3.image} alt={s3.title} objectPosition="right" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

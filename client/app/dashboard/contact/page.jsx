@@ -2,16 +2,10 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, Slide, TextField, useMediaQuery, useTheme,
-} from "@mui/material";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import { Button } from "@/shared/components/ui/button";
 import { DataGrid } from "@mui/x-data-grid";
 import * as XLSX from "xlsx";
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide ref={ref} direction="up" {...props} />;
-});
 
 const formatContacts = (data) =>
   (Array.isArray(data) ? data : []).map((c) => ({
@@ -28,8 +22,6 @@ const formatContacts = (data) =>
 
 export default function ContactPage() {
   const { data: session, status } = useSession();
-  const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [contacts, setContacts] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
@@ -103,8 +95,7 @@ export default function ContactPage() {
   ], []);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
+    <div className="p-6 max-w-[1200px] mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white">Contacts</h1>
@@ -120,7 +111,6 @@ export default function ContactPage() {
         </button>
       </div>
 
-      {/* Search */}
       <input
         type="text"
         value={search}
@@ -129,14 +119,12 @@ export default function ContactPage() {
         className="w-full sm:w-80 mb-4 px-4 py-2 text-sm bg-neutral-900 border border-neutral-700 text-white placeholder:text-neutral-500 rounded-lg outline-none focus:border-neutral-500 transition-colors"
       />
 
-      {/* Error */}
       {error && (
         <div className="mb-4 px-4 py-3 text-sm text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg">
           {error}
         </div>
       )}
 
-      {/* Grid */}
       <div className="rounded-xl overflow-x-auto border border-neutral-800" style={{ WebkitOverflowScrolling: "touch" }}>
         <DataGrid
           rows={filtered}
@@ -161,14 +149,13 @@ export default function ContactPage() {
         />
       </div>
 
-      {/* Detail dialog */}
-      <Dialog open={!!selected} onClose={() => setSelected(null)} fullWidth maxWidth="sm" fullScreen={fullScreen} TransitionComponent={Transition}>
-        <DialogTitle sx={{ bgcolor: "#111", color: "#fff", borderBottom: "1px solid #262626", pb: 2 }}>
-          รายละเอียด Contact
-        </DialogTitle>
-        <DialogContent sx={{ bgcolor: "#111", color: "#e5e5e5", pt: 3 }}>
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="sm:max-w-sm bg-[#111] border-[#262626] text-[#e5e5e5]">
+          <DialogHeader>
+            <DialogTitle className="text-white border-b border-[#262626] pb-2">รายละเอียด Contact</DialogTitle>
+          </DialogHeader>
           {selected && (
-            <div className="space-y-3">
+            <div className="space-y-3 pt-1">
               <DetailRow label="ชื่อ" value={selected.fullName} />
               <DetailRow label="อีเมล" value={selected.email} />
               <DetailRow label="เบอร์โทร" value={selected.phone} />
@@ -179,16 +166,16 @@ export default function ContactPage() {
               <DetailRow label="วันที่ส่ง" value={selected.createdAt ? new Date(selected.createdAt).toLocaleString("th-TH") : "-"} />
             </div>
           )}
+          <DialogFooter className="border-t border-[#262626] pt-3 gap-2 flex-row">
+            {selected?.phone && (
+              <a href={`tel:${selected.phone}`} className="text-[#cc8f2a] text-sm mr-auto hover:underline">โทรหา</a>
+            )}
+            {selected?.email && (
+              <a href={`mailto:${selected.email}`} className="text-neutral-400 text-sm hover:underline">อีเมล</a>
+            )}
+            <Button variant="outline" size="sm" onClick={() => setSelected(null)}>ปิด</Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions sx={{ bgcolor: "#111", borderTop: "1px solid #262626", px: 3, py: 2, gap: 1 }}>
-          {selected?.phone && (
-            <Button component="a" href={`tel:${selected.phone}`} sx={{ color: "#cc8f2a", mr: "auto" }}>โทรหา</Button>
-          )}
-          {selected?.email && (
-            <Button component="a" href={`mailto:${selected.email}`} sx={{ color: "#737373" }}>อีเมล</Button>
-          )}
-          <Button onClick={() => setSelected(null)} sx={{ color: "#fff" }}>ปิด</Button>
-        </DialogActions>
       </Dialog>
     </div>
   );

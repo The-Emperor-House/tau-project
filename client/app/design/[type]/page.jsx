@@ -1,20 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Box, Typography, Skeleton, IconButton } from "@mui/material";
 import { useParams } from "next/navigation";
-import ChevronLeft from "@mui/icons-material/ChevronLeft";
-import ChevronRight from "@mui/icons-material/ChevronRight";
-
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import DesignGalleryModal from "../components/DesignGalleryModal";
-
-const COLORS = {
-  bg: "#404040",
-  text: "#fff",
-  faint: "rgba(255,255,255,.10)",
-  railText: "rgba(255,255,255,.95)",
-};
-const RAIL_WIDTH = 50;
 
 export default function DesignTypePage() {
   const { type } = useParams();
@@ -30,10 +20,9 @@ export default function DesignTypePage() {
     const load = async () => {
       setLoading(true);
       try {
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/designs?type=${String(
-          type
-        ).toUpperCase()}`;
-        const res = await fetch(apiUrl);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/designs?type=${String(type).toUpperCase()}`
+        );
         const data = await res.json();
         if (!alive) return;
         if (Array.isArray(data)) setItems(data);
@@ -50,99 +39,47 @@ export default function DesignTypePage() {
       setItems([]);
       setLoading(false);
     }
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, [type]);
 
   return (
-    <Box sx={{ bgcolor: COLORS.bg, color: COLORS.text, minHeight: "100vh", pt: { xs: "120px", md: "calc(var(--nav-h) + 0px)" }, pb: { xs: 8, md: 10 } }}>
-      <Box
-        sx={{
-          maxWidth: "1500px",
-          mx: "auto",
-          px: { xs: 2, sm: 3, md: 4 },
-          display: "flex",
-          gap: { lg: 3, xl: 5 },
-        }}
-      >
-
-        {/* LEFT: ภาพ grid 3 คอลัมน์ */}
-        <Box sx={{ flex: "1 1 auto", minWidth: 0 }}>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, 1fr)",
-                lg: "repeat(3, 1fr)",
-              },
-              gap: { xs: 2.5, md: 3.5 },
-              alignItems: "stretch",
-            }}
-          >
+    <div
+      className="bg-[#404040] text-white min-h-screen pb-16 md:pb-20"
+      style={{ paddingTop: "var(--page-top)" }}
+    >
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 flex gap-6 xl:gap-10">
+        {/* Grid */}
+        <div className="flex-1 min-w-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 items-stretch">
             {loading
               ? Array.from({ length: 6 }).map((_, i) => (
-                  <Box key={i}>
-                    <Skeleton
-                      variant="rectangular"
-                      sx={{ width: "100%", height: { xs: 220, md: 260 }, bgcolor: COLORS.faint }}
-                    />
-                    <Skeleton width="70%" height={28} sx={{ mt: 1.2, mx: "auto", bgcolor: COLORS.faint }} />
-                  </Box>
+                  <div key={i}>
+                    <Skeleton className="w-full h-[220px] md:h-[260px] bg-white/10" />
+                    <Skeleton className="w-[70%] h-7 mt-3 mx-auto bg-white/10" />
+                  </div>
                 ))
               : items.map((it) => (
-                  <Box key={it.id} sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
+                  <div key={it.id} className="flex flex-col gap-3">
                     <MiniCarouselCell item={it} onClick={() => setSelected(it)} />
-                    <Typography
-                      sx={{
-                        textAlign: "center",
-                        fontSize: { xs: "1.05rem", md: "1.25rem" },
-                        letterSpacing: ".18em",
-                        fontWeight: 300,
-                        opacity: 0.95,
-                      }}
-                    >
+                    <p className="text-center text-[1.05rem] md:text-[1.25rem] tracking-[0.18em] font-light opacity-95">
                       {it.title || it.name || "Perspective 3 D"}
-                    </Typography>
-                  </Box>
+                    </p>
+                  </div>
                 ))}
-          </Box>
-        </Box>
+          </div>
+        </div>
 
-        {/* RIGHT: ป้ายชื่อแนวตั้ง sticky */}
-        <Box
-          sx={{
-            width: { xs: 0, lg: RAIL_WIDTH },
-            display: { xs: "none", lg: "block" },
-            position: "sticky",
-            top: { lg: "120px" },                         // ชดเชย navbar/pt ด้านบน
-            alignSelf: "flex-start",
-            height: { lg: "calc(100vh - 120px)" },        // สูงเท่าหน้าจอที่เหลือ
-          }}
-        >
-          <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", px: 1.5 }}>
-            <Typography
-              sx={{
-                writingMode: "vertical-rl",
-                textAlign: "center",
-                textOrientation: "mixed",
-                textTransform: "uppercase",
-                letterSpacing: ".35em",
-                fontWeight: 300,
-                fontSize: { lg: "2.6rem", xl: "3rem" },
-                lineHeight: 1,
-                color: COLORS.railText,
-                px: 1.5,
-                py: 1,
-                userSelect: "none",
-              }}
-            >
-              {sidebarLabel}
-            </Typography>
-          </Box>
-        </Box>
-      </Box>
+        {/* Vertical label — lg+ only */}
+        <div className="hidden lg:flex w-[50px] sticky self-start items-center justify-center px-3"
+          style={{ top: "120px", height: "calc(100vh - 120px)" }}>
+          <p
+            className="text-white/95 font-light text-[2.6rem] xl:text-[3rem] tracking-[0.35em] leading-none select-none text-center px-3 py-2"
+            style={{ writingMode: "vertical-rl", textOrientation: "mixed", textTransform: "uppercase" }}
+          >
+            {sidebarLabel}
+          </p>
+        </div>
+      </div>
 
       {selected && (
         <DesignGalleryModal
@@ -151,11 +88,10 @@ export default function DesignTypePage() {
           design={selected}
         />
       )}
-    </Box>
+    </div>
   );
 }
 
-/* ----------------- Mini carousel สำหรับรูปแต่ละการ์ด ----------------- */
 function MiniCarouselCell({ item, onClick }) {
   const FALLBACK = "/images/default-data.jpg";
 
@@ -179,63 +115,35 @@ function MiniCarouselCell({ item, onClick }) {
   };
 
   return (
-    <Box
+    <div
       onClick={onClick}
-      sx={{
-        position: "relative",
-        width: "100%",
-        overflow: "hidden",
-        bgcolor: "#111",
-        cursor: "pointer",
-      }}
+      className="relative w-full overflow-hidden bg-neutral-900 cursor-pointer"
+      style={{ paddingTop: "56.25%" }}
     >
-      {/* Aspect 16:9 */}
-      <Box sx={{ pt: "56.25%" }} />
       <img
         src={pics[idx]}
         alt={item?.name || "design"}
         loading="lazy"
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        className="absolute inset-0 w-full h-full object-cover block"
         onError={(e) => (e.currentTarget.src = FALLBACK)}
       />
 
       {pics.length > 1 && (
         <>
-          <IconButton
+          <button
             onClick={prev}
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: 6,
-              transform: "translateY(-50%)",
-              width: 40,
-              height: 40,
-              bgcolor: "rgba(0,0,0,.55)",
-              color: "#fff",
-              "&:hover": { bgcolor: "rgba(0,0,0,.75)" },
-            }}
+            className="absolute left-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center bg-black/55 text-white hover:bg-black/75 transition-colors"
           >
-            <ChevronLeft />
-          </IconButton>
-
-          <IconButton
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
             onClick={next}
-            sx={{
-              position: "absolute",
-              top: "50%",
-              right: 6,
-              transform: "translateY(-50%)",
-              width: 40,
-              height: 40,
-              bgcolor: "rgba(0,0,0,.55)",
-              color: "#fff",
-              "&:hover": { bgcolor: "rgba(0,0,0,.75)" },
-            }}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center bg-black/55 text-white hover:bg-black/75 transition-colors"
           >
-            <ChevronRight />
-          </IconButton>
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </>
       )}
-    </Box>
+    </div>
   );
 }

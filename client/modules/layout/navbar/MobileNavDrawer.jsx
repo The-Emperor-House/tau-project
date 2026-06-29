@@ -1,76 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Drawer,
-  Box,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Divider,
-} from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import CloseIcon from "@mui/icons-material/Close";
+import { Sheet, SheetContent } from "@/shared/components/ui/sheet";
+import { Separator } from "@/shared/components/ui/separator";
+import { cn } from "@/shared/lib/cn";
 import { usePathname } from "next/navigation";
 
-export default function MobileNavDrawer({
-  open,
-  onClose,
-  links,
-  extra,
-}) {
+export default function MobileNavDrawer({ open, onClose, links, extra }) {
   const pathname = usePathname() || "/";
   const isActive = (href) => pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
-      PaperProps={{
-        sx: (t) => ({
-          bgcolor: "grey.900",
-          color: "common.white",
-          width: "min(85vw, 280px)",
-          borderLeft: `1px solid ${alpha(t.palette.common.white, 0.12)}`,
-        }),
-      }}
-    >
-      <Box sx={{ display: "flex", justifyContent: "flex-end", p: 2 }}>
-        <IconButton onClick={onClose} sx={{ color: "common.white" }} aria-label="close menu">
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      <List sx={{ pt: 0 }}>
-        {links.map((link) => (
-          <ListItem key={link.href} disablePadding>
-            <ListItemButton
-              component={Link}
+    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent side="right" className="bg-neutral-900 text-white border-l border-white/10 w-[min(85vw,280px)] p-0">
+        <nav className="flex flex-col pt-4">
+          {links.map((link) => (
+            <Link
+              key={link.href}
               href={link.href}
               onClick={onClose}
-              selected={isActive(link.href)}
-              sx={{
-                "&.Mui-selected": {
-                  bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
-                  color: "primary.main",
-                },
-              }}
+              className={cn(
+                "px-6 py-3 text-base transition-colors hover:bg-white/5",
+                isActive(link.href) ? "text-primary font-medium" : "text-white"
+              )}
             >
-              <ListItemText primary={link.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-
-      {extra ? (
-        <>
-          <Divider sx={(t) => ({ my: 1, borderColor: alpha(t.palette.common.white, 0.12) })} />
-          {extra}
-        </>
-      ) : null}
-    </Drawer>
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        {extra && (
+          <>
+            <Separator className="my-2 bg-white/10" />
+            {extra}
+          </>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }

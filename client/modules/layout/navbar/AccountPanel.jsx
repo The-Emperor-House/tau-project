@@ -1,20 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { Separator } from "@/shared/components/ui/separator";
 import {
-  Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
-  ListSubheader, Divider
-} from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import DesignServicesIcon from "@mui/icons-material/DesignServices";
-import WorkspacesIcon from "@mui/icons-material/Workspaces";
-import PersonIcon from "@mui/icons-material/Person";
-import ContactMailIcon from "@mui/icons-material/ContactMail";
-import NewspaperIcon from "@mui/icons-material/Newspaper";
-import ChairIcon from "@mui/icons-material/Chair";
-import LogoutIcon from "@mui/icons-material/Logout";
-
+  Palette, Layers, Armchair, Newspaper,
+  Mail, User, LogOut,
+} from "lucide-react";
+import { cn } from "@/shared/lib/cn";
 import useModalContext from "@/shared/hooks/useModalContext";
+
+const MENU = [
+  { href: "/dashboard/design",    label: "Design",   icon: Palette },
+  { href: "/dashboard/project",   label: "Project",  icon: Layers },
+  { href: "/dashboard/furniture", label: "Showroom", icon: Armchair },
+  { href: "/dashboard/news",      label: "News",     icon: Newspaper },
+  { href: "/dashboard/contact",   label: "Contact",  icon: Mail },
+];
 
 export default function AccountPanel({ onClose, onLogout }) {
   const { confirm, showLoading, hideLoading } = useModalContext();
@@ -25,10 +26,9 @@ export default function AccountPanel({ onClose, onLogout }) {
       message: "Do you want to sign out now?",
       confirmText: "Sign out",
       cancelText: "Cancel",
-      destructive: true, // ✅ ใช้ปุ่มสี error ใน ConfirmDialog
+      destructive: true,
     });
     if (!ok) return;
-
     onClose?.();
     showLoading("Signing out...");
     try {
@@ -39,51 +39,40 @@ export default function AccountPanel({ onClose, onLogout }) {
   };
 
   return (
-    <Box sx={{ pt: 0 }}>
-      <List
-        subheader={
-          <ListSubheader
-            sx={{ bgcolor: "transparent", color: "primary.main", fontWeight: 700, letterSpacing: ".06em" }}
-          >
-            Dashboard
-          </ListSubheader>
-        }
+    <div className="flex flex-col pt-4">
+      <p className="px-6 pb-2 text-xs font-bold tracking-widest text-primary uppercase">
+        Dashboard
+      </p>
+      {MENU.map(({ href, label, icon: Icon }) => (
+        <Link
+          key={href}
+          href={href}
+          onClick={onClose}
+          className="flex items-center gap-3 px-6 py-3 text-sm text-white hover:bg-white/5 transition-colors"
+        >
+          <Icon className="w-4 h-4 text-primary shrink-0" />
+          {label}
+        </Link>
+      ))}
+
+      <Separator className="my-2 bg-white/10" />
+
+      <Link
+        href="/profile"
+        onClick={onClose}
+        className="flex items-center gap-3 px-6 py-3 text-sm text-white hover:bg-white/5 transition-colors"
       >
-        {[
-          { href: "/dashboard/design", label: "Design", icon: <DesignServicesIcon /> },
-          { href: "/dashboard/project", label: "Project", icon: <WorkspacesIcon /> },
-          { href: "/dashboard/furniture", label: "Showroom", icon: <ChairIcon /> },
-          { href: "/dashboard/news", label: "News", icon: <NewspaperIcon /> },
-          { href: "/dashboard/contact", label: "Contact", icon: <ContactMailIcon /> },
-        ].map((item) => (
-          <ListItem key={item.href} disablePadding>
-            <ListItemButton component={Link} href={item.href} onClick={onClose}>
-              <ListItemIcon sx={{ color: "primary.main" }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        <User className="w-4 h-4 text-primary shrink-0" />
+        Profile
+      </Link>
 
-        <Divider sx={(t) => ({ my: 1, borderColor: alpha(t.palette.divider, 0.6) })} />
-
-        <ListItem disablePadding>
-          <ListItemButton component={Link} href="/profile" onClick={onClose}>
-            <ListItemIcon sx={{ color: "primary.main" }}>
-              <PersonIcon />
-            </ListItemIcon>
-            <ListItemText primary="Profile" />
-          </ListItemButton>
-        </ListItem>
-
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleLogoutClick}>
-            <ListItemIcon sx={{ color: "primary.main" }}>
-              <LogoutIcon />
-            </ListItemIcon>
-            <ListItemText primary="Logout" />
-          </ListItemButton>
-        </ListItem>
-      </List>
-    </Box>
+      <button
+        onClick={handleLogoutClick}
+        className="flex items-center gap-3 px-6 py-3 text-sm text-white hover:bg-white/5 transition-colors text-left"
+      >
+        <LogOut className="w-4 h-4 text-primary shrink-0" />
+        Logout
+      </button>
+    </div>
   );
 }
