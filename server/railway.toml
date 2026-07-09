@@ -1,7 +1,5 @@
 [deploy]
 startCommand = "npm start"
+preDeployCommand = "npm run migrate:deploy"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
-
-[deploy.preDeployCommand]
-command = "npm run migrate:deploy"
