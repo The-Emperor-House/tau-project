@@ -26,15 +26,17 @@ export default function GalleryModal({ open, onClose, data }) {
         </DialogHeader>
 
         {images.length > 0 ? (
-          <ImageGallery
-            items={images}
-            showThumbnails
-            showPlayButton={false}
-            showFullscreenButton={false}
-            showNav
-            slideDuration={450}
-            thumbnailPosition="bottom"
-          />
+          <div className="[&_.image-gallery-slide-wrapper]:h-[420px] [&_.image-gallery-image]:h-full [&_.image-gallery-image]:object-contain [&_.image-gallery-slide]:h-full [&_.image-gallery-swipe]:h-full [&_.image-gallery-slides]:h-full [&_.image-gallery-thumbnail-image]:h-[70px] [&_.image-gallery-thumbnail-image]:object-cover [&_.image-gallery-thumbnail]:w-[100px]">
+            <ImageGallery
+              items={images}
+              showThumbnails
+              showPlayButton={false}
+              showFullscreenButton={false}
+              showNav
+              slideDuration={450}
+              thumbnailPosition="bottom"
+            />
+          </div>
         ) : (
           <p className="text-center text-muted-foreground py-8">
             ไม่มีภาพเพิ่มเติมสำหรับโครงการนี้
