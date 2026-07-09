@@ -7,7 +7,7 @@
     "dev": "cross-env NODE_ENV=development nodemon server.js",
     "start": "cross-env NODE_ENV=production node server.js",
     "generate": "prisma generate",
-    "migrate:deploy": "prisma migrate deploy",
+    "migrate:deploy": "node -e \"const {execSync}=require('child_process');let i=0;while(i++<5){try{execSync('prisma migrate deploy',{stdio:'inherit'});break}catch(e){if(i===5)throw e;console.log('DB not ready, retrying in 5s...');require('child_process').execSync('sleep 5')}}\"",
     "start:prod": "npm run migrate:deploy && cross-env NODE_ENV=production node server.js",
     "seed": "prisma db seed",
     "postinstall": "prisma generate"
