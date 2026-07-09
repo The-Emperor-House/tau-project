@@ -10,11 +10,6 @@ datasource db {
 //
 // 🔽 ENUMS
 //
-enum UserRole {
-  USER
-  ADMIN
-}
-
 enum DesignType {
   ARCHITECTURAL
   INTERIOR
@@ -42,7 +37,6 @@ model user {
   name           String?
   avatarUrl      String?
   avatarPublicId String?
-  role           UserRole  @default(USER)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

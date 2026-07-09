@@ -44,6 +44,8 @@ export default function FurnitureDetail() {
         const data = res.ok ? await res.json() : null;
         setItem(data);
         setImgSrc(data?.coverUrl || FALLBACK);
+      } catch (e) {
+        if (e.name === "AbortError") return;
       } finally {
         setLoading(false);
       }

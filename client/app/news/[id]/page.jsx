@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import MediaEmbed from "@/shared/components/ui/MediaEmbed";
+import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const FALLBACK_COVER = "/images/default-news.jpg";
 const ACCENT = "#cc8f2a";
@@ -43,6 +45,62 @@ export default function NewsDetail() {
   const [imgSrc, setImgSrc] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const gallery = useMemo(() => {
+    if (!item) return [];
+    const pics = [];
+    if (item.coverUrl && !item.videoUrl) pics.push(resolveUrl(item.coverUrl));
+    if (Array.isArray(item.images)) {
+      for (const im of item.images) if (im?.imageUrl) pics.push(resolveUrl(im.imageUrl));
+    }
+    return pics.filter(Boolean);
+  }, [item]);
+
+  const openLightbox = useCallback((index) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  }, []);
+
+  const prev = useCallback(
+    () => setLightboxIndex((i) => (gallery.length ? (i - 1 + gallery.length) % gallery.length : 0)),
+    [gallery.length]
+  );
+  const next = useCallback(
+    () => setLightboxIndex((i) => (gallery.length ? (i + 1) % gallery.length : 0)),
+    [gallery.length]
+  );
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e) => {
+      if (e.key === "ArrowRight") next();
+      else if (e.key === "ArrowLeft") prev();
+      else if (e.key === "Escape") setLightboxOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxOpen, next, prev]);
+
+  const touchRef = useRef({ x: 0, t: 0 });
+  const onTouchStart = (e) => {
+    const t = e.touches?.[0];
+    if (!t) return;
+    touchRef.current.x = t.clientX;
+    touchRef.current.t = Date.now();
+  };
+  const onTouchEnd = (e) => {
+    const t = e.changedTouches?.[0];
+    if (!t) return;
+    const dx = t.clientX - touchRef.current.x;
+    const dt = Date.now() - touchRef.current.t;
+    if (dt < 600 && Math.abs(dx) > 40) {
+      if (dx < 0) next();
+      else prev();
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -86,9 +144,13 @@ export default function NewsDetail() {
 
         {/* Date line */}
         <hr className="border-white/12 mb-3" />
-        <p className="text-center font-extrabold tracking-[0.08em] text-[1.2rem] md:text-[1.8rem] uppercase mb-6 md:mb-8 truncate">
-          {loading ? <Skeleton className="w-64 h-8 mx-auto" /> : dateLine}
-        </p>
+        {loading ? (
+          <Skeleton className="w-64 h-8 mx-auto mb-6 md:mb-8" />
+        ) : (
+          <p className="text-center font-extrabold tracking-[0.08em] text-[1.2rem] md:text-[1.8rem] uppercase mb-6 md:mb-8 truncate">
+            {dateLine}
+          </p>
+        )}
 
         {/* 2-column layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8">
@@ -107,7 +169,9 @@ export default function NewsDetail() {
                   alt={item?.heading1 || "news cover"}
                   onError={() => setImgSrc(FALLBACK_COVER)}
                   className="absolute inset-0 w-full h-full object-cover block"
+                  style={{ cursor: gallery.length ? "zoom-in" : "default" }}
                   loading="eager"
+                  onClick={() => { if (gallery.length) openLightbox(0); }}
                 />
               )}
             </div>
@@ -156,7 +220,11 @@ export default function NewsDetail() {
                 return (
                   <div
                     key={img?.id ?? i}
-                    className="relative w-full aspect-square overflow-hidden rounded bg-neutral-900"
+                    className="relative w-full aspect-square overflow-hidden rounded bg-neutral-900 cursor-zoom-in"
+                    onClick={() => {
+                      const base = (item?.coverUrl && !item?.videoUrl) ? 1 : 0;
+                      openLightbox(base + i);
+                    }}
                   >
                     <img
                       src={src || FALLBACK_COVER}
@@ -172,6 +240,58 @@ export default function NewsDetail() {
           </div>
         )}
       </div>
+
+      {/* Lightbox */}
+      <Dialog open={lightboxOpen} onOpenChange={(o) => !o && setLightboxOpen(false)}>
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-none w-full h-screen p-0 bg-black border-none rounded-none"
+        >
+          <button
+            aria-label="close"
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-3 right-3 z-[2] w-10 h-10 rounded-full flex items-center justify-center text-white bg-black/40 hover:bg-black/60 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div
+            className="relative grid place-items-center min-h-screen bg-black"
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+          >
+            {gallery.length > 0 && (
+              <img
+                src={gallery[lightboxIndex] || FALLBACK_COVER}
+                alt=""
+                onError={(e) => (e.currentTarget.src = FALLBACK_COVER)}
+                className="max-w-full max-h-[90vh] object-contain block"
+              />
+            )}
+            {gallery.length > 1 && (
+              <>
+                <button
+                  aria-label="previous"
+                  onClick={prev}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white bg-black/35 hover:bg-black/55 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  aria-label="next"
+                  onClick={next}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white bg-black/35 hover:bg-black/55 transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+                <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+                  {lightboxIndex + 1} / {gallery.length}
+                </p>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

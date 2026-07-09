@@ -1,24 +1,21 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useLogout } from "@/shared/hooks/useLogout";
-import { Menu, LogIn, User } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Menu, LogIn } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip";
 
 import LogoSwap from "./LogoSwap";
 import NavLinks from "./NavLinks";
 import MobileNavDrawer from "./MobileNavDrawer";
-import AccountPanel from "./AccountPanel";
-import AccountDrawer from "./AccountDrawer";
-
 export default function MainNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAccountOpen, setIsAccountOpen] = useState(false);
 
   const { data: session, status } = useSession();
+  const router = useRouter();
   const isAuthed = status === "authenticated";
   const { logout } = useLogout();
 
@@ -28,7 +25,7 @@ export default function MainNavbar() {
       { href: "/about-us", label: "About Us" },
       { href: "/design", label: "Design" },
       { href: "/projects", label: "Projects" },
-      { href: "#furniture", label: "Showroom" },
+      { href: "/furniture", label: "Showroom" },
       { href: "/news", label: "News & Events" },
       { href: "/contact", label: "Contact" },
     ],
@@ -51,7 +48,6 @@ export default function MainNavbar() {
   const handleLogout = () => {
     logout(session?.refreshToken);
     setIsMobileMenuOpen(false);
-    setIsAccountOpen(false);
   };
 
   return (
@@ -74,37 +70,23 @@ export default function MainNavbar() {
           <NavLinks links={navLinks} onSmoothScroll={handleSmoothScroll} />
 
           {isAuthed ? (
+            <Link
+              href="/dashboard/furniture"
+              className="ml-2 px-4 py-1.5 text-sm font-medium text-black rounded-lg transition-colors"
+              style={{ background: 'linear-gradient(135deg, #cc8f2a, #b57b14)' }}
+            >
+              Dashboard
+            </Link>
+          ) : (
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsAccountOpen(true)}
+              onClick={() => router.push('/auth/login')}
               className="text-white hover:text-white hover:bg-white/10 ml-1"
-              aria-label="open account menu"
+              aria-label="login"
             >
-              {session?.user?.image ? (
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={session.user.image} alt={session.user.name || "Profile"} />
-                  <AvatarFallback>{session.user.name?.charAt(0)}</AvatarFallback>
-                </Avatar>
-              ) : (
-                <User className="w-5 h-5" />
-              )}
+              <LogIn className="w-5 h-5" />
             </Button>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => signIn()}
-                  className="text-white hover:text-white hover:bg-white/10 ml-1"
-                  aria-label="login"
-                >
-                  <LogIn className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Login</TooltipContent>
-            </Tooltip>
           )}
         </div>
 
@@ -126,31 +108,36 @@ export default function MainNavbar() {
         links={navLinks}
         extra={
           isAuthed ? (
-            <AccountPanel
-              onClose={() => setIsMobileMenuOpen(false)}
-              onLogout={handleLogout}
-            />
-          ) : (
-            <div className="p-4">
-              <Button
-                className="w-full"
-                onClick={() => { setIsMobileMenuOpen(false); signIn(); }}
+            <div className="px-4 py-3 space-y-2">
+              <Link
+                href="/dashboard/furniture"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-center w-full py-2.5 text-sm font-medium text-black rounded-lg"
+                style={{ background: 'linear-gradient(135deg, #cc8f2a, #b57b14)' }}
               >
-                <LogIn className="w-4 h-4 mr-2" />
-                Login
-              </Button>
+                Dashboard
+              </Link>
+              <button
+                onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }}
+                className="w-full py-2.5 text-sm text-neutral-300 border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                ออกจากระบบ
+              </button>
+            </div>
+          ) : (
+            <div className="px-4 py-3">
+              <button
+                onClick={() => { setIsMobileMenuOpen(false); router.push('/auth/login'); }}
+                className="flex items-center justify-center gap-2 w-full py-2.5 text-sm text-white border border-white/20 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                เข้าสู่ระบบ
+              </button>
             </div>
           )
         }
       />
 
-      {isAuthed && (
-        <AccountDrawer
-          open={isAccountOpen}
-          onClose={() => setIsAccountOpen(false)}
-          onLogout={handleLogout}
-        />
-      )}
     </header>
   );
 }

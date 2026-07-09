@@ -7,15 +7,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
-
-const ROLES = ["ADMIN", "EDITOR", "VIEWER"];
-
-const ROLE_STYLE = {
-  ADMIN: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  EDITOR: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  VIEWER: "bg-neutral-500/15 text-neutral-400 border-neutral-500/30",
-};
 
 export default function UsersPage() {
   const { data: session } = useSession();
@@ -23,7 +14,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
-  const [editForm, setEditForm] = useState({ name: "", role: "" });
+  const [editName, setEditName] = useState("");
   const [saving, setSaving] = useState(false);
 
   const fetchUsers = async () => {
@@ -49,17 +40,17 @@ export default function UsersPage() {
 
   const openEdit = (user) => {
     setSelected(user);
-    setEditForm({ name: user.name, role: user.role });
+    setEditName(user.name);
   };
 
   const handleSave = async () => {
-    if (!editForm.name.trim()) return;
+    if (!editName.trim()) return;
     setSaving(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.backendToken}` },
-        body: JSON.stringify({ name: editForm.name, role: editForm.role }),
+        body: JSON.stringify({ name: editName }),
       });
       if (!res.ok) throw new Error("บันทึกไม่สำเร็จ");
       toast.success("อัปเดตผู้ใช้สำเร็จ");
@@ -75,7 +66,7 @@ export default function UsersPage() {
   const skeletons = Array.from({ length: 8 });
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto">
+    <div className="p-4 sm:p-6 max-w-[1200px] mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white">Users</h1>
@@ -93,7 +84,6 @@ export default function UsersPage() {
             <tr className="bg-neutral-900 border-b border-neutral-800">
               <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500">ผู้ใช้</th>
               <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500 hidden sm:table-cell">อีเมล</th>
-              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Role</th>
               <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-neutral-500 hidden md:table-cell">วันที่ลงทะเบียน</th>
               <th className="px-4 py-3 w-20" />
             </tr>
@@ -109,7 +99,6 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell"><div className="h-3 w-36 bg-neutral-800 rounded animate-pulse" /></td>
-                    <td className="px-4 py-3"><div className="h-5 w-16 bg-neutral-800 rounded-full animate-pulse" /></td>
                     <td className="px-4 py-3 hidden md:table-cell"><div className="h-3 w-24 bg-neutral-800 rounded animate-pulse" /></td>
                     <td className="px-4 py-3" />
                   </tr>
@@ -126,11 +115,6 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-neutral-400 hidden sm:table-cell">{user.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${ROLE_STYLE[user.role] ?? ROLE_STYLE.VIEWER}`}>
-                        {user.role}
-                      </span>
-                    </td>
                     <td className="px-4 py-3 text-neutral-500 text-xs hidden md:table-cell">
                       {user.createdAt ? new Date(user.createdAt).toLocaleDateString("th-TH") : "-"}
                     </td>
@@ -150,39 +134,25 @@ export default function UsersPage() {
       </div>
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-xs bg-[#111] border-[#262626] text-[#e5e5e5]">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-xs bg-[#111] border-[#262626] text-[#e5e5e5]">
           <DialogHeader>
             <DialogTitle className="text-white border-b border-[#262626] pb-2">แก้ไขผู้ใช้</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-4 pt-1">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="u-name" className="text-neutral-400">ชื่อ</Label>
-              <Input
-                id="u-name"
-                value={editForm.name}
-                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                className="bg-[#0a0a0a] border-[#404040] text-white focus-visible:ring-[#cc8f2a]"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-neutral-400">Role</Label>
-              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
-                <SelectTrigger className="bg-[#0a0a0a] border-[#404040] text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1a1a1a] border-[#404040] text-white">
-                  {ROLES.map((r) => (
-                    <SelectItem key={r} value={r} className="focus:bg-[#262626] focus:text-white">{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="pt-1">
+            <Label htmlFor="u-name" className="text-neutral-400 text-xs uppercase tracking-wider">ชื่อ</Label>
+            <Input
+              id="u-name"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="mt-1.5 bg-[#0a0a0a] border-[#404040] text-white focus-visible:ring-[#cc8f2a]"
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
+            />
           </div>
           <DialogFooter className="border-t border-[#262626] pt-3 gap-2">
             <Button variant="ghost" className="text-neutral-400 hover:text-white" onClick={() => setSelected(null)}>ยกเลิก</Button>
             <Button
               onClick={handleSave}
-              disabled={saving || !editForm.name.trim()}
+              disabled={saving || !editName.trim()}
               className="bg-[#cc8f2a] text-black hover:bg-[#b57b14] disabled:opacity-50"
             >
               {saving ? "กำลังบันทึก..." : "บันทึก"}

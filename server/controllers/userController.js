@@ -9,7 +9,6 @@ exports.getUsers = async (req, res) => {
         email: true,
         name: true,
         avatarUrl: true,
-        role: true,
         createdAt: true,
         updatedAt: true,
       }
@@ -27,20 +26,14 @@ exports.updateUser = async (req, res) => {
     return res.status(400).json({ message: 'Invalid ID' })
   }
 
-  const isAdmin = req.user.role === 'ADMIN'
   const isSelf = req.user.id === userId
-  if (!isAdmin && !isSelf) {
+  if (!isSelf) {
     return res.status(403).json({ message: 'Forbidden: You do not have permission' })
-  }
-
-  if (req.body.role !== undefined && !isAdmin) {
-    return res.status(403).json({ message: 'Forbidden: Only admins can change role' })
   }
 
   const updateData = {}
   if (req.body.name !== undefined) updateData.name = req.body.name
   if (req.body.email !== undefined) updateData.email = req.body.email
-  if (req.body.role !== undefined) updateData.role = req.body.role
 
   if (updateData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updateData.email)) {
     return res.status(400).json({ message: 'Invalid email format' })
@@ -64,7 +57,6 @@ exports.updateUser = async (req, res) => {
         id: true,
         email: true,
         name: true,
-        role: true,
         avatarUrl: true
       }
     })

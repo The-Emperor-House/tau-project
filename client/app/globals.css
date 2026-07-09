@@ -66,8 +66,8 @@
 
 @media (max-width: 900px) {
   :root {
-    --nav-h: 64px;
-    --page-top: calc(var(--nav-h) + 24px);
+    --nav-h: 90px;
+    --page-top: calc(var(--announcement-h) + var(--nav-h) + 20px);
   }
 }
 

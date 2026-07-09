@@ -14,12 +14,11 @@ if (!JWT_SECRET || !REFRESH_TOKEN_SECRET) {
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 // Token generator
-const generateTokens = (userId, email, role, rememberMe = false) => {
+const generateTokens = (userId, email, rememberMe = false) => {
   const accessTokenExpiresIn = rememberMe ? "7d" : "2h";
-  // const accessTokenExpiresIn = rememberMe ? "7d" : "30s"; // For testing, use a shorter expiration time
   const refreshTokenExpiresIn = "30d";
 
-  const accessToken = jwt.sign({ id: userId, email, role }, JWT_SECRET, {
+  const accessToken = jwt.sign({ id: userId, email }, JWT_SECRET, {
     expiresIn: accessTokenExpiresIn,
     algorithm: "HS256",
   });
@@ -46,7 +45,7 @@ const saveRefreshToken = async (token, userId) => {
 exports.register = [
   uploadAvatar.single("avatar"),
   async (req, res) => {
-    const { email, password, name, role } = req.body;
+    const { email, password, name } = req.body;
     const avatarFile = req.file;
 
     const errors = [
@@ -55,8 +54,6 @@ exports.register = [
       email && !isValidEmail(email) && "Invalid email format",
       password && password.length < 6 && "Password must be at least 6 characters",
       (!name || name.length < 2) && "Name must be at least 2 characters",
-      role && !["USER", "ADMIN"].includes(role) && "Invalid role",
-      role === "ADMIN" && req.user?.role !== "ADMIN" && "Only admins can create admin users",
     ].filter(Boolean);
 
     if (errors.length > 0) {
@@ -81,7 +78,6 @@ exports.register = [
           email,
           password: hashedPassword,
           name,
-          role: role || "USER",
           avatarUrl: avatarFile?.path || null,
           avatarPublicId: avatarFile?.filename || null,
         },
@@ -96,7 +92,6 @@ exports.register = [
             email: user.email,
             name: user.name,
             avatarUrl: user.avatarUrl,
-            role: user.role,
           },
         },
       });
@@ -131,7 +126,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const { accessToken, refreshToken, accessTokenExpiresIn } = generateTokens(user.id, user.email, user.role, rememberMe);
+    const { accessToken, refreshToken, accessTokenExpiresIn } = generateTokens(user.id, user.email, rememberMe);
     await saveRefreshToken(refreshToken, user.id);
 
     res.json({
@@ -184,7 +179,7 @@ exports.refreshToken = async (req, res) => {
 
     await prisma.refreshToken.delete({ where: { token: refreshToken } });
 
-    const { accessToken, refreshToken: newRefreshToken, accessTokenExpiresIn } = generateTokens(decoded.id, storedToken.user.email, storedToken.user.role);
+    const { accessToken, refreshToken: newRefreshToken, accessTokenExpiresIn } = generateTokens(decoded.id, storedToken.user.email);
 
     await saveRefreshToken(newRefreshToken, decoded.id);
 
@@ -232,7 +227,7 @@ exports.me = async (req, res) => {
         email: true,
         name: true,
         avatarUrl: true,
-        role: true,
+
         createdAt: true,
         updatedAt: true,
       },

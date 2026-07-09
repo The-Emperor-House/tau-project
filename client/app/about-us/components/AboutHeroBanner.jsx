@@ -14,7 +14,7 @@ export default function AboutHeroBanner() {
       <div className="absolute inset-0 bg-black/50 z-[1]" />
       <div
         className="relative z-[2] flex flex-col items-center px-4"
-        style={{ paddingTop: "var(--nav-h)" }}
+        style={{ paddingTop: "var(--page-top)" }}
       >
         <h1 className="text-3xl md:text-4xl font-bold text-white tracking-[0.05em]">
           ABOUT US

@@ -79,7 +79,7 @@ export default function ChangePasswordDialog({ open, onClose, user, token }) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-sm">
         <DialogHeader>
           <DialogTitle className="font-bold">เปลี่ยนรหัสผ่าน</DialogTitle>
         </DialogHeader>

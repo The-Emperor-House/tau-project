@@ -53,7 +53,7 @@ export default function FurnitureListPage() {
 
         {/* Filter */}
         <div className="flex justify-center mb-8">
-          <div className="flex border border-white/20 rounded overflow-hidden">
+          <div className="flex border border-white/20 rounded overflow-hidden overflow-x-auto max-w-full">
             {TYPES.map((t) => (
               <button
                 key={t}
@@ -87,6 +87,12 @@ export default function FurnitureListPage() {
                   <Skeleton className="h-5 w-[60%] mt-1.5 bg-white/10" />
                 </div>
               ))
+            : items.length === 0
+            ? (
+                <div className="col-span-full flex flex-col items-center justify-center py-20 text-neutral-400">
+                  <p className="text-lg">ไม่พบสินค้า</p>
+                </div>
+              )
             : items.map((it) => (
                 <FurnitureCard
                   key={it.id}

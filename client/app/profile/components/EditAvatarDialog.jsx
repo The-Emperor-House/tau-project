@@ -10,7 +10,7 @@ import { Loader2, Camera } from "lucide-react";
 
 export default function EditAvatarDialog({ open, onClose, user, token, onUpdated }) {
   const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl || "");
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl || "");
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e) => {
@@ -50,7 +50,7 @@ export default function EditAvatarDialog({ open, onClose, user, token, onUpdated
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-xs">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-xs">
         <DialogHeader>
           <DialogTitle>แก้ไขรูปโปรไฟล์</DialogTitle>
         </DialogHeader>
@@ -60,11 +60,11 @@ export default function EditAvatarDialog({ open, onClose, user, token, onUpdated
             <Avatar className="w-28 h-28">
               <AvatarImage
                 src={avatarPreview || undefined}
-                alt={user.name || "User"}
+                alt={user?.name || "User"}
                 onError={(e) => { e.target.onerror = null; e.target.src = ""; }}
               />
               <AvatarFallback className="text-4xl">
-                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
               </AvatarFallback>
             </Avatar>
 

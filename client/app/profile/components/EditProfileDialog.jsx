@@ -8,19 +8,15 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/shared/components/ui/select";
-
 export default function EditProfileDialog({ open, onClose, user, token, onUpdated }) {
   const { showModal, closeModal } = useModalContext();
-  const [form, setForm] = useState({ name: "", email: "", role: "USER" });
+  const [form, setForm] = useState({ name: "", email: "" });
   const [formError, setFormError] = useState({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open && user) {
-      setForm({ name: user.name || "", email: user.email || "", role: user.role || "USER" });
+      setForm({ name: user.name || "", email: user.email || "" });
       setFormError({});
     }
   }, [open, user]);
@@ -36,7 +32,6 @@ export default function EditProfileDialog({ open, onClose, user, token, onUpdate
     if (!form.email.trim()) errors.email = "กรุณากรอกอีเมล";
     else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(form.email))
       errors.email = "รูปแบบอีเมลไม่ถูกต้อง";
-    if (!form.role) errors.role = "กรุณาเลือกบทบาท";
     setFormError(errors);
     return Object.keys(errors).length === 0;
   };
@@ -89,7 +84,7 @@ export default function EditProfileDialog({ open, onClose, user, token, onUpdate
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-sm">
         <DialogHeader>
           <DialogTitle className="font-semibold">แก้ไขโปรไฟล์</DialogTitle>
         </DialogHeader>
@@ -117,24 +112,6 @@ export default function EditProfileDialog({ open, onClose, user, token, onUpdate
               className={formError.email ? "border-destructive" : ""}
             />
             {formError.email && <p className="text-sm text-destructive">{formError.email}</p>}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label>บทบาท</Label>
-            <Select
-              value={form.role}
-              onValueChange={(v) => { setForm((p) => ({ ...p, role: v })); setFormError((p) => ({ ...p, role: "" })); }}
-            >
-              <SelectTrigger className={formError.role ? "border-destructive" : ""}>
-                <SelectValue placeholder="เลือกบทบาท" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USER">ผู้ใช้</SelectItem>
-                <SelectItem value="ADMIN">ผู้ดูแลระบบ</SelectItem>
-                <SelectItem value="SUPER_ADMIN">ผู้ดูแลระบบสูงสุด</SelectItem>
-              </SelectContent>
-            </Select>
-            {formError.role && <p className="text-sm text-destructive">{formError.role}</p>}
           </div>
 
           <DialogFooter className="mt-2">

@@ -1,8 +1,7 @@
 import './globals.css';
 import { Poppins, Prompt } from 'next/font/google';
 import { Providers } from '@/shared/providers/Providers';
-import MainNavbar from '@/modules/layout/navbar/MainNavbar';
-import Footer from '@/modules/layout/footer/Footer';
+import ShellWrapper from '@/modules/layout/common/ShellWrapper';
 import ClientGuards from "@/modules/layout/common/ClientGuards";
 
 const poppins = Poppins({
@@ -37,9 +36,7 @@ export default function RootLayout({ children }) {
       <body data-protect={enableGuards ? "on" : "off"}>
         <Providers>
           <ClientGuards enabled={enableGuards} />
-          <MainNavbar />
-          <main>{children}</main>
-          <Footer />
+          <ShellWrapper>{children}</ShellWrapper>
         </Providers>
       </body>
     </html>

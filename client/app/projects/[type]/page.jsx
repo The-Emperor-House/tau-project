@@ -66,6 +66,12 @@ export default function TypePage() {
                   <div className="mt-3 mx-auto h-6 w-[70%] bg-white/8 animate-pulse" />
                 </div>
               ))
+            : projects.length === 0
+            ? (
+                <div className="col-span-full flex flex-col items-center justify-center py-20 text-neutral-400">
+                  <p className="text-lg">ไม่พบโปรเจกต์</p>
+                </div>
+              )
             : projects.map((project, i) => (
                 <div key={project.id ?? i} className="flex flex-col">
                   <GridCard data={project} onClick={() => setSelectedProject(project)} />

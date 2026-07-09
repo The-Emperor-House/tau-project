@@ -95,7 +95,7 @@ export default function ContactPage() {
   ], []);
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto">
+    <div className="p-4 sm:p-6 max-w-[1200px] mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white">Contacts</h1>
@@ -150,7 +150,7 @@ export default function ContactPage() {
       </div>
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="sm:max-w-sm bg-[#111] border-[#262626] text-[#e5e5e5]">
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-sm bg-[#111] border-[#262626] text-[#e5e5e5]">
           <DialogHeader>
             <DialogTitle className="text-white border-b border-[#262626] pb-2">รายละเอียด Contact</DialogTitle>
           </DialogHeader>

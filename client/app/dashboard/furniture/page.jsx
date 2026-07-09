@@ -126,7 +126,7 @@ export default function DashboardFurniture() {
   const skeletons = Array.from({ length: 6 });
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto">
+    <div className="p-4 sm:p-6 max-w-[1200px] mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 className="text-xl font-semibold text-white">Furniture</h1>
         <button
@@ -175,7 +175,7 @@ export default function DashboardFurniture() {
       </div>
 
       <Dialog open={openForm} onOpenChange={(o) => !o && setOpenForm(false)}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isEditing ? "Edit Furniture" : "Add Furniture"}</DialogTitle>
           </DialogHeader>

@@ -58,7 +58,7 @@ export default function ProjectsSection() {
           align="center"
           titleColor="#ffffffff"
         />
-        <div className="grid w-full p-4 sm:p-6 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))] gap-5 sm:gap-6 min-h-[60vh]">
+        <div className="grid w-full p-4 sm:p-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 min-h-[60vh]">
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
