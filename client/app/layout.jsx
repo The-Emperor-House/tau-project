@@ -3,6 +3,7 @@ import { Poppins, Prompt } from 'next/font/google';
 import { Providers } from '@/shared/providers/Providers';
 import ShellWrapper from '@/modules/layout/common/ShellWrapper';
 import ClientGuards from "@/modules/layout/common/ClientGuards";
+import CookieConsent from "@/shared/components/CookieConsent";
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
         <Providers>
           <ClientGuards enabled={enableGuards} />
           <ShellWrapper>{children}</ShellWrapper>
+          <CookieConsent />
         </Providers>
       </body>
     </html>

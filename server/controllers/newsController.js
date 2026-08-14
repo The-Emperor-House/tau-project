@@ -67,22 +67,28 @@ exports.createNews = [
 
 // List + filter
 exports.getAllNews = async (req, res) => {
-  const { q } = req.query;
+  const { q, featured, limit } = req.query;
 
   try {
-    const where = q
-      ? {
-          OR: [
-            { heading1: { contains: q, mode: "insensitive" } },
-            { heading2: { contains: q, mode: "insensitive" } },
-            { body: { contains: q, mode: "insensitive" } },
-          ],
-        }
-      : {};
+    const where = {
+      ...(q
+        ? {
+            OR: [
+              { heading1: { contains: q, mode: "insensitive" } },
+              { heading2: { contains: q, mode: "insensitive" } },
+              { body: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+      ...(featured === "true" ? { isFeatured: true } : {}),
+    };
+
+    const take = isValidId(limit) || undefined;
 
     const data = await prisma.news.findMany({
       where,
       orderBy: { createdAt: "desc" },
+      take,
       include: {
         images: { select: { id: true, imageUrl: true } },
       },
@@ -91,6 +97,26 @@ exports.getAllNews = async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error("Get news error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Set/unset featured (multiple news can be featured at the same time)
+exports.setFeaturedNews = async (req, res) => {
+  const id = isValidId(req.params.id);
+  if (!id) return res.status(400).json({ message: "Invalid ID" });
+
+  const isFeatured = !!req.body.isFeatured;
+
+  try {
+    const exists = await prisma.news.findUnique({ where: { id } });
+    if (!exists) return res.status(404).json({ message: "Not found" });
+
+    await prisma.news.update({ where: { id }, data: { isFeatured } });
+
+    res.json({ message: "News featured status updated", id, isFeatured });
+  } catch (err) {
+    console.error("Set featured news error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

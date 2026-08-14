@@ -1,11 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { toast } from 'sonner';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/shared/components/ui/dialog';
-import { Button } from '@/shared/components/ui/button';
 
 const PAGE_BG = '#404040';
 const ACCENT = '#ab9685';
@@ -30,7 +27,6 @@ const services = {
 
 export default function ContactForm() {
   const [formData, setFormData] = useState(initialState);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -172,13 +168,12 @@ export default function ContactForm() {
               />
               <span className="text-base md:text-[1.375rem]">
                 ยอมรับข้อตกลงในการใช้งานและนโยบายความเป็นส่วนตัว&nbsp;
-                <button
-                  type="button"
-                  onClick={() => setPrivacyOpen(true)}
+                <Link
+                  href="/privacy-policy"
                   className="underline text-[1rem] md:text-[1.375rem] hover:opacity-70 transition-opacity"
                 >
                   นโยบายความเป็นส่วนตัว
-                </button>
+                </Link>
               </span>
             </label>
 
@@ -194,15 +189,6 @@ export default function ContactForm() {
           </div>
         </div>
       </form>
-
-      <PrivacyDialog
-        open={privacyOpen}
-        onClose={() => setPrivacyOpen(false)}
-        onAccept={() => {
-          setFormData(prev => ({ ...prev, accept: true }));
-          setPrivacyOpen(false);
-        }}
-      />
     </div>
   );
 }
@@ -235,47 +221,5 @@ function Field({ label, name, value, onChange, multiline, rows }) {
         />
       )}
     </div>
-  );
-}
-
-function PrivacyDialog({ open, onClose, onAccept }) {
-  return (
-    <Dialog open={open} onOpenChange={o => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90dvh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>นโยบายความเป็นส่วนตัว</DialogTitle>
-        </DialogHeader>
-
-        <div className="overflow-y-auto flex-1 pr-1 space-y-4 text-base leading-relaxed border-t border-b py-4 my-2">
-          <p>
-            เราให้ความสำคัญกับข้อมูลส่วนบุคคลของคุณ ข้อมูลที่คุณให้ผ่านฟอร์มการติดต่อจะถูกใช้เพื่อ
-            ติดต่อกลับ จัดทำใบเสนอราคา จัดนัดหมาย และนำไปปรับปรุงคุณภาพงานบริการของเรา
-            โดยจะไม่เปิดเผยต่อบุคคลที่สาม เว้นแต่จำเป็นต่อการให้บริการหรือเป็นไปตามกฎหมาย
-          </p>
-          <p>
-            ประเภทข้อมูลที่เก็บ ได้แก่ ชื่อ–นามสกุล อีเมล เบอร์โทร ข้อมูลโครงการ (งบประมาณ พื้นที่
-            สถานที่ก่อสร้าง) และรายละเอียดเพิ่มเติม
-          </p>
-          <p>
-            คุณสามารถขอเข้าถึง/แก้ไข/ลบข้อมูล หรือเพิกถอนความยินยอมได้
-            โดยติดต่อช่องทางที่ระบุไว้ในเว็บไซต์ของเรา
-          </p>
-          <p>
-            การกดยอมรับนโยบายนี้ถือเป็นการอนุญาตให้เราเก็บและใช้ข้อมูลตามวัตถุประสงค์ที่ระบุ
-          </p>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>ปิด</Button>
-          <Button
-            onClick={onAccept}
-            style={{ backgroundColor: '#ab9685' }}
-            className="hover:opacity-90"
-          >
-            ยอมรับและปิด
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

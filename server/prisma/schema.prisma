@@ -137,6 +137,7 @@ model news {
   coverUrl       String
   coverPublicId  String?
   videoUrl       String?
+  isFeatured     Boolean        @default(false)
   images         newsImage[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt

@@ -4,35 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import MediaEmbed from "@/shared/components/ui/MediaEmbed";
+import { resolveNewsUrl, extractNewsLabel, formatNewsDate, NEWS_FALLBACK_COVER } from "@/shared/lib/news";
 
 const ACCENT = "#BFA68A";
 const FRAME = "#333";
-const FALLBACK_COVER = "/images/default-news.jpg";
+const FALLBACK_COVER = NEWS_FALLBACK_COVER;
 const PAGE_SIZE = 5;
 
-const resolveUrl = (u) => {
-  if (!u) return null;
-  if (u.startsWith("https://")) return u;
-  if (u.startsWith("//")) return "https:" + u;
-  if (u.startsWith("http://")) return u.replace(/^http:\/\//i, "https://");
-  if (u.startsWith("/")) {
-    const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
-    return base ? `${base}${u}` : u;
-  }
-  return u;
-};
-const dateLine = (d) =>
-  d
-    ? new Date(d)
-        .toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
-        .toUpperCase()
-    : "";
-const extractLabel = (h1 = "") => {
-  const s = String(h1).trim();
-  if (!s) return "NEWS :";
-  if (s.includes(":")) return `${s.split(":")[0].trim().toUpperCase()} :`;
-  return `${s.split(/\s+/)[0].toUpperCase()} :`;
-};
+const resolveUrl = resolveNewsUrl;
+const dateLine = formatNewsDate;
+const extractLabel = extractNewsLabel;
 
 export default function NewsListPage() {
   const [allItems, setAllItems] = useState([]);
@@ -70,6 +51,7 @@ export default function NewsListPage() {
 
   const totalPages = Math.max(1, Math.ceil(allItems.length / PAGE_SIZE));
   const canNext = page < totalPages;
+  const canPrev = page > 1;
 
   return (
     <div
@@ -173,7 +155,23 @@ export default function NewsListPage() {
             })}
 
         {/* Pagination */}
-        <div className="flex justify-end mt-8 gap-4">
+        <div className="flex items-center justify-end mt-8 gap-4">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={!canPrev || loading}
+            className="px-8 py-3.5 rounded-full font-extrabold tracking-[0.18em] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: canPrev ? ACCENT : "rgba(255,255,255,.2)",
+              color: canPrev ? "#000" : "rgba(255,255,255,.6)",
+            }}
+          >
+            ← Previous
+          </button>
+
+          <p className="font-bold tracking-[0.08em] text-white/70 text-sm">
+            {page} / {totalPages}
+          </p>
+
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={!canNext || loading}

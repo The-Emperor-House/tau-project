@@ -12,6 +12,7 @@ router.use(authenticate);
 
 router.post('/', newsController.createNews);
 router.put('/:id', newsController.updateNews);
+router.patch('/:id/feature', newsController.setFeaturedNews);
 router.delete('/:id', newsController.deleteNews);
 
 module.exports = router;
