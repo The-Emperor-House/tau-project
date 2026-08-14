@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import MediaEmbed from "@/shared/components/ui/MediaEmbed";
@@ -9,10 +9,9 @@ import { resolveNewsUrl, extractNewsLabel, formatNewsDate, NEWS_FALLBACK_COVER }
 const ACCENT = "#BFA68A";
 const FRAME = "#333";
 const FALLBACK_COVER = NEWS_FALLBACK_COVER;
-const MAX_ITEMS = 3;
 
 export default function LatestNews({ title = "News & Events", showViewAll = true }) {
-  const [items, setItems] = useState(null);
+  const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
@@ -22,23 +21,23 @@ export default function LatestNews({ title = "News & Events", showViewAll = true
       try {
         setLoading(true);
         setErr("");
-        let list = [];
+        let latest = null;
 
-        const rFeatured = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/news?featured=true`, { signal: ctrl.signal });
+        const rFeatured = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/news?featured=true&limit=1`, { signal: ctrl.signal });
         if (rFeatured.ok) {
           const data = await rFeatured.json();
-          if (Array.isArray(data)) list = data;
+          if (Array.isArray(data) && data.length) latest = data[0];
         }
 
-        if (!list.length) {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/news?limit=${MAX_ITEMS}`, { signal: ctrl.signal });
+        if (!latest) {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/news?limit=1`, { signal: ctrl.signal });
           if (res.ok) {
             const data = await res.json();
-            if (Array.isArray(data)) list = data;
+            if (Array.isArray(data) && data.length) latest = data[0];
           }
         }
 
-        setItems(list.slice(0, MAX_ITEMS));
+        setNews(latest || null);
       } catch (e) {
         if (e.name !== "AbortError") setErr(e.message || "เกิดข้อผิดพลาด");
       } finally {
@@ -48,6 +47,8 @@ export default function LatestNews({ title = "News & Events", showViewAll = true
     return () => ctrl.abort();
   }, []);
 
+  const cover = useMemo(() => resolveNewsUrl(news?.coverUrl) || FALLBACK_COVER, [news?.coverUrl]);
+
   if (err) {
     return (
       <div className="bg-white px-4 md:px-6 py-12 md:py-16">
@@ -56,7 +57,7 @@ export default function LatestNews({ title = "News & Events", showViewAll = true
     );
   }
 
-  const showEmpty = !loading && (!items || items.length === 0);
+  if (!loading && !news) return null;
 
   return (
     <div className="bg-white text-foreground px-4 md:px-6 py-12 md:py-16">
@@ -69,84 +70,80 @@ export default function LatestNews({ title = "News & Events", showViewAll = true
         <div className="h-px bg-black" />
       </div>
 
-      {showEmpty ? null : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          {(loading || !items ? Array.from({ length: MAX_ITEMS }) : items).map((news, i) => (
-            <NewsCard key={news?.id ?? i} news={news} loading={loading || !news} />
-          ))}
-        </div>
-      )}
-
-      {showViewAll && !showEmpty && (
-        <div className="flex justify-center mt-10">
-          <Link
-            href="/news"
-            className="px-8 py-3 rounded-full font-bold tracking-[0.12em] border transition-colors hover:bg-[#BFA68A]/10"
-            style={{ borderColor: ACCENT, color: ACCENT }}
-          >
-            VIEW ALL
-          </Link>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function NewsCard({ news, loading }) {
-  const cover = resolveNewsUrl(news?.coverUrl) || FALLBACK_COVER;
-
-  if (loading) {
-    return (
-      <div>
-        <div style={{ border: `10px solid ${FRAME}`, borderRadius: 4 }}>
-          <div className="relative aspect-video bg-neutral-100">
-            <Skeleton className="absolute inset-0 w-full h-full" />
+      {/* Content */}
+      {loading || !news ? (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8">
+          <div className="md:col-span-7">
+            <div style={{ border: `10px solid ${FRAME}`, borderRadius: 4 }}>
+              <div className="relative aspect-video bg-neutral-100">
+                <Skeleton className="absolute inset-0 w-full h-full" />
+              </div>
+            </div>
+          </div>
+          <div className="md:col-span-5 space-y-2">
+            <Skeleton className="h-6 w-3/5" />
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-4/5" />
+            <Skeleton className="h-4 w-3/5" />
+            <Skeleton className="h-10 w-36 mt-2" />
           </div>
         </div>
-        <div className="space-y-2 mt-3">
-          <Skeleton className="h-4 w-1/3" />
-          <Skeleton className="h-5 w-4/5" />
-          <Skeleton className="h-4 w-3/5" />
-        </div>
-      </div>
-    );
-  }
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 items-start">
+          <div className="md:col-span-7">
+            <div style={{ border: `10px solid ${FRAME}`, borderRadius: 4 }}>
+              <div className="relative aspect-video overflow-hidden bg-neutral-100">
+                {news.videoUrl ? (
+                  <MediaEmbed url={news.videoUrl} />
+                ) : (
+                  <img
+                    src={cover}
+                    alt={news.heading1 || "news cover"}
+                    onError={(e) => (e.currentTarget.src = FALLBACK_COVER)}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
 
-  return (
-    <div>
-      <div style={{ border: `10px solid ${FRAME}`, borderRadius: 4 }}>
-        <div className="relative aspect-video overflow-hidden bg-neutral-100">
-          {news.videoUrl ? (
-            <MediaEmbed url={news.videoUrl} />
-          ) : (
-            <img
-              src={cover}
-              alt={news.heading1 || "news cover"}
-              onError={(e) => (e.currentTarget.src = FALLBACK_COVER)}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          )}
+          <div className="md:col-span-5">
+            <p className="font-extrabold text-[1rem] md:text-[1.1rem] mb-2">{formatNewsDate(news.createdAt)}</p>
+            <p className="font-extrabold tracking-[0.06em] uppercase mb-1" style={{ color: ACCENT }}>
+              {extractNewsLabel(news.heading1)}
+            </p>
+            <p className="font-black text-[1.2rem] md:text-[1.4rem] leading-tight mb-3">
+              {news.heading2 || news.heading1}
+            </p>
+            {news.body && (
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {news.body.length > 140 ? news.body.slice(0, 140) + "…" : news.body}
+              </p>
+            )}
+            <div className="flex gap-3 flex-wrap">
+              <Link
+                href={`/news/${news.id}`}
+                className="px-6 py-2.5 rounded-full font-extrabold tracking-[0.12em] text-black transition-colors"
+                style={{ backgroundColor: ACCENT }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#a88e72")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = ACCENT)}
+              >
+                READ MORE
+              </Link>
+              {showViewAll && (
+                <Link
+                  href="/news"
+                  className="px-6 py-2.5 rounded-full font-bold tracking-[0.12em] border transition-colors hover:bg-[#BFA68A]/10"
+                  style={{ borderColor: ACCENT, color: ACCENT }}
+                >
+                  VIEW ALL
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="mt-3">
-        <p className="font-extrabold text-sm mb-1">{formatNewsDate(news.createdAt)}</p>
-        <p className="font-extrabold tracking-[0.06em] uppercase text-sm mb-1" style={{ color: ACCENT }}>
-          {extractNewsLabel(news.heading1)}
-        </p>
-        <p className="font-black text-[1.1rem] leading-tight mb-2 line-clamp-2">
-          {news.heading2 || news.heading1}
-        </p>
-        <Link
-          href={`/news/${news.id}`}
-          className="inline-flex px-5 py-2 rounded-full font-extrabold tracking-[0.1em] text-sm text-black transition-colors"
-          style={{ backgroundColor: ACCENT }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#a88e72")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = ACCENT)}
-        >
-          READ MORE
-        </Link>
-      </div>
+      )}
     </div>
   );
 }
