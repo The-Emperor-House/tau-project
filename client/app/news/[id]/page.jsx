@@ -6,36 +6,13 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import MediaEmbed from "@/shared/components/ui/MediaEmbed";
 import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { resolveNewsUrl, extractNewsLabel, formatNewsDate, NEWS_FALLBACK_COVER } from "@/shared/lib/news";
 
-const FALLBACK_COVER = "/images/default-news.jpg";
+const FALLBACK_COVER = NEWS_FALLBACK_COVER;
 const ACCENT = "#cc8f2a";
-
-function resolveUrl(u) {
-  if (!u) return null;
-  if (u.startsWith("https://")) return u;
-  if (u.startsWith("//")) return "https:" + u;
-  if (u.startsWith("http://")) return u.replace(/^http:\/\//i, "https://");
-  if (u.startsWith("/")) {
-    const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
-    return base ? `${base}${u}` : u;
-  }
-  return u;
-}
-
-function extractLabel(h1 = "") {
-  const s = String(h1).trim();
-  if (!s) return "NEWS :";
-  if (s.includes(":")) return `${s.split(":")[0].trim().toUpperCase()} :`;
-  return `${s.split(/\s+/)[0].toUpperCase()} :`;
-}
-
-function formatDateLine(d) {
-  const dt = new Date(d);
-  const day = dt.getDate();
-  const month = dt.toLocaleString("en-US", { month: "long" }).toUpperCase();
-  const year = dt.getFullYear();
-  return `${day} ${month} ${year}`;
-}
+const resolveUrl = resolveNewsUrl;
+const extractLabel = extractNewsLabel;
+const formatDateLine = formatNewsDate;
 
 export default function NewsDetail() {
   const params = useParams();
