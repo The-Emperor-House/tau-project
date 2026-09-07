@@ -10,6 +10,7 @@ const rateLimit = require("express-rate-limit");
 
 const routes = require("./routes");
 const errorMiddleware = require("./middleware/errorMiddleware");
+const timeoutMiddleware = require("./middleware/timeoutMiddleware");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -131,6 +132,9 @@ app.use((req, res, next) => {
   res.locals.isSecure = process.env.NODE_ENV === "production";
   next();
 });
+
+/** ⏱️ Request timeout — กัน request ค้างไม่มีที่สิ้นสุด (เช่น DB pool รอ, Cloudinary ช้า) */
+app.use("/api", timeoutMiddleware(25000));
 
 /** 🚀 Routes */
 app.use("/api", routes);
