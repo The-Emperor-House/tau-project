@@ -20,13 +20,13 @@ export default function GalleryModal({ open, onClose, data }) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-4 sm:rounded-2xl">
+      <DialogContent className="max-w-[95vw] lg:max-w-5xl w-full max-h-[95vh] overflow-y-auto p-4 sm:rounded-2xl">
         <DialogHeader>
           <DialogTitle className="text-center pr-6">{data.name}</DialogTitle>
         </DialogHeader>
 
         {images.length > 0 ? (
-          <div className="[&_.image-gallery-slide-wrapper]:h-[260px] sm:[&_.image-gallery-slide-wrapper]:h-[420px] [&_.image-gallery-image]:h-full [&_.image-gallery-image]:object-contain [&_.image-gallery-slide]:h-full [&_.image-gallery-swipe]:h-full [&_.image-gallery-slides]:h-full [&_.image-gallery-thumbnail-image]:h-[70px] [&_.image-gallery-thumbnail-image]:object-cover [&_.image-gallery-thumbnail]:w-[100px]">
+          <div className="[&_.image-gallery-slide-wrapper]:h-[45vh] sm:[&_.image-gallery-slide-wrapper]:h-[65vh] [&_.image-gallery-image]:h-full [&_.image-gallery-image]:object-contain [&_.image-gallery-slide]:h-full [&_.image-gallery-swipe]:h-full [&_.image-gallery-slides]:h-full [&_.image-gallery-thumbnail-image]:h-[70px] [&_.image-gallery-thumbnail-image]:object-cover [&_.image-gallery-thumbnail]:w-[100px]">
             <ImageGallery
               items={images}
               showThumbnails
