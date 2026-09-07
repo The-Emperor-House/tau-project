@@ -60,8 +60,8 @@ export default function DesignFormDialog({
             <input type="file" accept="image/*" ref={coverInputRef} onChange={handleCoverChange} className="hidden" />
             <div className="flex flex-wrap items-center gap-2">
               {coverPreview && (
-                <div className="relative w-full sm:w-60 rounded-lg overflow-hidden shadow">
-                  <div className="aspect-video relative">
+                <div className="relative w-full sm:w-60 rounded-lg shadow">
+                  <div className="aspect-video relative overflow-hidden rounded-lg">
                     <img src={coverPreview} alt="Cover Preview" className="absolute inset-0 w-full h-full object-cover" />
                   </div>
                   <button
@@ -96,8 +96,8 @@ export default function DesignFormDialog({
             />
             <div className="flex flex-wrap gap-2 items-center">
               {imagesPreview.map((src, i) => (
-                <div key={i} className="relative w-40 rounded overflow-hidden shadow">
-                  <div className="aspect-video relative">
+                <div key={i} className="relative w-40 rounded shadow">
+                  <div className="aspect-video relative overflow-hidden rounded">
                     <img src={src} alt={`Preview ${i + 1}`} className="absolute inset-0 w-full h-full object-cover" />
                   </div>
                   <button
