@@ -26,6 +26,7 @@ export default function DashboardFurniture() {
   const imagesInputRef = useRef(null);
   const [coverPreview, setCoverPreview] = useState(null);
   const [imagesPreview, setImagesPreview] = useState([]);
+  const [imagesFiles, setImagesFiles] = useState([]);
   const [deleteImageIds, setDeleteImageIds] = useState(new Set());
 
   const fetchItems = async () => {
@@ -52,7 +53,7 @@ export default function DashboardFurniture() {
   const handleOpenAdd = () => {
     setIsEditing(false);
     setFormData({ id: null, name: "", type: "BUILT_IN", details: "", price: "", width: "", depth: "", height: "", images: [], coverUrl: "" });
-    setCoverPreview(null); setImagesPreview([]); setDeleteImageIds(new Set());
+    setCoverPreview(null); setImagesPreview([]); setImagesFiles([]); setDeleteImageIds(new Set());
     setOpenForm(true); resetFiles();
   };
 
@@ -61,6 +62,7 @@ export default function DashboardFurniture() {
     setFormData({ id: it.id, name: it.name, type: it.type, details: it.details || "", price: it.price ?? "", width: it.width ?? "", depth: it.depth ?? "", height: it.height ?? "", images: it.images || [], coverUrl: it.coverUrl || "" });
     setCoverPreview(it.coverUrl || null);
     setImagesPreview(it.images?.map((x) => x.imageUrl) || []);
+    setImagesFiles([]);
     setDeleteImageIds(new Set()); setOpenForm(true); resetFiles();
   };
 
@@ -85,13 +87,23 @@ export default function DashboardFurniture() {
 
   const handleImagesChange = (e) => {
     const files = Array.from(e.target.files || []);
-    if (files.length) setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+    if (files.length) {
+      setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+      setImagesFiles((prev) => [...prev, ...files]);
+    }
+    e.target.value = null;
   };
 
   const handleRemoveImage = (index) => {
     const url = imagesPreview[index];
     const ex = formData.images.find((im) => im.imageUrl === url);
-    if (ex) setDeleteImageIds((prev) => new Set(prev).add(ex.id));
+    if (ex) {
+      setDeleteImageIds((prev) => new Set(prev).add(ex.id));
+    } else {
+      const existingCount = imagesPreview.length - imagesFiles.length;
+      const fileIndex = index - existingCount;
+      setImagesFiles((prev) => prev.filter((_, i) => i !== fileIndex));
+    }
     setImagesPreview((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -103,7 +115,7 @@ export default function DashboardFurniture() {
     const form = new FormData();
     ["name", "type", "details", "price", "width", "depth", "height"].forEach((k) => form.append(k, String(formData[k] ?? "")));
     if (coverInputRef.current?.files?.[0]) form.append("cover", coverInputRef.current.files[0]);
-    Array.from(imagesInputRef.current?.files || []).forEach((f) => form.append("images", f));
+    imagesFiles.forEach((f) => form.append("images", f));
     if (deleteImageIds.size) form.append("deleteImageIds", Array.from(deleteImageIds).join(","));
 
     showLoading(isEditing ? "Updating..." : "Creating...");

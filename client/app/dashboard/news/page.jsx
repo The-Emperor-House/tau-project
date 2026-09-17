@@ -13,6 +13,7 @@ export default function DashboardNews() {
   const [formData, setFormData] = useState({ id: null, heading1: "", heading2: "", body: "", videoUrl: "", coverUrl: "", images: [] });
   const [coverPreview, setCoverPreview] = useState(null);
   const [imagesPreview, setImagesPreview] = useState([]);
+  const [imagesFiles, setImagesFiles] = useState([]);
   const [deleteImageIds, setDeleteImageIds] = useState(new Set());
   const coverInputRef = useRef(null);
   const imagesInputRef = useRef(null);
@@ -44,7 +45,7 @@ export default function DashboardNews() {
 
   const openAdd = () => {
     setFormData({ id: null, heading1: "", heading2: "", body: "", videoUrl: "", coverUrl: "", images: [] });
-    setCoverPreview(null); setImagesPreview([]); setDeleteImageIds(new Set());
+    setCoverPreview(null); setImagesPreview([]); setImagesFiles([]); setDeleteImageIds(new Set());
     setIsEditing(false); setOpenForm(true); resetFiles();
   };
 
@@ -52,13 +53,25 @@ export default function DashboardNews() {
     setFormData({ id: item.id, heading1: item.heading1, heading2: item.heading2 || "", body: item.body || "", videoUrl: item.videoUrl || "", coverUrl: item.coverUrl || "", images: item.images || [] });
     setCoverPreview(item.coverUrl || null);
     setImagesPreview(item.images?.map((i) => i.imageUrl) || []);
+    setImagesFiles([]);
     setDeleteImageIds(new Set()); setIsEditing(true); setOpenForm(true); resetFiles();
+  };
+
+  const onAddImages = (files) => {
+    setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+    setImagesFiles((prev) => [...prev, ...files]);
   };
 
   const onRemoveImage = (i) => {
     const url = imagesPreview[i];
     const existing = formData.images.find((img) => img.imageUrl === url);
-    if (existing) setDeleteImageIds((prev) => new Set(prev).add(existing.id));
+    if (existing) {
+      setDeleteImageIds((prev) => new Set(prev).add(existing.id));
+    } else {
+      const existingCount = imagesPreview.length - imagesFiles.length;
+      const fileIndex = i - existingCount;
+      setImagesFiles((prev) => prev.filter((_, idx) => idx !== fileIndex));
+    }
     setImagesPreview((prev) => prev.filter((_, idx) => idx !== i));
   };
 
@@ -114,8 +127,7 @@ export default function DashboardNews() {
     if (formData.body) fd.append("body", formData.body);
     if (formData.videoUrl) fd.append("videoUrl", formData.videoUrl);
     if (coverInputRef.current?.files[0]) fd.append("cover", coverInputRef.current.files[0]);
-    if (imagesInputRef.current?.files?.length)
-      Array.from(imagesInputRef.current.files).forEach((f) => fd.append("images", f));
+    imagesFiles.forEach((f) => fd.append("images", f));
     if (deleteImageIds.size) fd.append("deleteImageIds", Array.from(deleteImageIds).join(","));
 
     showLoading(isEditing ? "Updating..." : "Creating...");
@@ -217,7 +229,7 @@ export default function DashboardNews() {
         coverPreview={coverPreview}
         setCoverPreview={setCoverPreview}
         imagesPreview={imagesPreview}
-        setImagesPreview={setImagesPreview}
+        onAddImages={onAddImages}
         coverInputRef={coverInputRef}
         imagesInputRef={imagesInputRef}
         onRemoveImage={onRemoveImage}

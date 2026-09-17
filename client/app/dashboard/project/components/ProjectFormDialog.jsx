@@ -12,7 +12,7 @@ export default function ProjectFormDialog({
   open, onClose, onSubmit,
   formData, setFormData,
   coverPreview, setCoverPreview,
-  imagesPreview, setImagesPreview,
+  imagesPreview, onAddImages,
   coverInputRef, imagesInputRef,
   onRemoveImage,
 }) {
@@ -114,7 +114,8 @@ export default function ProjectFormDialog({
               ref={imagesInputRef}
               onChange={(e) => {
                 const files = Array.from(e.target.files);
-                if (files.length) setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+                if (files.length) onAddImages(files);
+                e.target.value = null;
               }}
               className="hidden"
             />

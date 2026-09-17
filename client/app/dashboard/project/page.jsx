@@ -18,6 +18,7 @@ export default function DashboardProjects() {
   const [formData, setFormData] = useState({ id: null, name: "", type: "REBUILD", details: "", areaSize: "", coverUrl: "", images: [] });
   const [coverPreview, setCoverPreview] = useState(null);
   const [imagesPreview, setImagesPreview] = useState([]);
+  const [imagesFiles, setImagesFiles] = useState([]);
   const [deleteImageIds, setDeleteImageIds] = useState(new Set());
   const coverInputRef = useRef(null);
   const imagesInputRef = useRef(null);
@@ -56,7 +57,7 @@ export default function DashboardProjects() {
 
   const handleOpenAdd = () => {
     setFormData({ id: null, name: "", type: "REBUILD", details: "", areaSize: "", coverUrl: "", images: [] });
-    setCoverPreview(null); setImagesPreview([]); setDeleteImageIds(new Set());
+    setCoverPreview(null); setImagesPreview([]); setImagesFiles([]); setDeleteImageIds(new Set());
     setIsEditing(false); setOpenForm(true); resetFileInputs();
   };
 
@@ -64,7 +65,13 @@ export default function DashboardProjects() {
     setFormData({ id: item.id, name: item.name || "", type: item.type || "REBUILD", details: item.details || "", areaSize: item.areaSize ?? "", coverUrl: item.coverUrl || "", images: item.images || [] });
     setCoverPreview(item.coverUrl || null);
     setImagesPreview(item.images?.map((img) => img.imageUrl) || []);
+    setImagesFiles([]);
     setDeleteImageIds(new Set()); setIsEditing(true); setOpenForm(true); resetFileInputs();
+  };
+
+  const onAddImages = (files) => {
+    setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+    setImagesFiles((prev) => [...prev, ...files]);
   };
 
   const handleDelete = async (id) => {
@@ -99,8 +106,7 @@ export default function DashboardProjects() {
     form.append("details", formData.details || "");
     if (formData.areaSize !== "") form.append("areaSize", String(formData.areaSize));
     if (coverInputRef.current?.files[0]) form.append("cover", coverInputRef.current.files[0]);
-    if (imagesInputRef.current?.files?.length)
-      Array.from(imagesInputRef.current.files).forEach((f) => form.append("images", f));
+    imagesFiles.forEach((f) => form.append("images", f));
     if (deleteImageIds.size) form.append("deleteImageIds", Array.from(deleteImageIds).join(","));
 
     showLoading(isEditing ? "Updating..." : "Creating...");
@@ -125,7 +131,13 @@ export default function DashboardProjects() {
   const onRemoveImage = (i) => {
     const url = imagesPreview[i];
     const existing = formData.images.find((img) => img.imageUrl === url);
-    if (existing) setDeleteImageIds((prev) => new Set(prev).add(existing.id));
+    if (existing) {
+      setDeleteImageIds((prev) => new Set(prev).add(existing.id));
+    } else {
+      const existingCount = imagesPreview.length - imagesFiles.length;
+      const fileIndex = i - existingCount;
+      setImagesFiles((prev) => prev.filter((_, idx) => idx !== fileIndex));
+    }
     setImagesPreview((prev) => prev.filter((_, idx) => idx !== i));
   };
 
@@ -151,7 +163,7 @@ export default function DashboardProjects() {
         open={openForm} onClose={() => setOpenForm(false)} onSubmit={handleSubmit}
         formData={formData} setFormData={setFormData}
         coverPreview={coverPreview} setCoverPreview={setCoverPreview}
-        imagesPreview={imagesPreview} setImagesPreview={setImagesPreview}
+        imagesPreview={imagesPreview} onAddImages={onAddImages}
         coverInputRef={coverInputRef} imagesInputRef={imagesInputRef}
         onRemoveImage={onRemoveImage}
       />
