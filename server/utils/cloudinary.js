@@ -10,6 +10,7 @@ cloudinary.config({
 });
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE_MB = 5;
 
 /**
  * สร้าง multer uploader สำหรับอัปโหลดไฟล์ไปยัง Cloudinary
@@ -31,15 +32,17 @@ function createUploader(folder, transformation = [{ width: 1280, crop: 'limit', 
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error(`Invalid file type: ${file.mimetype}`));
+      const err = new Error(`"${file.originalname}" is not supported. Only JPG, PNG and WEBP images are allowed.`);
+      err.statusCode = 400;
+      cb(err);
     }
   };
 
   return multer({
     storage,
     fileFilter,
-    limits: { 
-      fileSize: 5 * 1024 * 1024, // จำกัดขนาดไฟล์สูงสุดที่ 5MB
+    limits: {
+      fileSize: MAX_FILE_SIZE_MB * 1024 * 1024, // จำกัดขนาดไฟล์สูงสุดต่อไฟล์
     }
   });
 }
@@ -75,4 +78,5 @@ module.exports = {
   uploadNews,
   uploadFurniture,
   createUploader,
+  MAX_FILE_SIZE_MB,
 };

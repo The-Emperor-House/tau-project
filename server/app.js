@@ -134,7 +134,7 @@ app.use((req, res, next) => {
 });
 
 /** ⏱️ Request timeout — กัน request ค้างไม่มีที่สิ้นสุด (เช่น DB pool รอ, Cloudinary ช้า) */
-app.use("/api", timeoutMiddleware(25000));
+app.use("/api", timeoutMiddleware(25000, { uploadMs: 120000 }));
 
 /** 🚀 Routes */
 app.use("/api", routes);

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { compressImage, compressImages, getErrorMessage, pickGalleryImages } from "@/shared/lib/imageUpload";
 import { useSession } from "next-auth/react";
 import useModalContext from "@/shared/hooks/useModalContext";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
@@ -86,7 +87,7 @@ export default function DashboardFurniture() {
   };
 
   const handleImagesChange = (e) => {
-    const files = Array.from(e.target.files || []);
+    const files = pickGalleryImages(Array.from(e.target.files || []), imagesPreview.length);
     if (files.length) {
       setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
       setImagesFiles((prev) => [...prev, ...files]);
@@ -112,10 +113,22 @@ export default function DashboardFurniture() {
       toast.warning("Name required");
       return;
     }
+    showLoading("Preparing images...");
+    let cover, images;
+    try {
+      const coverFile = coverInputRef.current?.files?.[0];
+      cover = coverFile ? await compressImage(coverFile) : null;
+      images = await compressImages(imagesFiles);
+    } catch (err) {
+      hideLoading();
+      toast.error(err.message);
+      return;
+    }
+
     const form = new FormData();
     ["name", "type", "details", "price", "width", "depth", "height"].forEach((k) => form.append(k, String(formData[k] ?? "")));
-    if (coverInputRef.current?.files?.[0]) form.append("cover", coverInputRef.current.files[0]);
-    imagesFiles.forEach((f) => form.append("images", f));
+    if (cover) form.append("cover", cover);
+    images.forEach((f) => form.append("images", f));
     if (deleteImageIds.size) form.append("deleteImageIds", Array.from(deleteImageIds).join(","));
 
     showLoading(isEditing ? "Updating..." : "Creating...");
@@ -125,7 +138,10 @@ export default function DashboardFurniture() {
       : `${process.env.NEXT_PUBLIC_API_URL}/api/furniture`;
     try {
       const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: form });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        toast.error(await getErrorMessage(res, "Failed to submit"));
+        return;
+      }
       toast.success(isEditing ? "Updated" : "Created");
       setOpenForm(false); fetchItems();
     } catch {

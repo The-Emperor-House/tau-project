@@ -1,6 +1,7 @@
 const { cloudinary, uploadProject } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
+const { MAX_IMAGES, imageFields, destroyImages, discardUploads } = require("../utils/upload");
 
 // util: ตรวจ enum type ให้ตรง schema
 const VALID_TYPES = ["REBUILD", "RENOVATE", "REDESIGN"];
@@ -8,10 +9,7 @@ const isValidType = (t) => typeof t === "string" && VALID_TYPES.includes(t.toUpp
 
 // Create Project
 exports.createProject = [
-  uploadProject.fields([
-    { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 10 },
-  ]),
+  uploadProject.fields(imageFields),
   async (req, res) => {
     const { name, type, details } = req.body;
     const areaSize = req.body.areaSize !== undefined && req.body.areaSize !== null
@@ -19,12 +17,15 @@ exports.createProject = [
       : undefined;
 
     if (!name || !req.files?.cover?.length) {
+      await discardUploads(req);
       return res.status(400).json({ message: "Missing name or cover image" });
     }
     if (!isValidType(type)) {
+      await discardUploads(req);
       return res.status(400).json({ message: "Invalid project type" });
     }
     if (areaSize !== undefined && (Number.isNaN(areaSize) || areaSize < 0)) {
+      await discardUploads(req);
       return res.status(400).json({ message: "Invalid areaSize" });
     }
 
@@ -60,14 +61,7 @@ exports.createProject = [
     } catch (err) {
       console.error("Create project error:", err);
       // Clean up uploaded images on error
-      const toDelete = [
-        coverFile?.filename,
-        ...imageFiles.map((f) => f.filename),
-      ].filter(Boolean);
-
-      await Promise.allSettled(
-        toDelete.map((publicId) => cloudinary.uploader.destroy(publicId))
-      );
+      await discardUploads(req);
 
       res.status(500).json({ message: "Server error" });
     }
@@ -102,13 +96,13 @@ exports.getAllProjects = async (req, res) => {
 
 // Update project
 exports.updateProject = [
-  uploadProject.fields([
-    { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 10 },
-  ]),
+  uploadProject.fields(imageFields),
   async (req, res) => {
     const id = isValidId(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid ID" });
+    if (!id) {
+      await discardUploads(req);
+      return res.status(400).json({ message: "Invalid ID" });
+    }
 
     // อนุญาตอัปเดต name, type, details, areaSize
     const updateData = buildUpdateData(["name", "type", "details", "areaSize"], req.body);
@@ -116,6 +110,7 @@ exports.updateProject = [
     // normalize/validate type
     if (updateData.type !== undefined) {
       if (!isValidType(updateData.type)) {
+        await discardUploads(req);
         return res.status(400).json({ message: "Invalid project type" });
       }
       updateData.type = updateData.type.toUpperCase();
@@ -125,64 +120,64 @@ exports.updateProject = [
     if (updateData.areaSize !== undefined) {
       const n = Number(updateData.areaSize);
       if (Number.isNaN(n) || n < 0) {
+        await discardUploads(req);
         return res.status(400).json({ message: "Invalid areaSize" });
       }
       updateData.areaSize = n;
     }
 
-    try {
-      const project = await prisma.project.findUnique({ where: { id } });
-      if (!project) return res.status(404).json({ message: "Project not found" });
+    const cover = req.files?.cover?.[0];
+    const newImages = req.files?.images || [];
 
-      // Replace cover if uploaded
-      if (req.files.cover?.[0]) {
-        if (project.coverPublicId) {
-          await cloudinary.uploader.destroy(project.coverPublicId);
-        }
-        const cover = req.files.cover[0];
+    try {
+      const project = await prisma.project.findUnique({
+        where: { id },
+        include: { images: { select: { id: true, publicId: true } } },
+      });
+      if (!project) {
+        await discardUploads(req);
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
+      const imagesToDelete = project.images.filter((img) => idsToDelete.includes(img.id));
+      if (project.images.length - imagesToDelete.length + newImages.length > MAX_IMAGES) {
+        await discardUploads(req);
+        return res.status(400).json({ message: `Too many images. Each project can have up to ${MAX_IMAGES} gallery images.` });
+      }
+
+      if (cover) {
         updateData.coverUrl = cover.path;
         updateData.coverPublicId = cover.filename;
       }
 
-      const updated = await prisma.project.update({
-        where: { id },
-        data: updateData,
-      });
-
-      // Delete images marked for removal
-      if (req.body.deleteImageIds) {
-        const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
-        if (idsToDelete.length) {
-          const imagesToDelete = await prisma.projectImage.findMany({
-            where: {
-              id: { in: idsToDelete },
+      // Save everything together so a failure never leaves a half-updated project
+      await prisma.$transaction(async (tx) => {
+        await tx.project.update({ where: { id }, data: updateData });
+        if (imagesToDelete.length) {
+          await tx.projectImage.deleteMany({ where: { id: { in: imagesToDelete.map((img) => img.id) } } });
+        }
+        if (newImages.length) {
+          await tx.projectImage.createMany({
+            data: newImages.map((file) => ({
               projectId: id,
-            },
-          });
-
-          for (const img of imagesToDelete) {
-            await cloudinary.uploader.destroy(img.publicId);
-          }
-
-          await prisma.projectImage.deleteMany({
-            where: { id: { in: idsToDelete } },
+              imageUrl: file.path,
+              publicId: file.filename,
+            })),
           });
         }
-      }
+      });
 
-      // Add newly uploaded images
-      if (req.files.images?.length) {
-        const newImages = req.files.images.map((file) => ({
-          projectId: id,
-          imageUrl: file.path,
-          publicId: file.filename,
-        }));
-        await prisma.projectImage.createMany({ data: newImages });
-      }
+      // DB is committed — now remove the replaced cover and deleted images from Cloudinary
+      await destroyImages([
+        cover && project.coverPublicId,
+        ...imagesToDelete.map((img) => img.publicId),
+      ]);
 
-      res.json({ message: "Project updated", projectId: updated.id });
+      res.json({ message: "Project updated", projectId: id });
     } catch (err) {
       console.error("Update project error:", err);
+      await discardUploads(req);
       res.status(500).json({ message: "Server error" });
     }
   },

@@ -1,20 +1,20 @@
 const { cloudinary, uploadFurniture } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
+const { MAX_IMAGES, imageFields, destroyImages, discardUploads } = require("../utils/upload");
 
 // CREATE
 exports.createFurniture = [
-  uploadFurniture.fields([
-    { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 12 },
-  ]),
+  uploadFurniture.fields(imageFields),
   async (req, res) => {
     const { name, type, details, price, width, depth, height } = req.body;
     const valid = ["BUILT_IN", "LOOSE", "CUSTOM"];
     if (!name || !req.files?.cover?.length) {
+      await discardUploads(req);
       return res.status(400).json({ message: "Missing name or cover image" });
     }
     if (!valid.includes(type)) {
+      await discardUploads(req);
       return res.status(400).json({ message: "Invalid furniture type" });
     }
 
@@ -51,11 +51,7 @@ exports.createFurniture = [
       res.json({ message: "Furniture created", id: created.id });
     } catch (err) {
       console.error("Create furniture error:", err);
-      const toDelete = [
-        req.files?.cover?.[0]?.filename,
-        ...(req.files?.images || []).map((f) => f.filename),
-      ].filter(Boolean);
-      await Promise.allSettled(toDelete.map((pid) => cloudinary.uploader.destroy(pid)));
+      await discardUploads(req);
       res.status(500).json({ message: "Server error" });
     }
   },
@@ -111,13 +107,13 @@ exports.getFurnitureById = async (req, res) => {
 
 // UPDATE
 exports.updateFurniture = [
-  uploadFurniture.fields([
-    { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 12 },
-  ]),
+  uploadFurniture.fields(imageFields),
   async (req, res) => {
     const id = isValidId(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid ID" });
+    if (!id) {
+      await discardUploads(req);
+      return res.status(400).json({ message: "Invalid ID" });
+    }
 
     const updateData = buildUpdateData(["name", "type", "details", "price", "width", "depth", "height"], req.body);
     // cast number fields
@@ -127,45 +123,58 @@ exports.updateFurniture = [
       }
     });
 
-    try {
-      const old = await prisma.furniture.findUnique({ where: { id } });
-      if (!old) return res.status(404).json({ message: "Not found" });
+    const cover = req.files?.cover?.[0];
+    const newImages = req.files?.images || [];
 
-      if (req.files.cover?.[0]) {
-        if (old.coverPublicId) await cloudinary.uploader.destroy(old.coverPublicId);
-        const cover = req.files.cover[0];
+    try {
+      const old = await prisma.furniture.findUnique({
+        where: { id },
+        include: { images: { select: { id: true, publicId: true } } },
+      });
+      if (!old) {
+        await discardUploads(req);
+        return res.status(404).json({ message: "Not found" });
+      }
+
+      const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
+      const imagesToDelete = old.images.filter((img) => idsToDelete.includes(img.id));
+      if (old.images.length - imagesToDelete.length + newImages.length > MAX_IMAGES) {
+        await discardUploads(req);
+        return res.status(400).json({ message: `Too many images. Each item can have up to ${MAX_IMAGES} gallery images.` });
+      }
+
+      if (cover) {
         updateData.coverUrl = cover.path;
         updateData.coverPublicId = cover.filename;
       }
 
-      const updated = await prisma.furniture.update({ where: { id }, data: updateData });
-
-      // delete images
-      if (req.body.deleteImageIds) {
-        const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
-        if (idsToDelete.length) {
-          const imgs = await prisma.furnitureImage.findMany({
-            where: { id: { in: idsToDelete }, furnitureId: id },
-          });
-          for (const img of imgs) if (img.publicId) await cloudinary.uploader.destroy(img.publicId);
-          await prisma.furnitureImage.deleteMany({ where: { id: { in: idsToDelete } } });
+      // save everything together so a failure never leaves a half-updated item
+      await prisma.$transaction(async (tx) => {
+        await tx.furniture.update({ where: { id }, data: updateData });
+        if (imagesToDelete.length) {
+          await tx.furnitureImage.deleteMany({ where: { id: { in: imagesToDelete.map((img) => img.id) } } });
         }
-      }
+        if (newImages.length) {
+          await tx.furnitureImage.createMany({
+            data: newImages.map((f) => ({
+              furnitureId: id,
+              imageUrl: f.path,
+              publicId: f.filename,
+            })),
+          });
+        }
+      });
 
-      // add new images
-      if (req.files.images?.length) {
-        await prisma.furnitureImage.createMany({
-          data: req.files.images.map((f) => ({
-            furnitureId: id,
-            imageUrl: f.path,
-            publicId: f.filename,
-          })),
-        });
-      }
+      // DB is committed — now remove the replaced cover and deleted images from Cloudinary
+      await destroyImages([
+        cover && old.coverPublicId,
+        ...imagesToDelete.map((img) => img.publicId),
+      ]);
 
-      res.json({ message: "Furniture updated", id: updated.id });
+      res.json({ message: "Furniture updated", id });
     } catch (err) {
       console.error("Update furniture error:", err);
+      await discardUploads(req);
       res.status(500).json({ message: "Server error" });
     }
   },

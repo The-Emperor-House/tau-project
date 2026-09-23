@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
+import { compressImage, compressImages, getErrorMessage, pickGalleryImages } from "@/shared/lib/imageUpload";
 import SectionBlock from "./components/SectionBlock";
 import DesignFormDialog from "./components/DesignFormDialog";
 import useModalContext from "@/shared/hooks/useModalContext";
@@ -64,8 +65,10 @@ export default function DashboardDesign() {
   };
 
   const onAddImages = (files) => {
-    setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
-    setImagesFiles((prev) => [...prev, ...files]);
+    const picked = pickGalleryImages(files, imagesPreview.length);
+    if (!picked.length) return;
+    setImagesPreview((prev) => [...prev, ...picked.map((f) => URL.createObjectURL(f))]);
+    setImagesFiles((prev) => [...prev, ...picked]);
   };
 
   const handleDelete = async (id) => {
@@ -94,11 +97,23 @@ export default function DashboardDesign() {
       toast.warning("Name is required");
       return;
     }
+    showLoading("Preparing images...");
+    let cover, images;
+    try {
+      const coverFile = coverInputRef.current?.files[0];
+      cover = coverFile ? await compressImage(coverFile) : null;
+      images = await compressImages(imagesFiles);
+    } catch (err) {
+      hideLoading();
+      toast.error(err.message);
+      return;
+    }
+
     const form = new FormData();
     form.append("name", formData.name);
     form.append("type", formData.type);
-    if (coverInputRef.current?.files[0]) form.append("cover", coverInputRef.current.files[0]);
-    imagesFiles.forEach((f) => form.append("images", f));
+    if (cover) form.append("cover", cover);
+    images.forEach((f) => form.append("images", f));
     if (deleteImageIds.size) form.append("deleteImageIds", Array.from(deleteImageIds).join(","));
 
     showLoading(isEditing ? "Updating..." : "Creating...");
@@ -110,7 +125,10 @@ export default function DashboardDesign() {
       const { getSession } = await import("next-auth/react");
       const session = await getSession();
       const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: form });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        toast.error(await getErrorMessage(res, "Failed to submit"));
+        return;
+      }
       toast.success(isEditing ? "Updated" : "Created");
       setOpenForm(false); fetchDesigns();
     } catch {

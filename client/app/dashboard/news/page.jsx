@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { compressImage, compressImages, getErrorMessage, pickGalleryImages } from "@/shared/lib/imageUpload";
 import useModalContext from "@/shared/hooks/useModalContext";
 import NewsFormDialog from "./components/NewsFormDialog";
 
@@ -58,8 +59,10 @@ export default function DashboardNews() {
   };
 
   const onAddImages = (files) => {
-    setImagesPreview((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
-    setImagesFiles((prev) => [...prev, ...files]);
+    const picked = pickGalleryImages(files, imagesPreview.length);
+    if (!picked.length) return;
+    setImagesPreview((prev) => [...prev, ...picked.map((f) => URL.createObjectURL(f))]);
+    setImagesFiles((prev) => [...prev, ...picked]);
   };
 
   const onRemoveImage = (i) => {
@@ -121,13 +124,25 @@ export default function DashboardNews() {
       toast.warning("Heading 1 is required");
       return;
     }
+    showLoading("Preparing images...");
+    let cover, images;
+    try {
+      const coverFile = coverInputRef.current?.files[0];
+      cover = coverFile ? await compressImage(coverFile) : null;
+      images = await compressImages(imagesFiles);
+    } catch (err) {
+      hideLoading();
+      toast.error(err.message);
+      return;
+    }
+
     const fd = new FormData();
     fd.append("heading1", formData.heading1);
     if (formData.heading2) fd.append("heading2", formData.heading2);
     if (formData.body) fd.append("body", formData.body);
     if (formData.videoUrl) fd.append("videoUrl", formData.videoUrl);
-    if (coverInputRef.current?.files[0]) fd.append("cover", coverInputRef.current.files[0]);
-    imagesFiles.forEach((f) => fd.append("images", f));
+    if (cover) fd.append("cover", cover);
+    images.forEach((f) => fd.append("images", f));
     if (deleteImageIds.size) fd.append("deleteImageIds", Array.from(deleteImageIds).join(","));
 
     showLoading(isEditing ? "Updating..." : "Creating...");
@@ -139,7 +154,10 @@ export default function DashboardNews() {
       const { getSession } = await import("next-auth/react");
       const session = await getSession();
       const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: fd });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        toast.error(await getErrorMessage(res, "Submit failed"));
+        return;
+      }
       toast.success(isEditing ? "Updated" : "Created");
       setOpenForm(false); fetchNews();
     } catch {

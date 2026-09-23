@@ -1,21 +1,21 @@
 const { cloudinary, uploadDesign } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
+const { MAX_IMAGES, imageFields, destroyImages, discardUploads } = require("../utils/upload");
 
 // Create Design
 exports.createDesign = [
-  uploadDesign.fields([
-    { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 10 },
-  ]),
+  uploadDesign.fields(imageFields),
   async (req, res) => {
     const { name, type } = req.body;
     const validTypes = ["ARCHITECTURAL", "INTERIOR"];
 
     if (!name || !req.files?.cover?.length) {
+      await discardUploads(req);
       return res.status(400).json({ message: "Missing name or cover image" });
     }
     if (!validTypes.includes(type)) {
+      await discardUploads(req);
       return res.status(400).json({ message: "Invalid design type" });
     }
 
@@ -49,14 +49,7 @@ exports.createDesign = [
     } catch (err) {
       console.error("Create design error:", err);
       // Clean up uploaded images on error
-      const toDelete = [
-        coverFile?.filename,
-        ...imageFiles.map((f) => f.filename),
-      ].filter(Boolean);
-
-      await Promise.allSettled(
-        toDelete.map((publicId) => cloudinary.uploader.destroy(publicId))
-      );
+      await discardUploads(req);
 
       res.status(500).json({ message: "Server error" });
     }
@@ -86,69 +79,67 @@ exports.getAllDesigns = async (req, res) => {
 
 // Update design
 exports.updateDesign = [
-  uploadDesign.fields([
-    { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 10 },
-  ]),
+  uploadDesign.fields(imageFields),
   async (req, res) => {
     const id = isValidId(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid ID" });
+    if (!id) {
+      await discardUploads(req);
+      return res.status(400).json({ message: "Invalid ID" });
+    }
 
     const updateData = buildUpdateData(["name", "type"], req.body);
+    const cover = req.files?.cover?.[0];
+    const newImages = req.files?.images || [];
 
     try {
-      const design = await prisma.design.findUnique({ where: { id } });
-      if (!design) return res.status(404).json({ message: "Design not found" });
+      const design = await prisma.design.findUnique({
+        where: { id },
+        include: { images: { select: { id: true, publicId: true } } },
+      });
+      if (!design) {
+        await discardUploads(req);
+        return res.status(404).json({ message: "Design not found" });
+      }
 
-      // Replace cover if uploaded
-      if (req.files.cover?.[0]) {
-        if (design.coverPublicId) {
-          await cloudinary.uploader.destroy(design.coverPublicId);
-        }
-        const cover = req.files.cover[0];
+      const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
+      const imagesToDelete = design.images.filter((img) => idsToDelete.includes(img.id));
+      if (design.images.length - imagesToDelete.length + newImages.length > MAX_IMAGES) {
+        await discardUploads(req);
+        return res.status(400).json({ message: `Too many images. Each design can have up to ${MAX_IMAGES} gallery images.` });
+      }
+
+      if (cover) {
         updateData.coverUrl = cover.path;
         updateData.coverPublicId = cover.filename;
       }
 
-      const updated = await prisma.design.update({
-        where: { id },
-        data: updateData,
-      });
-
-      // Delete images marked for removal
-      if (req.body.deleteImageIds) {
-        const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
-        if (idsToDelete.length) {
-          const imagesToDelete = await prisma.designImage.findMany({
-            where: {
-              id: { in: idsToDelete },
+      // Save everything together so a failure never leaves a half-updated design
+      await prisma.$transaction(async (tx) => {
+        await tx.design.update({ where: { id }, data: updateData });
+        if (imagesToDelete.length) {
+          await tx.designImage.deleteMany({ where: { id: { in: imagesToDelete.map((img) => img.id) } } });
+        }
+        if (newImages.length) {
+          await tx.designImage.createMany({
+            data: newImages.map((file) => ({
               designId: id,
-            },
-          });
-
-          for (const img of imagesToDelete) {
-            await cloudinary.uploader.destroy(img.publicId);
-          }
-
-          await prisma.designImage.deleteMany({
-            where: { id: { in: idsToDelete } },
+              imageUrl: file.path,
+              publicId: file.filename,
+            })),
           });
         }
-      }
+      });
 
-      // Add newly uploaded images
-      if (req.files.images?.length) {
-        const newImages = req.files.images.map((file) => ({
-          designId: id,
-          imageUrl: file.path,
-          publicId: file.filename,
-        }));
-        await prisma.designImage.createMany({ data: newImages });
-      }
+      // DB is committed — now remove the replaced cover and deleted images from Cloudinary
+      await destroyImages([
+        cover && design.coverPublicId,
+        ...imagesToDelete.map((img) => img.publicId),
+      ]);
 
-      res.json({ message: "Design updated", designId: updated.id });
+      res.json({ message: "Design updated", designId: id });
     } catch (err) {
       console.error("Update design error:", err);
+      await discardUploads(req);
       res.status(500).json({ message: "Server error" });
     }
   },
