@@ -1,6 +1,5 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { uploadAvatar, cloudinary } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -42,69 +41,6 @@ const saveRefreshToken = async (token, userId) => {
   });
 };
 
-exports.register = [
-  uploadAvatar.single("avatar"),
-  async (req, res) => {
-    const { email, password, name } = req.body;
-    const avatarFile = req.file;
-
-    const errors = [
-      !email && "Missing email",
-      !password && "Missing password",
-      email && !isValidEmail(email) && "Invalid email format",
-      password && password.length < 6 && "Password must be at least 6 characters",
-      (!name || name.length < 2) && "Name must be at least 2 characters",
-    ].filter(Boolean);
-
-    if (errors.length > 0) {
-      if (avatarFile?.filename) {
-        await cloudinary.uploader.destroy(avatarFile.filename);
-      }
-      return res.status(400).json({ message: errors[0] });
-    }
-
-    try {
-      const existingUser = await prisma.user.findUnique({ where: { email } });
-      if (existingUser) {
-        if (avatarFile?.filename) {
-          await cloudinary.uploader.destroy(avatarFile.filename);
-        }
-        return res.status(400).json({ message: "Email already exists" });
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await prisma.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          name,
-          avatarUrl: avatarFile?.path || null,
-          avatarPublicId: avatarFile?.filename || null,
-        },
-      });
-
-      res.status(201).json({
-        status: "success",
-        message: "User registered successfully",
-        data: {
-          user: {
-            userId: user.id,
-            email: user.email,
-            name: user.name,
-            avatarUrl: user.avatarUrl,
-          },
-        },
-      });
-    } catch (error) {
-      if (avatarFile?.filename) {
-        await cloudinary.uploader.destroy(avatarFile.filename);
-      }
-      console.error("Register error:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  },
-];
-
 exports.login = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
@@ -138,7 +74,6 @@ exports.login = async (req, res) => {
           email: user.email,
           name: user.name,
           avatarUrl: user.avatarUrl,
-          role: user.role,
         },
         accessToken,
         accessTokenExpiresIn,
@@ -245,7 +180,6 @@ exports.me = async (req, res) => {
           email: user.email,
           name: user.name,
           avatarUrl: user.avatarUrl,
-          role: user.role,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },

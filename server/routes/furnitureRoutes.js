@@ -7,7 +7,7 @@ const furnitureController = require('../controllers/furnitureController');
 router.get('/', furnitureController.getAllFurniture);
 router.get('/:id', furnitureController.getFurnitureById);
 
-// Private routes (ต้อง login + เฉพาะแอดมิน)
+// Private routes (ต้อง login)
 router.use(authenticate);
 
 router.post('/', furnitureController.createFurniture);

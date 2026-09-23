@@ -79,8 +79,6 @@ exports.uploadAvatar = [
     }
 
     try {
-      console.log('Uploaded file info:', req.file)
-
       const user = await prisma.user.findUnique({ 
         where: { id: req.user.id },
         select: {

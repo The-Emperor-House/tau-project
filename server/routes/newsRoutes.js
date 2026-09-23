@@ -7,7 +7,7 @@ const newsController = require('../controllers/newsController');
 router.get('/', newsController.getAllNews);
 router.get('/:id', newsController.getNewsById);
 
-// Private routes with auth + role control
+// Private routes (ต้อง login)
 router.use(authenticate);
 
 router.post('/', newsController.createNews);

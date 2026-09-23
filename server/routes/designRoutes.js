@@ -6,7 +6,7 @@ const designController = require('../controllers/designController');
 // Public routes (ไม่ต้อง login)
 router.get('/', designController.getAllDesigns);
 
-// Private routes (ต้อง login + เฉพาะแอดมิน)
+// Private routes (ต้อง login)
 router.use(authenticate);
 
 router.post('/', designController.createDesign);

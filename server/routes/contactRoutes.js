@@ -13,7 +13,7 @@ const contactLimiter = rateLimit({
 // Public
 router.post('/', contactLimiter, contactController.submitContact);
 
-// Private (เฉพาะแอดมิน — ข้อมูลลูกค้า)
+// Private (ต้อง login — ข้อมูลลูกค้า)
 router.get('/', authenticate, contactController.getContacts);
 
 module.exports = router;

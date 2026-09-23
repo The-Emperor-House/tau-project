@@ -6,13 +6,13 @@ const userController = require('../controllers/userController');
 // ---------- 🔐 Protected Routes ----------
 router.use(authenticate); // เช็ก JWT ทุก route ด้านล่างนี้
 
-// 👤 ดึง users ทั้งหมด (เฉพาะแอดมิน)
+// 👤 ดึง users ทั้งหมด
 router.get('/', userController.getUsers);
 
 // 📸 อัปโหลด avatar ของ user ที่ล็อกอินอยู่ (ต้องมาก่อน /:id เพื่อไม่ให้ Express ตีความ "avatar" เป็น id)
 router.put('/avatar/me', userController.uploadAvatar);
 
-// ✏️ แก้ไข user ตาม ID (เจ้าของข้อมูลหรือแอดมินเท่านั้น — เช็กใน controller)
+// ✏️ แก้ไข user ตาม ID (เฉพาะเจ้าของข้อมูล — เช็กใน controller)
 router.put('/:id', userController.updateUser);
 
 module.exports = router;

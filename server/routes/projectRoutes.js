@@ -6,7 +6,7 @@ const projectController = require('../controllers/projectController');
 // Public routes (ไม่ต้อง login)
 router.get('/', projectController.getAllProjects);
 
-// Private routes (ต้อง login + เฉพาะแอดมิน)
+// Private routes (ต้อง login)
 router.use(authenticate);
 router.post('/', projectController.createProject);
 router.put('/:id', projectController.updateProject);
