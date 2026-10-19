@@ -1,3 +1,4 @@
+import ThaiText from "@/shared/components/ui/ThaiText";
 import { ABOUT_INTRO_TEXT } from "../_data/aboutIntro";
 
 function Paragraphs({ text }) {
@@ -7,16 +8,15 @@ function Paragraphs({ text }) {
       {paras.map((p, i) => (
         <p
           key={i}
-          className="text-[#111] leading-[1.85] tracking-[0.01rem] text-[0.95rem] sm:text-[1.05rem] md:text-[1.15rem] break-words hyphens-auto"
+          className="text-[#111] leading-[1.85] text-[0.95rem] sm:text-[1.05rem] md:text-[1.1rem]"
           style={{
-            marginTop: i === 0 ? "0.375rem" : 0,
+            marginTop: i === 0 ? "0.75rem" : 0,
             marginBottom: "1rem",
-            WebkitHyphens: "auto",
             textWrap: "pretty",
             WebkitFontSmoothing: "antialiased",
           }}
         >
-          {p}
+          <ThaiText>{p}</ThaiText>
         </p>
       ))}
     </div>
@@ -32,8 +32,9 @@ export default function AboutBlock() {
       <p className="text-black font-bold tracking-[0.1rem] uppercase text-[1.2rem] sm:text-[1.5rem] md:text-[2rem] -mt-1">
         WE RENEW
       </p>
-      <p className="text-center mt-4 text-black tracking-[0.2rem] text-[0.8rem] sm:text-base md:text-[1.2rem]">
-        &quot;สร้างบ้านหลังใหม่ ในที่อยู่อาศัยเดิมของคุณ&quot;
+      {/* ภาษาไทยห้ามเว้นระยะตัวอักษร — สระ/วรรณยุกต์จะลอยแยกจากพยัญชนะ */}
+      <p className="text-center mt-4 text-black font-medium text-[0.95rem] sm:text-base md:text-[1.15rem]" style={{ textWrap: "balance" }}>
+        <ThaiText maxPhrase={40}>&quot;สร้างบ้านหลังใหม่ ในที่อยู่อาศัยเดิมของคุณ&quot;</ThaiText>
       </p>
       <Paragraphs text={ABOUT_INTRO_TEXT} />
     </div>

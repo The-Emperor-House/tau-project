@@ -1,4 +1,4 @@
-const { cloudinary, uploadFurniture } = require("../utils/cloudinary");
+const { cloudinary, uploadFurniture, destroyMany, uploadedPublicIds, MAX_GALLERY_IMAGES } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
 
@@ -6,16 +6,22 @@ const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers
 exports.createFurniture = [
   uploadFurniture.fields([
     { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 12 },
+    { name: "images", maxCount: MAX_GALLERY_IMAGES },
   ]),
   async (req, res) => {
     const { name, type, details, price, width, depth, height } = req.body;
     const valid = ["BUILT_IN", "LOOSE", "CUSTOM"];
+    // validation ไม่ผ่าน → ลบไฟล์ที่ multer อัปโหลดไปแล้วทิ้ง ไม่ให้ค้างบน Cloudinary
+    const reject = async (message) => {
+      await destroyMany(uploadedPublicIds(req.files));
+      return res.status(400).json({ message });
+    };
+
     if (!name || !req.files?.cover?.length) {
-      return res.status(400).json({ message: "Missing name or cover image" });
+      return reject("Missing name or cover image");
     }
     if (!valid.includes(type)) {
-      return res.status(400).json({ message: "Invalid furniture type" });
+      return reject("Invalid furniture type");
     }
 
     const coverFile = req.files.cover[0];
@@ -71,8 +77,8 @@ exports.getAllFurniture = async (req, res) => {
         q
           ? {
               OR: [
-                { name: { contains: q, mode: "insensitive" } },
-                { details: { contains: q, mode: "insensitive" } },
+                { name: { contains: q } },
+                { details: { contains: q } },
               ],
             }
           : {},
@@ -113,11 +119,15 @@ exports.getFurnitureById = async (req, res) => {
 exports.updateFurniture = [
   uploadFurniture.fields([
     { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 12 },
+    { name: "images", maxCount: MAX_GALLERY_IMAGES },
   ]),
   async (req, res) => {
+    const newUploads = uploadedPublicIds(req.files);
     const id = isValidId(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid ID" });
+    if (!id) {
+      await destroyMany(newUploads);
+      return res.status(400).json({ message: "Invalid ID" });
+    }
 
     const updateData = buildUpdateData(["name", "type", "details", "price", "width", "depth", "height"], req.body);
     // cast number fields
@@ -127,45 +137,57 @@ exports.updateFurniture = [
       }
     });
 
+    const cover = req.files?.cover?.[0];
+    const imageFiles = req.files?.images || [];
+    const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
+
     try {
       const old = await prisma.furniture.findUnique({ where: { id } });
-      if (!old) return res.status(404).json({ message: "Not found" });
+      if (!old) {
+        await destroyMany(newUploads);
+        return res.status(404).json({ message: "Not found" });
+      }
 
-      if (req.files.cover?.[0]) {
-        if (old.coverPublicId) await cloudinary.uploader.destroy(old.coverPublicId);
-        const cover = req.files.cover[0];
+      if (cover) {
         updateData.coverUrl = cover.path;
         updateData.coverPublicId = cover.filename;
       }
 
-      const updated = await prisma.furniture.update({ where: { id }, data: updateData });
+      // เขียน DB ให้สำเร็จก่อน แล้วค่อยลบไฟล์เก่าบน Cloudinary — ถ้า DB fail ไฟล์เก่ายังอยู่ครบ
+      const removedImages = await prisma.$transaction(async (tx) => {
+        await tx.furniture.update({ where: { id }, data: updateData });
 
-      // delete images
-      if (req.body.deleteImageIds) {
-        const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
-        if (idsToDelete.length) {
-          const imgs = await prisma.furnitureImage.findMany({
-            where: { id: { in: idsToDelete }, furnitureId: id },
-          });
-          for (const img of imgs) if (img.publicId) await cloudinary.uploader.destroy(img.publicId);
-          await prisma.furnitureImage.deleteMany({ where: { id: { in: idsToDelete } } });
+        // delete images (เฉพาะรูปของ furniture นี้)
+        const removed = idsToDelete.length
+          ? await tx.furnitureImage.findMany({ where: { id: { in: idsToDelete }, furnitureId: id } })
+          : [];
+        if (removed.length) {
+          await tx.furnitureImage.deleteMany({ where: { id: { in: removed.map((img) => img.id) } } });
         }
-      }
 
-      // add new images
-      if (req.files.images?.length) {
-        await prisma.furnitureImage.createMany({
-          data: req.files.images.map((f) => ({
-            furnitureId: id,
-            imageUrl: f.path,
-            publicId: f.filename,
-          })),
-        });
-      }
+        // add new images
+        if (imageFiles.length) {
+          await tx.furnitureImage.createMany({
+            data: imageFiles.map((f) => ({
+              furnitureId: id,
+              imageUrl: f.path,
+              publicId: f.filename,
+            })),
+          });
+        }
 
-      res.json({ message: "Furniture updated", id: updated.id });
+        return removed;
+      });
+
+      await destroyMany([
+        cover && old.coverPublicId,
+        ...removedImages.map((img) => img.publicId),
+      ]);
+
+      res.json({ message: "Furniture updated", id });
     } catch (err) {
       console.error("Update furniture error:", err);
+      await destroyMany(newUploads);
       res.status(500).json({ message: "Server error" });
     }
   },
@@ -180,15 +202,15 @@ exports.deleteFurniture = async (req, res) => {
     const item = await prisma.furniture.findUnique({ where: { id } });
     if (!item) return res.status(404).json({ message: "Not found" });
 
-    if (item.coverPublicId) await cloudinary.uploader.destroy(item.coverPublicId);
-
     const imgs = await prisma.furnitureImage.findMany({ where: { furnitureId: id } });
-    await Promise.allSettled(imgs.map((img) => img.publicId && cloudinary.uploader.destroy(img.publicId)));
 
+    // ลบใน DB ก่อน แล้วค่อยลบไฟล์บน Cloudinary
     await prisma.$transaction([
       prisma.furnitureImage.deleteMany({ where: { furnitureId: id } }),
       prisma.furniture.delete({ where: { id } }),
     ]);
+
+    await destroyMany([item.coverPublicId, ...imgs.map((img) => img.publicId)]);
 
     res.json({ message: "Furniture and related images deleted" });
   } catch (err) {

@@ -32,7 +32,7 @@ export default function ServiceBlock() {
               {item.title}
             </motion.button>
 
-            <p className="font-semibold text-center tracking-[0.2em] text-[0.9rem] md:text-[1rem] opacity-90">
+            <p className="font-semibold text-center text-[0.95rem] md:text-[1.05rem] opacity-90">
               {item.subtitle}
             </p>
           </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import ThaiText from "@/shared/components/ui/ThaiText";
+import { ServiceList } from "./ServicesSummaryBar";
 import { serviceItems } from "../_data/services";
 
 const BG = "#f2e8df";
@@ -33,7 +35,7 @@ function Heading({ item, align = "left" }) {
         {item.title}
       </h6>
       <h6
-        className="mt-1.5 font-extrabold tracking-[.12rem] text-[1.05rem] md:text-[1.2rem]"
+        className="mt-1.5 font-extrabold text-[1.05rem] md:text-[1.2rem]"
         style={{ color: ACC }}
       >
         {item.subtitleTH}
@@ -67,10 +69,10 @@ function TextBody({ children, align = "left" }) {
 
   return (
     <p
-      className={`leading-[2.05] tracking-[.025rem] text-[1rem] md:text-[1.1rem] text-center md:${textAlign}`}
-      style={{ color: BODY }}
+      className={`leading-[2.05] text-[1rem] md:text-[1.1rem] text-center md:${textAlign}`}
+      style={{ color: BODY, textWrap: "pretty" }}
     >
-      {children}
+      <ThaiText>{children}</ThaiText>
     </p>
   );
 }
@@ -95,8 +97,8 @@ export default function ServiceShowcase() {
             </h5>
             <div className="flex-1 h-px" style={{ backgroundColor: "rgba(0,0,0,0.06)" }} />
           </div>
-          <p className="text-center tracking-[.1em] text-[1rem] md:text-[1.15rem] text-[#3a3a3a]">
-            สร้างใหม่ | ปรับปรุงต่อเติม - ซ่อมแซม | ออกแบบตกแต่งภายใน
+          <p className="text-center text-[1rem] md:text-[1.15rem] text-[#3a3a3a]">
+            <ServiceList items={["สร้างใหม่", "ปรับปรุงต่อเติม - ซ่อมแซม", "ออกแบบตกแต่งภายใน"]} />
           </p>
         </div>
 

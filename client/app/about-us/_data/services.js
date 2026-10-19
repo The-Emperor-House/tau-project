@@ -5,7 +5,7 @@ export const serviceItems = [
     subtitleTH: "สร้างใหม่",
     descriptionTH:
       "บริการรับก่อสร้างบ้านพักอาศัย บูรณะต่อเติม ปรับปรุงเสริมความแข็งแรง บ้านหลังเดิมให้มีอายุยืนยาว และทันสมัยขึ้น รวมถึงงานตกแต่งภายใน เฟอร์นิเจอร์ Built-in ตามฟังก์ชันการใช้งานจริง และตามความต้องการของลูกค้าตลอดจนพร้อมเข้าอยู่อาศัย",
-    image: "/about-us/services/rebuild.png",
+    image: "/about-us/services/rebuild.webp",
   },
   {
     no: "2",
@@ -13,7 +13,7 @@ export const serviceItems = [
     subtitleTH: "ปรับปรุงซ่อมแซม",
     descriptionTH:
       "บริการออกแบบก่อสร้าง ซ่อมแซม บ้านพักอาศัย คอนโดมิเนียม โรงแรม ทาวน์โฮม รวมถึงอาคารสำนักงานต่างๆ ให้คงความแข็งแรงและสวยงามเหมือนเดิม",
-    image: "/about-us/services/renovate.png",
+    image: "/about-us/services/renovate.webp",
   },
   {
     no: "3",
@@ -21,6 +21,6 @@ export const serviceItems = [
     subtitleTH: "ออกแบบตกแต่งภายใน",
     descriptionTH:
       "บริการรับออกแบบตกแต่งภายใน โดยทีมมัณฑนากรมืออาชีพ และมากประสบการณ์ ปรับโฉมรูปแบบบ้านหลังเดิม อาคารเก่า และจัดพื้นที่ใช้สอยเดิมด้วยดีไซน์ใหม่ ให้สวยงามลงตัวตามความต้องการ",
-    image: "/about-us/services/decorate.png",
+    image: "/about-us/services/decorate.webp",
   },
 ];

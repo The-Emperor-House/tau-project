@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useModalContext from "@/shared/hooks/useModalContext";
+import { revalidatePublicPages } from "@/shared/lib/revalidate";
+import { submitImageForm, MAX_IMAGES_PER_UPLOAD } from "@/shared/lib/imageUpload";
 import ProjectSection from "./components/ProjectSection";
 import ProjectFormDialog from "./components/ProjectFormDialog";
 
@@ -22,7 +24,7 @@ export default function DashboardProjects() {
   const [deleteImageIds, setDeleteImageIds] = useState(new Set());
   const coverInputRef = useRef(null);
   const imagesInputRef = useRef(null);
-  const { showLoading, hideLoading, confirm } = useModalContext();
+  const { showLoading, updateLoading, hideLoading, confirm } = useModalContext();
 
   const splitGroups = (arr) => {
     setREBUILD(arr.filter((p) => p.type === "REBUILD"));
@@ -75,7 +77,7 @@ export default function DashboardProjects() {
   };
 
   const handleDelete = async (id) => {
-    const ok = await confirm({ title: "Delete project?", message: "การลบจะไม่สามารถย้อนกลับได้", confirmText: "Delete", cancelText: "Cancel" });
+    const ok = await confirm({ title: "Delete project?", message: "การลบจะไม่สามารถย้อนกลับได้", confirmText: "Delete", cancelText: "Cancel", destructive: true });
     if (!ok) return;
     showLoading("Deleting...");
     try {
@@ -86,6 +88,7 @@ export default function DashboardProjects() {
         headers: { Authorization: `Bearer ${session?.backendToken}` },
       });
       if (!res.ok) throw new Error();
+      revalidatePublicPages();
       toast.success("Deleted");
       fetchProjects();
     } catch {
@@ -100,14 +103,10 @@ export default function DashboardProjects() {
       toast.warning("Name is required");
       return;
     }
-    const form = new FormData();
-    form.append("name", formData.name);
-    form.append("type", formData.type);
-    form.append("details", formData.details || "");
-    if (formData.areaSize !== "") form.append("areaSize", String(formData.areaSize));
-    if (coverInputRef.current?.files[0]) form.append("cover", coverInputRef.current.files[0]);
-    imagesFiles.forEach((f) => form.append("images", f));
-    if (deleteImageIds.size) form.append("deleteImageIds", Array.from(deleteImageIds).join(","));
+    if (imagesFiles.length > MAX_IMAGES_PER_UPLOAD) {
+      toast.warning(`อัปโหลดได้ครั้งละไม่เกิน ${MAX_IMAGES_PER_UPLOAD} รูป`);
+      return;
+    }
 
     showLoading(isEditing ? "Updating..." : "Creating...");
     const method = isEditing ? "PUT" : "POST";
@@ -117,12 +116,27 @@ export default function DashboardProjects() {
     try {
       const { getSession } = await import("next-auth/react");
       const session = await getSession();
-      const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: form });
-      if (!res.ok) throw new Error();
+      const res = await submitImageForm({
+        url,
+        method,
+        token: session?.backendToken,
+        fields: {
+          name: formData.name,
+          type: formData.type,
+          details: formData.details || "",
+          areaSize: formData.areaSize !== "" ? String(formData.areaSize) : undefined,
+          deleteImageIds: deleteImageIds.size ? Array.from(deleteImageIds).join(",") : undefined,
+        },
+        cover: coverInputRef.current?.files[0],
+        images: imagesFiles,
+        onStatus: updateLoading,
+      });
+      if (!res.ok) throw new Error(res.message || "Failed to submit");
+      revalidatePublicPages();
       toast.success(isEditing ? "Updated" : "Created");
       setOpenForm(false); fetchProjects();
-    } catch {
-      toast.error("Failed to submit");
+    } catch (err) {
+      toast.error(err.message || "Failed to submit");
     } finally {
       hideLoading();
     }

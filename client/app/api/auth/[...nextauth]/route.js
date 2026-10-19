@@ -93,7 +93,6 @@ const handler = NextAuth({
               id: data.data.user.userId,
               name: data.data.user.name,
               email: data.data.user.email,
-              role: data.data.user.role,
               avatarUrl: data.data.user.avatarUrl,
               backendToken: data.data.accessToken,
               tokenExpiresIn: data.data.accessTokenExpiresIn,
@@ -119,7 +118,6 @@ const handler = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role,
           avatarUrl: user.avatarUrl,
           backendToken: user.backendToken,
           tokenExpiresIn: user.tokenExpiresIn,
@@ -142,17 +140,32 @@ const handler = NextAuth({
         id: token.id,
         name: token.name,
         email: token.email,
-        role: token.role,
         avatarUrl: token.avatarUrl,
       };
 
       session.backendToken = token.backendToken;
       session.tokenExpiresIn = token.tokenExpiresIn;
-      session.refreshToken = token.refreshToken;
+      // refreshToken อยู่ใน JWT cookie (httpOnly, เข้ารหัส) ฝั่ง server เท่านั้น — ไม่ส่งให้ browser
       session.accessTokenExpires = token.accessTokenExpires;
       session.error = token.error ?? null;
 
       return session;
+    },
+  },
+
+  events: {
+    // revoke refresh token ที่ backend ตอน logout — ทำฝั่ง server เพราะ browser ไม่มี refresh token แล้ว
+    async signOut({ token }) {
+      if (!token?.refreshToken) return;
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken: token.refreshToken }),
+        });
+      } catch (err) {
+        console.error("Backend logout failed:", err);
+      }
     },
   },
 

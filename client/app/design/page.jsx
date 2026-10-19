@@ -1,46 +1,34 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
+import PageShell from "@/shared/components/site/PageShell";
+import { DESIGN_TYPES } from "./designTypes";
 
-const tiles = [
-  {
-    id: "architectural",
-    title: "ARCHITECTURAL DESIGN",
-    image: "/design/architectural-cover.webp",
-    link: "/design/architectural",
-  },
-  {
-    id: "interior",
-    title: "INTERIOR DESIGN",
-    image: "/design/interior-cover.webp",
-    link: "/design/interior",
-  },
-];
+export const metadata = {
+  title: "Design - TAURUS : WE RENEW",
+};
 
-function DesignTile({ t }) {
+function DesignTile({ type, priority }) {
   return (
     <Link
-      href={t.link}
-      className="block w-full no-underline text-inherit bg-white rounded shadow-[0_6px_24px_rgba(0,0,0,0.18)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.28)] transition-shadow"
+      href={`/design/${type.value}`}
+      className="group block bg-white/[0.04] ring-1 ring-white/10 hover:ring-site-accent/50 transition-[box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_-24px_rgba(0,0,0,0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-site-accent"
     >
-      <div className="p-4 md:p-6">
-        <div className="relative w-full overflow-hidden" style={{ paddingTop: "58%" }}>
-          <Image
-            src={t.image}
-            alt={t.title}
-            fill
-            sizes="(max-width: 1200px) 100vw, 600px"
-            className="object-cover"
-            priority
-          />
-        </div>
+      <div className="relative w-full overflow-hidden aspect-[100/58]">
+        <Image
+          src={type.cover}
+          alt={type.title}
+          fill
+          priority={priority}
+          sizes="(max-width: 768px) 100vw, 700px"
+          className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.05]"
+        />
       </div>
-
-      <div className="px-6 md:px-10 py-6 md:py-8 bg-white">
-        <h3 className="text-center font-light tracking-[0.18em] md:tracking-[0.28em] text-[1.1rem] md:text-[2rem] leading-tight">
-          {t.title}
-        </h3>
+      <div className="px-6 md:px-10 py-6 md:py-8 text-center">
+        <h2 className="text-white font-light uppercase tracking-[0.18em] md:tracking-[0.28em] text-[1.1rem] md:text-[1.75rem] leading-tight transition-colors group-hover:text-site-accent">
+          {type.title}
+        </h2>
+        <p className="mt-2 text-white/50 text-sm">{type.subtitle}</p>
+        <span className="mx-auto mt-4 block h-px w-10 bg-site-accent transition-all duration-500 group-hover:w-24" />
       </div>
     </Link>
   );
@@ -48,23 +36,19 @@ function DesignTile({ t }) {
 
 export default function DesignPage() {
   return (
-    <div
-      className="min-h-screen bg-[#404040] flex flex-col gap-8 md:gap-12"
-      style={{ paddingTop: "var(--page-top)" }}
-    >
-      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 text-right">
-        <h1 className="text-white font-light tracking-[0.4em] md:tracking-[0.6em] text-[1.6rem] md:text-[3rem]">
-          DESIGN
+    <PageShell className="max-w-[1400px] md:px-8">
+      <div className="text-right mb-8 md:mb-12">
+        <h1 className="text-white font-light uppercase tracking-[0.4em] md:tracking-[0.6em] text-[1.6rem] md:text-[3rem]">
+          Design
         </h1>
+        <span className="ml-auto mt-3 block h-px w-24 md:w-40 bg-gradient-to-l from-site-accent to-transparent" />
       </div>
 
-      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        {tiles.map((t) => (
-          <DesignTile key={t.id} t={t} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        {DESIGN_TYPES.map((t, i) => (
+          <DesignTile key={t.value} type={t} priority={i === 0} />
         ))}
       </div>
-
-      <div className="h-6 md:h-10" />
-    </div>
+    </PageShell>
   );
 }

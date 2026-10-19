@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib/utils";
 
 export default function NavLinkItem({ href, label, active, onClick, dense = false }) {
   return (

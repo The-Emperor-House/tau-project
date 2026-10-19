@@ -30,6 +30,11 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
+  /* หน้าเว็บสาธารณะ (design / projects / showroom / news) */
+  --color-site-bg: #404040;
+  --color-site-accent: #BFA68A;
+  --color-site-accent-strong: #a88e72;
+
   --animate-move: move 5s linear infinite;
 
   @keyframes move {
@@ -118,18 +123,4 @@ html, body {
 a, [role="link"], img, svg {
   -webkit-user-drag: none;
   user-drag: none;
-}
-
-body[data-protect="on"] {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-
-body[data-protect="on"] input,
-body[data-protect="on"] textarea,
-body[data-protect="on"] [contenteditable="true"],
-body[data-protect="on"] .selectable {
-  -webkit-user-select: text;
-  user-select: text;
 }

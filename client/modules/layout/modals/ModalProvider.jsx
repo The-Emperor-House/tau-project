@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useMemo, useState, useCallback } from "react";
+import { createContext, useMemo, useState, useCallback, useRef } from "react";
 import LoadingDialog from "./LoadingDialog";
 import ConfirmDialog from "./ConfirmDialog";
 import ErrorModal from "./ErrorModal";
@@ -10,19 +10,23 @@ import LogoutDialog from "./LogoutDialog";
 
 export const ModalContext = createContext(null);
 
+const CONFIRM_DEFAULTS = {
+  title: "Confirm",
+  message: "Are you sure?",
+  confirmText: "Confirm",
+  cancelText: "Cancel",
+  destructive: false,
+};
+
 export default function ModalProvider({ children }) {
   // ---- Loading ----
-  const [loading, setLoading] = useState({ open: false, message: "" });
+  // progress: ตัวเลข 0-100 = แสดงแถบความคืบหน้า, null = แสดงแค่ spinner
+  const [loading, setLoading] = useState({ open: false, message: "", progress: null });
 
   // ---- Confirm (promise-based) ----
-  const [confirm, setConfirm] = useState({
-    open: false,
-    title: "Confirm",
-    message: "Are you sure?",
-    confirmText: "Confirm",
-    cancelText: "Cancel",
-    _resolver: null,
-  });
+  const [confirm, setConfirm] = useState({ open: false, ...CONFIRM_DEFAULTS });
+  // resolver + onConfirm ของ confirm ที่เปิดอยู่ — เก็บใน ref กัน closure เก่า
+  const confirmPending = useRef(null);
 
   // ---- Other modals ----
   const [error, setError] = useState({
@@ -56,44 +60,56 @@ export default function ModalProvider({ children }) {
   });
 
   // ---- helpers ----
-  const showLoading = useCallback((message = "Loading...") => {
-    setLoading({ open: true, message });
+  const showLoading = useCallback((message = "Loading...", progress = null) => {
+    setLoading({ open: true, message, progress });
   }, []);
-  
+
+  // อัปเดตข้อความ/ความคืบหน้าของ loading ที่เปิดอยู่ (ไม่เปิดใหม่ถ้าปิดไปแล้ว)
+  const updateLoading = useCallback(({ message, progress = null } = {}) => {
+    setLoading((prev) => (prev.open ? { ...prev, message: message ?? prev.message, progress } : prev));
+  }, []);
+
   const hideLoading = useCallback(
-    () => setLoading({ open: false, message: "" }),
+    () => setLoading({ open: false, message: "", progress: null }),
     []
   );
 
+  // คืน Promise<boolean> และถ้าส่ง onConfirm มา จะเรียกให้หลังผู้ใช้กดยืนยัน (หลัง dialog ปิด)
   const confirmAsync = useCallback(
     (opts = {}) =>
       new Promise((resolve) => {
-        setConfirm((prev) => ({
-          ...prev,
-          ...opts,
-          open: true,
-          _resolver: resolve,
-        }));
+        // ถ้ามี confirm ค้างอยู่ ให้ถือว่ายกเลิก กัน promise เก่าค้างตลอดไป
+        confirmPending.current?.resolve(false);
+        const { onConfirm, ...rest } = opts;
+        confirmPending.current = { resolve, onConfirm };
+        setConfirm({ ...CONFIRM_DEFAULTS, ...rest, open: true });
       }),
     []
   );
 
-  const handleConfirmClose = useCallback(
-    (ok) => {
-      if (confirm._resolver) confirm._resolver(!!ok);
-      setConfirm((prev) => ({ ...prev, open: false, _resolver: null }));
-    },
-    [confirm._resolver]
-  );
+  const handleConfirmClose = useCallback((ok) => {
+    const pending = confirmPending.current;
+    confirmPending.current = null;
+    setConfirm((prev) => ({ ...prev, open: false }));
+    if (!pending) return;
+
+    pending.resolve(!!ok);
+    if (ok && typeof pending.onConfirm === "function") {
+      // ให้ confirm ปิดก่อน แล้วค่อยเริ่มงาน (เช่น เปิด loading)
+      Promise.resolve().then(() => pending.onConfirm());
+    }
+  }, []);
 
   const closeModal = useCallback(() => {
     // ปิดทุก modal (กันหลงค้าง)
-    setLoading({ open: false, message: "" });
+    setLoading({ open: false, message: "", progress: null });
     setError((p) => ({ ...p, open: false }));
     setWarning((p) => ({ ...p, open: false }));
     setSuccess((p) => ({ ...p, open: false }));
     setLogout((p) => ({ ...p, open: false, onConfirm: null }));
-    setConfirm((p) => ({ ...p, open: false, _resolver: null }));
+    confirmPending.current?.resolve(false);
+    confirmPending.current = null;
+    setConfirm((p) => ({ ...p, open: false }));
   }, []);
 
   // ---- showModal dispatcher (API ที่หน้า test เรียก) ----
@@ -132,13 +148,14 @@ export default function ModalProvider({ children }) {
     () => ({
       // เดิม
       showLoading,
+      updateLoading,
       hideLoading,
       confirm: confirmAsync,
       // ใหม่
       showModal,
       closeModal,
     }),
-    [showLoading, hideLoading, confirmAsync, showModal, closeModal]
+    [showLoading, updateLoading, hideLoading, confirmAsync, showModal, closeModal]
   );
 
   return (
@@ -146,7 +163,7 @@ export default function ModalProvider({ children }) {
       {children}
 
       {/* Loading */}
-      <LoadingDialog open={loading.open} text={loading.message} />
+      <LoadingDialog open={loading.open} text={loading.message} progress={loading.progress} />
 
       {/* Confirm */}
       <ConfirmDialog
@@ -155,6 +172,7 @@ export default function ModalProvider({ children }) {
         message={confirm.message}
         confirmText={confirm.confirmText}
         cancelText={confirm.cancelText}
+        destructive={confirm.destructive}
         onClose={handleConfirmClose}
       />
 
