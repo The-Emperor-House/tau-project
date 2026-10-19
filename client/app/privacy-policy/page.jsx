@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 const ACCENT = "#ab9685";
 
 export default function PrivacyPolicyPage() {
@@ -8,13 +10,16 @@ export default function PrivacyPolicyPage() {
       {/* Hero */}
       <div
         className="relative w-full flex items-end justify-center text-white text-center"
-        style={{
-          height: "clamp(55vh, 60vh, 60vh)",
-          backgroundImage: "url('/privacy-policy/banner.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        style={{ height: "clamp(55vh, 60vh, 60vh)" }}
       >
+        <Image
+          src="/privacy-policy/banner.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
         <div className="absolute inset-0 bg-black/35 z-[1]" />
         <div className="relative z-[2] flex flex-col items-center px-4 pb-10 md:pb-14">
           <h1 className="text-3xl md:text-5xl font-light tracking-[0.35em]">
