@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import AboutBlock from "./AboutBlock";
 import ServiceBlock from "./ServiceBlock";
 import IconListBlock from "./IconListBlock";
+import { ServiceList } from "./ServicesSummaryBar";
 
 const servicesList = ["สร้างใหม่", "ปรับปรุงต่อเติม - ซ่อมแซม", "ออกแบบตกแต่งภายใน"];
 const categories = ["HOME", "CONDOMINIUM", "HOTEL", "OFFICE"];
@@ -72,11 +73,11 @@ export default function AboutUsSection() {
       </div>
 
       {/* BOTTOM TEXT + READ MORE */}
-      <div className="md:col-span-3 mt-26">
+      <div className="md:col-span-3 mt-12 md:mt-16">
         <div className="flex flex-col md:flex-row items-center justify-center md:justify-between gap-4 text-center md:text-left">
           <div className="w-full">
-            <p className="font-medium tracking-[0.05rem] text-[0.8rem] sm:text-[1rem] md:text-[1.2rem] md:ml-6 mb-1 break-words" style={{ wordBreak: "break-word" }}>
-              {servicesList.join(" | ")}
+            <p className="font-medium text-[0.95rem] sm:text-[1rem] md:text-[1.2rem] md:ml-6 mb-1">
+              <ServiceList items={servicesList} />
             </p>
             <p className="font-light text-black tracking-[0.05rem] text-[0.95rem] sm:text-[1rem] md:text-[1.2rem] opacity-80 md:ml-12 break-words" style={{ wordBreak: "break-word" }}>
               {categories.join(" | ")}

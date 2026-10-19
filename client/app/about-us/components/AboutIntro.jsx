@@ -1,5 +1,6 @@
 "use client";
 
+import ThaiText from "@/shared/components/ui/ThaiText";
 import { ABOUT_INTRO_TITLE, ABOUT_INTRO_TEXT } from "../_data/aboutIntro";
 
 function Paragraphs({ text }) {
@@ -9,17 +10,15 @@ function Paragraphs({ text }) {
       {paras.map((p, i) => (
         <p
           key={i}
-          className="text-[#ab9685] tracking-[0.01rem] text-[0.95rem] sm:text-[1.05rem] md:text-[1.15rem] overflow-wrap-anywhere break-words hyphens-auto leading-relaxed"
+          className="text-[#ab9685] text-[0.95rem] sm:text-[1.05rem] md:text-[1.15rem] leading-relaxed"
           style={{
             marginTop: i === 0 ? "0.375rem" : 0,
             marginBottom: "1rem",
-            textIndent: undefined,
-            WebkitHyphens: "auto",
             textWrap: "pretty",
             WebkitFontSmoothing: "antialiased",
           }}
         >
-          {p}
+          <ThaiText>{p}</ThaiText>
         </p>
       ))}
     </div>
