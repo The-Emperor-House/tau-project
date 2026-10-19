@@ -1,4 +1,4 @@
-const { cloudinary, uploadNews, destroyMany, uploadedPublicIds } = require("../utils/cloudinary");
+const { cloudinary, uploadNews, destroyMany, uploadedPublicIds, MAX_GALLERY_IMAGES } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
 
@@ -9,12 +9,13 @@ const clamp = (s, max = 65000) =>
 exports.createNews = [
   uploadNews.fields([
     { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 12 },
+    { name: "images", maxCount: MAX_GALLERY_IMAGES },
   ]),
   async (req, res) => {
     const { heading1, heading2, body, videoUrl } = req.body;
 
     if (!heading1 || !req.files?.cover?.length) {
+      await destroyMany(uploadedPublicIds(req.files));
       return res.status(400).json({ message: "Missing heading1 or cover image" });
     }
 
@@ -145,7 +146,7 @@ exports.getNewsById = async (req, res) => {
 exports.updateNews = [
   uploadNews.fields([
     { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 12 },
+    { name: "images", maxCount: MAX_GALLERY_IMAGES },
   ]),
   async (req, res) => {
     const newUploads = uploadedPublicIds(req.files);
@@ -184,6 +185,12 @@ exports.updateNews = [
     const imageFiles = req.files?.images || [];
     const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
 
+    // cover เป็นฟิลด์บังคับ — เปลี่ยนเป็นรูปใหม่หรือ URL ใหม่ได้ แต่ล้างให้ว่างไม่ได้
+    if (!cover && "coverUrl" in updateData && String(updateData.coverUrl ?? "").trim() === "") {
+      await destroyMany(newUploads);
+      return res.status(400).json({ message: "Cover image is required" });
+    }
+
     try {
       const old = await prisma.news.findUnique({ where: { id } });
       if (!old) {
@@ -200,15 +207,10 @@ exports.updateNews = [
         updateData.coverUrl = cover.path;
         updateData.coverPublicId = cover.filename;
       } else if ("coverUrl" in updateData) {
-        // ผู้ใช้ส่ง coverUrl (แก้หรือลบ)
-        const newUrl = String(updateData.coverUrl ?? "").trim();
-        if (newUrl === "") {
-          // ล้าง coverUrl
-          updateData.coverUrl = null;
-          // ถ้าเดิมเป็นรูปจาก Cloudinary ให้ลบทิ้งและล้าง publicId
-          oldCoverToDestroy = old.coverPublicId;
-          updateData.coverPublicId = null;
-        } else if (newUrl !== (old.coverUrl || "")) {
+        // ผู้ใช้ส่ง coverUrl ใหม่ (ค่าว่างถูกปฏิเสธไปแล้วด้านบน)
+        const newUrl = String(updateData.coverUrl).trim();
+        updateData.coverUrl = newUrl;
+        if (newUrl !== (old.coverUrl || "")) {
           // เปลี่ยนเป็น URL ใหม่ (ภายนอก) → ลบไฟล์เก่าใน Cloudinary และเคลียร์ publicId
           oldCoverToDestroy = old.coverPublicId;
           updateData.coverPublicId = null;

@@ -11,6 +11,12 @@ cloudinary.config({
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
+// ขนาดไฟล์สูงสุดต่อรูป — Cloudinary free plan รับรูปได้ไม่เกิน 10MB
+const MAX_FILE_SIZE_MB = 10;
+
+// จำนวนรูป gallery สูงสุดต่อการอัปโหลด 1 ครั้ง (ต้องตรงกับ MAX_IMAGES_PER_UPLOAD ฝั่ง client)
+const MAX_GALLERY_IMAGES = 30;
+
 /**
  * สร้าง multer uploader สำหรับอัปโหลดไฟล์ไปยัง Cloudinary
  * @param {string} folder โฟลเดอร์บน Cloudinary ที่จะเก็บไฟล์
@@ -31,15 +37,17 @@ function createUploader(folder, transformation = [{ width: 1280, crop: 'limit', 
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error(`Invalid file type: ${file.mimetype}`));
+      const err = new Error(`Invalid file type: ${file.mimetype} (${file.originalname}). Allowed: JPG, PNG, WEBP`);
+      err.statusCode = 400;
+      cb(err);
     }
   };
 
   return multer({
     storage,
     fileFilter,
-    limits: { 
-      fileSize: 5 * 1024 * 1024, // จำกัดขนาดไฟล์สูงสุดที่ 5MB
+    limits: {
+      fileSize: MAX_FILE_SIZE_MB * 1024 * 1024,
     }
   });
 }
@@ -94,6 +102,8 @@ module.exports = {
   uploadNews,
   uploadFurniture,
   createUploader,
+  MAX_FILE_SIZE_MB,
+  MAX_GALLERY_IMAGES,
   destroyMany,
   uploadedPublicIds,
 };

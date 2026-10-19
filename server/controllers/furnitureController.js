@@ -1,4 +1,4 @@
-const { cloudinary, uploadFurniture, destroyMany, uploadedPublicIds } = require("../utils/cloudinary");
+const { cloudinary, uploadFurniture, destroyMany, uploadedPublicIds, MAX_GALLERY_IMAGES } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
 
@@ -6,16 +6,22 @@ const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers
 exports.createFurniture = [
   uploadFurniture.fields([
     { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 12 },
+    { name: "images", maxCount: MAX_GALLERY_IMAGES },
   ]),
   async (req, res) => {
     const { name, type, details, price, width, depth, height } = req.body;
     const valid = ["BUILT_IN", "LOOSE", "CUSTOM"];
+    // validation ไม่ผ่าน → ลบไฟล์ที่ multer อัปโหลดไปแล้วทิ้ง ไม่ให้ค้างบน Cloudinary
+    const reject = async (message) => {
+      await destroyMany(uploadedPublicIds(req.files));
+      return res.status(400).json({ message });
+    };
+
     if (!name || !req.files?.cover?.length) {
-      return res.status(400).json({ message: "Missing name or cover image" });
+      return reject("Missing name or cover image");
     }
     if (!valid.includes(type)) {
-      return res.status(400).json({ message: "Invalid furniture type" });
+      return reject("Invalid furniture type");
     }
 
     const coverFile = req.files.cover[0];
@@ -113,7 +119,7 @@ exports.getFurnitureById = async (req, res) => {
 exports.updateFurniture = [
   uploadFurniture.fields([
     { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 12 },
+    { name: "images", maxCount: MAX_GALLERY_IMAGES },
   ]),
   async (req, res) => {
     const newUploads = uploadedPublicIds(req.files);

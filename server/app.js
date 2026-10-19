@@ -99,7 +99,9 @@ const HEALTH_UA = /UptimeRobot|Pingdom|StatusCake|Site24x7|kube-probe|GoogleHC|E
 app.use(
   morgan(process.env.NODE_ENV === "development" ? "dev" : "combined", {
     skip: (req) =>
-      req.path === "/health" || HEALTH_UA.test(req.headers["user-agent"] || ""),
+      process.env.NODE_ENV === "test" ||
+      req.path === "/health" ||
+      HEALTH_UA.test(req.headers["user-agent"] || ""),
   })
 );
 
@@ -133,8 +135,14 @@ app.use((req, res, next) => {
   next();
 });
 
-/** ⏱️ Request timeout — กัน request ค้างไม่มีที่สิ้นสุด (เช่น DB pool รอ, Cloudinary ช้า) */
-app.use("/api", timeoutMiddleware(25000));
+/** ⏱️ Request timeout — กัน request ค้างไม่มีที่สิ้นสุด (เช่น DB pool รอ, Cloudinary ช้า)
+ *  request อัปโหลดรูป (multipart) ให้เวลานานกว่า — ไฟล์ถูก stream ขึ้น Cloudinary ทีละรูป
+ *  ถ้าใช้ 25s รูปเยอะ ๆ จะโดนตัดกลางทาง และไม่มีอะไรถูกบันทึกเลย */
+const apiTimeout = timeoutMiddleware(25000);
+const uploadTimeout = timeoutMiddleware(5 * 60 * 1000);
+app.use("/api", (req, res, next) =>
+  (req.is("multipart/form-data") ? uploadTimeout : apiTimeout)(req, res, next)
+);
 
 /** 🚀 Routes */
 app.use("/api", routes);

@@ -1,4 +1,4 @@
-const { cloudinary, uploadDesign, destroyMany, uploadedPublicIds } = require("../utils/cloudinary");
+const { cloudinary, uploadDesign, destroyMany, uploadedPublicIds, MAX_GALLERY_IMAGES } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
 
@@ -6,17 +6,23 @@ const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers
 exports.createDesign = [
   uploadDesign.fields([
     { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 10 },
+    { name: "images", maxCount: MAX_GALLERY_IMAGES },
   ]),
   async (req, res) => {
     const { name, type } = req.body;
     const validTypes = ["ARCHITECTURAL", "INTERIOR"];
 
+    // validation ไม่ผ่าน → ลบไฟล์ที่ multer อัปโหลดไปแล้วทิ้ง ไม่ให้ค้างบน Cloudinary
+    const reject = async (message) => {
+      await destroyMany(uploadedPublicIds(req.files));
+      return res.status(400).json({ message });
+    };
+
     if (!name || !req.files?.cover?.length) {
-      return res.status(400).json({ message: "Missing name or cover image" });
+      return reject("Missing name or cover image");
     }
     if (!validTypes.includes(type)) {
-      return res.status(400).json({ message: "Invalid design type" });
+      return reject("Invalid design type");
     }
 
     const coverFile = req.files.cover[0];
@@ -88,7 +94,7 @@ exports.getAllDesigns = async (req, res) => {
 exports.updateDesign = [
   uploadDesign.fields([
     { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 10 },
+    { name: "images", maxCount: MAX_GALLERY_IMAGES },
   ]),
   async (req, res) => {
     const newUploads = uploadedPublicIds(req.files);

@@ -1,4 +1,4 @@
-const { cloudinary, uploadProject, destroyMany, uploadedPublicIds } = require("../utils/cloudinary");
+const { cloudinary, uploadProject, destroyMany, uploadedPublicIds, MAX_GALLERY_IMAGES } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
 
@@ -10,7 +10,7 @@ const isValidType = (t) => typeof t === "string" && VALID_TYPES.includes(t.toUpp
 exports.createProject = [
   uploadProject.fields([
     { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 10 },
+    { name: "images", maxCount: MAX_GALLERY_IMAGES },
   ]),
   async (req, res) => {
     const { name, type, details } = req.body;
@@ -18,14 +18,20 @@ exports.createProject = [
       ? Number(req.body.areaSize)
       : undefined;
 
+    // validation ไม่ผ่าน → ลบไฟล์ที่ multer อัปโหลดไปแล้วทิ้ง ไม่ให้ค้างบน Cloudinary
+    const reject = async (message) => {
+      await destroyMany(uploadedPublicIds(req.files));
+      return res.status(400).json({ message });
+    };
+
     if (!name || !req.files?.cover?.length) {
-      return res.status(400).json({ message: "Missing name or cover image" });
+      return reject("Missing name or cover image");
     }
     if (!isValidType(type)) {
-      return res.status(400).json({ message: "Invalid project type" });
+      return reject("Invalid project type");
     }
     if (areaSize !== undefined && (Number.isNaN(areaSize) || areaSize < 0)) {
-      return res.status(400).json({ message: "Invalid areaSize" });
+      return reject("Invalid areaSize");
     }
 
     const coverFile = req.files.cover[0];
@@ -104,7 +110,7 @@ exports.getAllProjects = async (req, res) => {
 exports.updateProject = [
   uploadProject.fields([
     { name: "cover", maxCount: 1 },
-    { name: "images", maxCount: 10 },
+    { name: "images", maxCount: MAX_GALLERY_IMAGES },
   ]),
   async (req, res) => {
     const newUploads = uploadedPublicIds(req.files);
