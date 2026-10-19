@@ -8,8 +8,8 @@ Docker Compose สำหรับ MySQL และ phpMyAdmin ของโปร�
 
 | Service | Container | Port (host) | Image |
 |---|---|---|---|
-| MySQL | `taurus_mysql` | `3307` | `mysql:8.0` |
-| phpMyAdmin | `taurus_phpmyadmin` | `8081` | `phpmyadmin:latest` |
+| MySQL | `tau-project_mysql` | `3308` | `mysql:8.0` |
+| phpMyAdmin | `tau-project_phpmyadmin` | `8082` | `phpmyadmin:latest` |
 
 ---
 
@@ -33,14 +33,14 @@ docker compose up -d
 | Field | Value |
 |---|---|
 | Host | `localhost` |
-| Port | `3307` |
+| Port | `3308` |
 | User | `root` |
 | Password | *(ว่าง)* |
 | Database | `taurus` |
 
 ### DATABASE_URL (Prisma / server .env)
 ```
-DATABASE_URL="mysql://root@localhost:3307/taurus"
+DATABASE_URL="mysql://root@localhost:3308/taurus"
 ```
 
 ---
@@ -85,6 +85,6 @@ node prisma/seed.js
 
 ## หมายเหตุ
 
-- **Project name** ถูกกำหนดเป็น `taurus` ใน `docker-compose.yml` เพื่อป้องกัน conflict กับ project อื่นที่มีโฟลเดอร์ชื่อ `database` เหมือนกัน
-- ข้อมูลทั้งหมดเก็บใน Docker Volume ชื่อ `taurus_mysql_data` ไม่หายแม้ลบ container
-- MySQL รันบน port **3307** (ไม่ใช่ 3306) เพื่อไม่ชนกับ project อื่นบนเครื่อง
+- **Project name** ถูกกำหนดเป็น `tau-project` ใน `docker-compose.yml` เพื่อป้องกัน conflict กับ project อื่นที่มีโฟลเดอร์ชื่อ `database` เหมือนกัน
+- ข้อมูลทั้งหมดเก็บใน Docker Volume ชื่อ `tau-project_mysql_data` ไม่หายแม้ลบ container
+- MySQL รันบน port **3308** (ไม่ใช่ 3306) เพื่อไม่ชนกับ project อื่นบนเครื่อง

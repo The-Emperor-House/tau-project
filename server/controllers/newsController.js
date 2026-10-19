@@ -1,4 +1,4 @@
-const { cloudinary, uploadNews } = require("../utils/cloudinary");
+const { cloudinary, uploadNews, destroyMany, uploadedPublicIds } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
 
@@ -74,9 +74,9 @@ exports.getAllNews = async (req, res) => {
       ...(q
         ? {
             OR: [
-              { heading1: { contains: q, mode: "insensitive" } },
-              { heading2: { contains: q, mode: "insensitive" } },
-              { body: { contains: q, mode: "insensitive" } },
+              { heading1: { contains: q } },
+              { heading2: { contains: q } },
+              { body: { contains: q } },
             ],
           }
         : {}),
@@ -148,8 +148,12 @@ exports.updateNews = [
     { name: "images", maxCount: 12 },
   ]),
   async (req, res) => {
+    const newUploads = uploadedPublicIds(req.files);
     const id = isValidId(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid ID" });
+    if (!id) {
+      await destroyMany(newUploads);
+      return res.status(400).json({ message: "Invalid ID" });
+    }
 
     // ✅ whitelist ฟิลด์ที่แก้ได้ + กัน body ยาวเกิน
     const updateData = buildUpdateData(
@@ -176,19 +180,23 @@ exports.updateNews = [
           : String(v);
     }
 
+    const cover = req.files?.cover?.[0];
+    const imageFiles = req.files?.images || [];
+    const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
+
     try {
-      const old = await prisma.news.findUnique({
-        where: { id },
-        include: { images: { select: { id: true, publicId: true } } },
-      });
-      if (!old) return res.status(404).json({ message: "Not found" });
+      const old = await prisma.news.findUnique({ where: { id } });
+      if (!old) {
+        await destroyMany(newUploads);
+        return res.status(404).json({ message: "Not found" });
+      }
+
+      // cover เก่าบน Cloudinary ที่ต้องลบ — ลบหลังเขียน DB สำเร็จแล้วเท่านั้น
+      let oldCoverToDestroy = null;
 
       // ----- เปลี่ยน cover: ถ้ามีไฟล์ใหม่ ให้อัปเดตและลบของเก่าใน Cloudinary -----
-      if (req.files.cover?.[0]) {
-        if (old.coverPublicId) {
-          await cloudinary.uploader.destroy(old.coverPublicId).catch(() => {});
-        }
-        const cover = req.files.cover[0];
+      if (cover) {
+        oldCoverToDestroy = old.coverPublicId;
         updateData.coverUrl = cover.path;
         updateData.coverPublicId = cover.filename;
       } else if ("coverUrl" in updateData) {
@@ -198,58 +206,47 @@ exports.updateNews = [
           // ล้าง coverUrl
           updateData.coverUrl = null;
           // ถ้าเดิมเป็นรูปจาก Cloudinary ให้ลบทิ้งและล้าง publicId
-          if (old.coverPublicId) {
-            await cloudinary.uploader.destroy(old.coverPublicId).catch(() => {});
-          }
+          oldCoverToDestroy = old.coverPublicId;
           updateData.coverPublicId = null;
         } else if (newUrl !== (old.coverUrl || "")) {
           // เปลี่ยนเป็น URL ใหม่ (ภายนอก) → ลบไฟล์เก่าใน Cloudinary และเคลียร์ publicId
-          if (old.coverPublicId) {
-            await cloudinary.uploader.destroy(old.coverPublicId).catch(() => {});
-          }
+          oldCoverToDestroy = old.coverPublicId;
           updateData.coverPublicId = null;
         }
       }
 
-      // ----- อัปเดตฟิลด์ในตาราง news -----
-      const updated = await prisma.news.update({
-        where: { id },
-        data: updateData,
-      });
+      const removedImages = await prisma.$transaction(async (tx) => {
+        // ----- อัปเดตฟิลด์ในตาราง news -----
+        await tx.news.update({ where: { id }, data: updateData });
 
-      // ----- ลบรูปย่อยตาม IDs ที่ส่งมา -----
-      if (req.body.deleteImageIds) {
-        const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
-        if (idsToDelete.length) {
-          const imgs = await prisma.newsImage.findMany({
-            where: { id: { in: idsToDelete }, newsId: id },
-          });
+        // ----- ลบรูปย่อยตาม IDs ที่ส่งมา -----
+        const removed = idsToDelete.length
+          ? await tx.newsImage.findMany({ where: { id: { in: idsToDelete }, newsId: id } })
+          : [];
+        if (removed.length) {
+          await tx.newsImage.deleteMany({ where: { id: { in: removed.map((img) => img.id) } } });
+        }
 
-          await Promise.all(
-            imgs
-              .filter((img) => !!img.publicId)
-              .map((img) => cloudinary.uploader.destroy(img.publicId).catch(() => {}))
-          );
-
-          await prisma.newsImage.deleteMany({
-            where: { id: { in: idsToDelete }, newsId: id },
+        // ----- เพิ่มรูปย่อยใหม่ -----
+        if (imageFiles.length) {
+          await tx.newsImage.createMany({
+            data: imageFiles.map((f) => ({
+              newsId: id,
+              imageUrl: f.path,
+              publicId: f.filename,
+            })),
           });
         }
-      }
 
-      // ----- เพิ่มรูปย่อยใหม่ -----
-      if (req.files.images?.length) {
-        const newImages = req.files.images.map((f) => ({
-          newsId: id,
-          imageUrl: f.path,
-          publicId: f.filename,
-        }));
-        await prisma.newsImage.createMany({ data: newImages });
-      }
+        return removed;
+      });
 
-      res.json({ message: "News updated", id: updated.id });
+      await destroyMany([oldCoverToDestroy, ...removedImages.map((img) => img.publicId)]);
+
+      res.json({ message: "News updated", id });
     } catch (err) {
       console.error("Update news error:", err);
+      await destroyMany(newUploads);
       res.status(500).json({ message: "Server error" });
     }
   },
@@ -264,17 +261,15 @@ exports.deleteNews = async (req, res) => {
     const item = await prisma.news.findUnique({ where: { id } });
     if (!item) return res.status(404).json({ message: "Not found" });
 
-    // destroy cover
-    if (item.coverPublicId) await cloudinary.uploader.destroy(item.coverPublicId);
-
-    // destroy images
     const images = await prisma.newsImage.findMany({ where: { newsId: id } });
-    for (const img of images) await cloudinary.uploader.destroy(img.publicId);
 
+    // ลบใน DB ก่อน แล้วค่อยลบ cover + รูปย่อยบน Cloudinary
     await prisma.$transaction([
       prisma.newsImage.deleteMany({ where: { newsId: id } }),
       prisma.news.delete({ where: { id } }),
     ]);
+
+    await destroyMany([item.coverPublicId, ...images.map((img) => img.publicId)]);
 
     res.json({ message: "News deleted" });
   } catch (err) {

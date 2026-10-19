@@ -2,7 +2,7 @@
 
 import { useInView } from "framer-motion";
 import { useMemo, useRef } from "react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib/utils";
 
 export default function AnimatedHeading({
   title = "PROJECT",

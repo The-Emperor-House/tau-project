@@ -1,8 +1,10 @@
 "use client";
 import { useEffect } from "react";
 
-export default function ClientGuards() {
+export default function ClientGuards({ enabled = true }) {
   useEffect(() => {
+    if (!enabled) return;
+
     // ⛔ คีย์ลัดยอดนิยม
     const onKeyDown = (e) => {
       const ctrlOrCmd = e.ctrlKey || e.metaKey;
@@ -50,9 +52,8 @@ export default function ClientGuards() {
       document.removeEventListener("dragstart", onDragStart, true);
       document.removeEventListener("copy", onCopy);
       document.removeEventListener("cut", onCut);
-      mo.disconnect();
     };
-  }, []);
+  }, [enabled]);
 
   return null;
 }

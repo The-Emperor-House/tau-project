@@ -1,4 +1,4 @@
-const { cloudinary, uploadDesign } = require("../utils/cloudinary");
+const { cloudinary, uploadDesign, destroyMany, uploadedPublicIds } = require("../utils/cloudinary");
 const prisma = require("../utils/prisma");
 const { isValidId, buildUpdateData, parseDeleteIds } = require("../utils/helpers");
 
@@ -91,64 +91,66 @@ exports.updateDesign = [
     { name: "images", maxCount: 10 },
   ]),
   async (req, res) => {
+    const newUploads = uploadedPublicIds(req.files);
     const id = isValidId(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid ID" });
+    if (!id) {
+      await destroyMany(newUploads);
+      return res.status(400).json({ message: "Invalid ID" });
+    }
 
     const updateData = buildUpdateData(["name", "type"], req.body);
+    const cover = req.files?.cover?.[0];
+    const imageFiles = req.files?.images || [];
+    const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
 
     try {
       const design = await prisma.design.findUnique({ where: { id } });
-      if (!design) return res.status(404).json({ message: "Design not found" });
+      if (!design) {
+        await destroyMany(newUploads);
+        return res.status(404).json({ message: "Design not found" });
+      }
 
       // Replace cover if uploaded
-      if (req.files.cover?.[0]) {
-        if (design.coverPublicId) {
-          await cloudinary.uploader.destroy(design.coverPublicId);
-        }
-        const cover = req.files.cover[0];
+      if (cover) {
         updateData.coverUrl = cover.path;
         updateData.coverPublicId = cover.filename;
       }
 
-      const updated = await prisma.design.update({
-        where: { id },
-        data: updateData,
-      });
+      // เขียน DB ให้สำเร็จก่อน แล้วค่อยลบไฟล์เก่าบน Cloudinary — ถ้า DB fail ไฟล์เก่ายังอยู่ครบ
+      const removedImages = await prisma.$transaction(async (tx) => {
+        await tx.design.update({ where: { id }, data: updateData });
 
-      // Delete images marked for removal
-      if (req.body.deleteImageIds) {
-        const idsToDelete = parseDeleteIds(req.body.deleteImageIds);
-        if (idsToDelete.length) {
-          const imagesToDelete = await prisma.designImage.findMany({
-            where: {
-              id: { in: idsToDelete },
+        // Delete images marked for removal (เฉพาะรูปของ design นี้)
+        const removed = idsToDelete.length
+          ? await tx.designImage.findMany({ where: { id: { in: idsToDelete }, designId: id } })
+          : [];
+        if (removed.length) {
+          await tx.designImage.deleteMany({ where: { id: { in: removed.map((img) => img.id) } } });
+        }
+
+        // Add newly uploaded images
+        if (imageFiles.length) {
+          await tx.designImage.createMany({
+            data: imageFiles.map((file) => ({
               designId: id,
-            },
-          });
-
-          for (const img of imagesToDelete) {
-            await cloudinary.uploader.destroy(img.publicId);
-          }
-
-          await prisma.designImage.deleteMany({
-            where: { id: { in: idsToDelete } },
+              imageUrl: file.path,
+              publicId: file.filename,
+            })),
           });
         }
-      }
 
-      // Add newly uploaded images
-      if (req.files.images?.length) {
-        const newImages = req.files.images.map((file) => ({
-          designId: id,
-          imageUrl: file.path,
-          publicId: file.filename,
-        }));
-        await prisma.designImage.createMany({ data: newImages });
-      }
+        return removed;
+      });
 
-      res.json({ message: "Design updated", designId: updated.id });
+      await destroyMany([
+        cover && design.coverPublicId,
+        ...removedImages.map((img) => img.publicId),
+      ]);
+
+      res.json({ message: "Design updated", designId: id });
     } catch (err) {
       console.error("Update design error:", err);
+      await destroyMany(newUploads);
       res.status(500).json({ message: "Server error" });
     }
   },
@@ -163,15 +165,15 @@ exports.deleteDesign = async (req, res) => {
     const design = await prisma.design.findUnique({ where: { id } });
     if (!design) return res.status(404).json({ message: "Design not found" });
 
-    if (design.coverPublicId) await cloudinary.uploader.destroy(design.coverPublicId);
-
     const images = await prisma.designImage.findMany({ where: { designId: id } });
-    for (const img of images) await cloudinary.uploader.destroy(img.publicId);
 
+    // ลบใน DB ก่อน แล้วค่อยลบไฟล์บน Cloudinary
     await prisma.$transaction([
       prisma.designImage.deleteMany({ where: { designId: id } }),
       prisma.design.delete({ where: { id } }),
     ]);
+
+    await destroyMany([design.coverPublicId, ...images.map((img) => img.publicId)]);
 
     res.json({ message: "Design and related images deleted" });
   } catch (err) {

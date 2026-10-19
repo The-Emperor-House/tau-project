@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Sheet, SheetContent } from "@/shared/components/ui/sheet";
 import { Separator } from "@/shared/components/ui/separator";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib/utils";
 import { usePathname } from "next/navigation";
 
 export default function MobileNavDrawer({ open, onClose, links, extra }) {

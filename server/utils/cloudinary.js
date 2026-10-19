@@ -44,6 +44,25 @@ function createUploader(folder, transformation = [{ width: 1280, crop: 'limit', 
   });
 }
 
+/**
+ * ลบไฟล์บน Cloudinary หลายไฟล์พร้อมกัน — ข้ามค่าว่าง และไม่ throw ถ้าบางไฟล์ลบไม่สำเร็จ
+ * @param {Array<string|null|undefined>} publicIds
+ */
+function destroyMany(publicIds) {
+  return Promise.allSettled(
+    publicIds.filter(Boolean).map((publicId) => cloudinary.uploader.destroy(publicId))
+  );
+}
+
+/**
+ * ดึง publicId ของไฟล์ที่ multer เพิ่งอัปโหลดใน request นี้ (ใช้ลบทิ้งเมื่อ request ล้มเหลว)
+ * @param {object} files req.files จาก multer.fields()
+ * @returns {string[]}
+ */
+function uploadedPublicIds(files) {
+  return Object.values(files || {}).flat().map((f) => f.filename);
+}
+
 // Uploader สำหรับอวาตาร์ ใช้ crop focus ที่ใบหน้าและขนาด 512px
 const uploadAvatar = createUploader('taurus-uploads/avatar', [
   { width: 512, crop: 'thumb', gravity: 'face', quality: 'auto' },
@@ -75,4 +94,6 @@ module.exports = {
   uploadNews,
   uploadFurniture,
   createUploader,
+  destroyMany,
+  uploadedPublicIds,
 };

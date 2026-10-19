@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/shared/lib/utils";
 
 export default function LogoSwap({
   href = "/",
