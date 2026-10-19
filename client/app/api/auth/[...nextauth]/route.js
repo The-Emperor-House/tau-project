@@ -145,11 +145,27 @@ const handler = NextAuth({
 
       session.backendToken = token.backendToken;
       session.tokenExpiresIn = token.tokenExpiresIn;
-      session.refreshToken = token.refreshToken;
+      // refreshToken อยู่ใน JWT cookie (httpOnly, เข้ารหัส) ฝั่ง server เท่านั้น — ไม่ส่งให้ browser
       session.accessTokenExpires = token.accessTokenExpires;
       session.error = token.error ?? null;
 
       return session;
+    },
+  },
+
+  events: {
+    // revoke refresh token ที่ backend ตอน logout — ทำฝั่ง server เพราะ browser ไม่มี refresh token แล้ว
+    async signOut({ token }) {
+      if (!token?.refreshToken) return;
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken: token.refreshToken }),
+        });
+      } catch (err) {
+        console.error("Backend logout failed:", err);
+      }
     },
   },
 

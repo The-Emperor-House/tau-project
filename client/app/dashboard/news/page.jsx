@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useModalContext from "@/shared/hooks/useModalContext";
+import { revalidatePublicPages } from "@/shared/lib/revalidate";
+import { submitImageForm, MAX_IMAGES_PER_UPLOAD } from "@/shared/lib/imageUpload";
 import NewsFormDialog from "./components/NewsFormDialog";
 
 export default function DashboardNews() {
@@ -17,7 +19,7 @@ export default function DashboardNews() {
   const [deleteImageIds, setDeleteImageIds] = useState(new Set());
   const coverInputRef = useRef(null);
   const imagesInputRef = useRef(null);
-  const { showLoading, hideLoading, confirm } = useModalContext();
+  const { showLoading, updateLoading, hideLoading, confirm } = useModalContext();
 
   const fetchNews = async () => {
     setLoading(true);
@@ -88,6 +90,7 @@ export default function DashboardNews() {
         body: JSON.stringify({ isFeatured: !item.isFeatured }),
       });
       if (!res.ok) throw new Error();
+      revalidatePublicPages();
       toast.success(item.isFeatured ? "Removed from Home" : "Set as Featured on Home");
       fetchNews();
     } catch {
@@ -96,7 +99,7 @@ export default function DashboardNews() {
   };
 
   const onDelete = async (id) => {
-    const ok = await confirm({ title: "Delete news?", message: "ต้องการลบบทความนี้หรือไม่", confirmText: "Delete", cancelText: "Cancel" });
+    const ok = await confirm({ title: "Delete news?", message: "ต้องการลบบทความนี้หรือไม่", confirmText: "Delete", cancelText: "Cancel", destructive: true });
     if (!ok) return;
     showLoading("Deleting...");
     try {
@@ -107,6 +110,7 @@ export default function DashboardNews() {
         headers: { Authorization: `Bearer ${session?.backendToken}` },
       });
       if (!res.ok) throw new Error();
+      revalidatePublicPages();
       toast.success("Deleted");
       fetchNews();
     } catch {
@@ -121,14 +125,10 @@ export default function DashboardNews() {
       toast.warning("Heading 1 is required");
       return;
     }
-    const fd = new FormData();
-    fd.append("heading1", formData.heading1);
-    if (formData.heading2) fd.append("heading2", formData.heading2);
-    if (formData.body) fd.append("body", formData.body);
-    if (formData.videoUrl) fd.append("videoUrl", formData.videoUrl);
-    if (coverInputRef.current?.files[0]) fd.append("cover", coverInputRef.current.files[0]);
-    imagesFiles.forEach((f) => fd.append("images", f));
-    if (deleteImageIds.size) fd.append("deleteImageIds", Array.from(deleteImageIds).join(","));
+    if (imagesFiles.length > MAX_IMAGES_PER_UPLOAD) {
+      toast.warning(`อัปโหลดได้ครั้งละไม่เกิน ${MAX_IMAGES_PER_UPLOAD} รูป`);
+      return;
+    }
 
     showLoading(isEditing ? "Updating..." : "Creating...");
     const method = isEditing ? "PUT" : "POST";
@@ -138,12 +138,27 @@ export default function DashboardNews() {
     try {
       const { getSession } = await import("next-auth/react");
       const session = await getSession();
-      const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: fd });
-      if (!res.ok) throw new Error();
+      const res = await submitImageForm({
+        url,
+        method,
+        token: session?.backendToken,
+        fields: {
+          heading1: formData.heading1,
+          heading2: formData.heading2 || undefined,
+          body: formData.body || undefined,
+          videoUrl: formData.videoUrl || undefined,
+          deleteImageIds: deleteImageIds.size ? Array.from(deleteImageIds).join(",") : undefined,
+        },
+        cover: coverInputRef.current?.files[0],
+        images: imagesFiles,
+        onStatus: updateLoading,
+      });
+      if (!res.ok) throw new Error(res.message || "Submit failed");
+      revalidatePublicPages();
       toast.success(isEditing ? "Updated" : "Created");
       setOpenForm(false); fetchNews();
-    } catch {
-      toast.error("Submit failed");
+    } catch (err) {
+      toast.error(err.message || "Submit failed");
     } finally {
       hideLoading();
     }

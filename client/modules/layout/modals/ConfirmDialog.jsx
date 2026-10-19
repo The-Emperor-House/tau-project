@@ -17,12 +17,12 @@ export default function ConfirmDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose?.(false)}>
-      <DialogContent className="max-w-xs">
+      <DialogContent className="sm:max-w-sm" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{message}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter>
           <Button variant="outline" onClick={() => onClose?.(false)}>
             {cancelText}
           </Button>

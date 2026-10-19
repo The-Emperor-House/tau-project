@@ -46,7 +46,7 @@ export default function MainNavbar() {
   }, []);
 
   const handleLogout = () => {
-    logout(session?.refreshToken);
+    logout();
     setIsMobileMenuOpen(false);
   };
 

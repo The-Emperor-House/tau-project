@@ -1,37 +1,32 @@
 // hooks/useLogout.js
-import { useState } from "react";
+import { useCallback } from "react";
 import { signOut } from "next-auth/react";
+import useModalContext from "@/shared/hooks/useModalContext";
 
+// ถามยืนยันก่อนออกจากระบบ แล้วแสดง loading ระหว่างรอ
+// การ revoke refresh token ที่ backend ทำใน events.signOut ของ NextAuth (ฝั่ง server)
 export function useLogout() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { showModal, showLoading, hideLoading } = useModalContext();
 
-  const logout = async (refreshToken) => {
-    setLoading(true);
-    setError(null);
-
+  const signOutNow = useCallback(async () => {
+    showLoading("กำลังออกจากระบบ...");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Logout failed");
-      }
-
-      // ล้าง session ฝั่ง NextAuth
       await signOut({ callbackUrl: "/auth/login" });
     } catch (err) {
       console.error("Logout error:", err);
-      setError(err.message || "Unexpected error");
-      await signOut({ callbackUrl: "/auth/login" }); // ป้องกันหลุด
-    } finally {
-      setLoading(false);
+      hideLoading();
     }
-  };
+  }, [showLoading, hideLoading]);
 
-  return { logout, loading, error };
+  const logout = useCallback(() => {
+    showModal("logout", {
+      title: "ออกจากระบบ?",
+      message: "ต้องการออกจากระบบตอนนี้หรือไม่",
+      confirmText: "ออกจากระบบ",
+      cancelText: "ยกเลิก",
+      onConfirm: signOutNow,
+    });
+  }, [showModal, signOutNow]);
+
+  return { logout };
 }

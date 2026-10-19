@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import ProfileSheet from '@/app/profile/components/ProfileSheet';
+import { useLogout } from '@/shared/hooks/useLogout';
 
 const NAV = [
   { href: '/dashboard/design', label: 'Design', icon: DesignIcon },
@@ -20,15 +21,11 @@ const ACCENT = '#cc8f2a';
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const handleSignOut = async () => {
-    await signOut({ redirect: false });
-    router.push('/auth/login');
-  };
+  const { logout: handleSignOut } = useLogout();
 
   return (
     <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">

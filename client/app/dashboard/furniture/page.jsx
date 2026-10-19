@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import useModalContext from "@/shared/hooks/useModalContext";
+import { revalidatePublicPages } from "@/shared/lib/revalidate";
+import { submitImageForm, MAX_IMAGES_PER_UPLOAD } from "@/shared/lib/imageUpload";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -16,7 +18,7 @@ const TYPES = ["BUILT_IN", "LOOSE", "CUSTOM"];
 
 export default function DashboardFurniture() {
   const { data: session } = useSession();
-  const { showLoading, hideLoading, confirm } = useModalContext();
+  const { showLoading, updateLoading, hideLoading, confirm } = useModalContext();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openForm, setOpenForm] = useState(false);
@@ -67,7 +69,7 @@ export default function DashboardFurniture() {
   };
 
   const handleDelete = async (id) => {
-    const ok = await confirm({ title: "Delete furniture?", message: "ต้องการลบรายการนี้หรือไม่", confirmText: "Delete", cancelText: "Cancel" });
+    const ok = await confirm({ title: "Delete furniture?", message: "ต้องการลบรายการนี้หรือไม่", confirmText: "Delete", cancelText: "Cancel", destructive: true });
     if (!ok) return;
     showLoading("Deleting...");
     try {
@@ -76,6 +78,7 @@ export default function DashboardFurniture() {
         headers: { Authorization: `Bearer ${session?.backendToken}` },
       });
       if (!res.ok) throw new Error();
+      revalidatePublicPages();
       toast.success("Deleted");
       fetchItems();
     } catch {
@@ -112,11 +115,10 @@ export default function DashboardFurniture() {
       toast.warning("Name required");
       return;
     }
-    const form = new FormData();
-    ["name", "type", "details", "price", "width", "depth", "height"].forEach((k) => form.append(k, String(formData[k] ?? "")));
-    if (coverInputRef.current?.files?.[0]) form.append("cover", coverInputRef.current.files[0]);
-    imagesFiles.forEach((f) => form.append("images", f));
-    if (deleteImageIds.size) form.append("deleteImageIds", Array.from(deleteImageIds).join(","));
+    if (imagesFiles.length > MAX_IMAGES_PER_UPLOAD) {
+      toast.warning(`อัปโหลดได้ครั้งละไม่เกิน ${MAX_IMAGES_PER_UPLOAD} รูป`);
+      return;
+    }
 
     showLoading(isEditing ? "Updating..." : "Creating...");
     const method = isEditing ? "PUT" : "POST";
@@ -124,12 +126,26 @@ export default function DashboardFurniture() {
       ? `${process.env.NEXT_PUBLIC_API_URL}/api/furniture/${formData.id}`
       : `${process.env.NEXT_PUBLIC_API_URL}/api/furniture`;
     try {
-      const res = await fetch(url, { method, headers: { Authorization: `Bearer ${session?.backendToken}` }, body: form });
-      if (!res.ok) throw new Error();
+      const fields = Object.fromEntries(
+        ["name", "type", "details", "price", "width", "depth", "height"].map((k) => [k, String(formData[k] ?? "")])
+      );
+      if (deleteImageIds.size) fields.deleteImageIds = Array.from(deleteImageIds).join(",");
+
+      const res = await submitImageForm({
+        url,
+        method,
+        token: session?.backendToken,
+        fields,
+        cover: coverInputRef.current?.files?.[0],
+        images: imagesFiles,
+        onStatus: updateLoading,
+      });
+      if (!res.ok) throw new Error(res.message || "Failed to submit");
+      revalidatePublicPages();
       toast.success(isEditing ? "Updated" : "Created");
       setOpenForm(false); fetchItems();
-    } catch {
-      toast.error("Failed to submit");
+    } catch (err) {
+      toast.error(err.message || "Failed to submit");
     } finally {
       hideLoading();
     }
