@@ -3,6 +3,7 @@ import { Poppins, Prompt } from 'next/font/google';
 import { Providers } from '@/shared/providers/Providers';
 import ShellWrapper from '@/modules/layout/common/ShellWrapper';
 import ClientGuards from "@/modules/layout/common/ClientGuards";
+import NavigationProgress from "@/modules/layout/common/NavigationProgress";
 import CookieConsent from "@/shared/components/CookieConsent";
 
 const poppins = Poppins({
@@ -34,9 +35,10 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="th" className={`${poppins.variable} ${prompt.variable}`}>
-      <body data-protect={enableGuards ? "on" : "off"}>
+      <body>
         <Providers>
           <ClientGuards enabled={enableGuards} />
+          <NavigationProgress />
           <ShellWrapper>{children}</ShellWrapper>
           <CookieConsent />
         </Providers>

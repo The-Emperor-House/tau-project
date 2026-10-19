@@ -1,24 +1,11 @@
 "use client";
 import { useEffect } from "react";
 
+// กันลากรูป/ลิงก์ออกจากหน้าเว็บเท่านั้น — ไม่กันคีย์ลัด, copy หรือการพิมพ์
+// เพื่อให้ลูกค้าคัดลอกเบอร์โทร/อีเมล/ที่อยู่ และพิมพ์หน้าเว็บได้ตามปกติ
 export default function ClientGuards({ enabled = true }) {
   useEffect(() => {
     if (!enabled) return;
-
-    // ⛔ คีย์ลัดยอดนิยม
-    const onKeyDown = (e) => {
-      const ctrlOrCmd = e.ctrlKey || e.metaKey;
-      const key = (e.key || "").toUpperCase();
-      const blocked =
-        key === "F12" ||
-        (ctrlOrCmd && e.shiftKey && ["I", "J", "C"].includes(key)) ||
-        (ctrlOrCmd && ["U", "S", "P"].includes(key));
-      if (blocked) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown, true);
 
     // ❌ ลากรูป & ลากลิงก์
     const onDragStart = (e) => {
@@ -41,17 +28,8 @@ export default function ClientGuards({ enabled = true }) {
     // แทนการแก้ DOM attribute/style ตรงๆ ที่นี่ เพราะการ mutate node ที่ React ควบคุมอยู่
     // (ผ่าน MutationObserver) ชิงจังหวะ hydration ทำให้เกิด hydration mismatch error
 
-    // ❌ คัดลอก/ตัด
-    const onCopy = (e) => e.preventDefault();
-    const onCut = (e) => e.preventDefault();
-    document.addEventListener("copy", onCopy);
-    document.addEventListener("cut", onCut);
-
     return () => {
-      window.removeEventListener("keydown", onKeyDown, true);
       document.removeEventListener("dragstart", onDragStart, true);
-      document.removeEventListener("copy", onCopy);
-      document.removeEventListener("cut", onCut);
     };
   }, [enabled]);
 

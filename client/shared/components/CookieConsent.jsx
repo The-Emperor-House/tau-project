@@ -34,7 +34,8 @@ export default function CookieConsent() {
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#404040] text-white px-4 py-5 md:px-8">
+      {/* z-40: อยู่เหนือเนื้อหา แต่ต่ำกว่า dialog/lightbox (z-50) ไม่ให้บังรูป */}
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-[#404040] text-white px-4 py-5 md:px-8">
         <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
           <div className="flex-1">
             <p className="font-semibold mb-1">We use cookies</p>
