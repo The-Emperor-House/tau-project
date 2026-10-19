@@ -10,12 +10,15 @@ const ACCENT = "#BFA68A";
 const FRAME = "#333";
 const FALLBACK_COVER = NEWS_FALLBACK_COVER;
 
-export default function LatestNews({ title = "News & Events", showViewAll = true }) {
-  const [news, setNews] = useState(null);
-  const [loading, setLoading] = useState(true);
+// initialNews มาจาก server (app/page.jsx): object = ข่าวที่จะแสดง, null = ไม่มีข่าว,
+// undefined = server ดึงไม่สำเร็จ → ดึงเองฝั่ง client
+export default function LatestNews({ title = "News & Events", showViewAll = true, initialNews }) {
+  const [news, setNews] = useState(initialNews ?? null);
+  const [loading, setLoading] = useState(initialNews === undefined);
   const [err, setErr] = useState("");
 
   useEffect(() => {
+    if (initialNews !== undefined) return;
     const ctrl = new AbortController();
     (async () => {
       try {
@@ -45,7 +48,7 @@ export default function LatestNews({ title = "News & Events", showViewAll = true
       }
     })();
     return () => ctrl.abort();
-  }, []);
+  }, [initialNews]);
 
   const cover = useMemo(() => resolveNewsUrl(news?.coverUrl) || FALLBACK_COVER, [news?.coverUrl]);
 

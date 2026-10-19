@@ -1,75 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
 import ProjectCardsGrid from "../components/ProjectCardsGrid";
 import AnimatedHeading from "@/shared/components/ui/AnimatedHeading";
+import { PROJECT_TYPES } from "../projectTypes";
 
-// mock fetch (replace with real API)
-const fetchProjectsData = async () =>
-  new Promise((resolve) =>
-    setTimeout(() => {
-      resolve([
-        {
-          id: 1,
-          title: "REBUILD",
-          description: "สร้างใหม่",
-          image: "/home/projects/rebuild.webp",
-          link: "/projects/REBUILD",
-        },
-        {
-          id: 2,
-          title: "RENOVATE",
-          description: "ปรับปรุงต่อเติม - ซ่อมแซม",
-          image: "/home/projects/renovate.webp",
-          link: "/projects/RENOVATE",
-        },
-        {
-          id: 3,
-          title: "REDESIGN & DECORATE",
-          description: "ออกแบบตกแต่งภายใน",
-          image: "/home/projects/redesign.png",
-          link: "/projects/REDESIGN",
-        },
-      ]);
-    }, 500)
-  );
+// ข้อมูลคงที่ — แสดงทันทีไม่ต้องรอโหลด
+const projects = PROJECT_TYPES.map((t) => ({
+  id: t.value,
+  title: t.title.toUpperCase(),
+  description: t.subtitle,
+  image: t.cover,
+  link: `/projects/${t.value}`,
+}));
 
 export default function ProjectsSection() {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const data = await fetchProjectsData();
-      setProjects(data);
-      setLoading(false);
-    };
-    load();
-  }, []);
-
-  if (loading) {
-    return (
-      <>
-        <AnimatedHeading
-          variant="h1"
-          className="mb-4"
-          title="PROJECT"
-          subtitle="RECRAFTING SPACES. REVIVING LIVING."
-          align="center"
-          titleColor="#ffffffff"
-        />
-        <div className="grid w-full p-4 sm:p-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 min-h-[60vh]">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="relative w-full aspect-[3/4] overflow-hidden rounded-2xl bg-neutral-900 animate-pulse ring-1 ring-white/10"
-            />
-          ))}
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
       <AnimatedHeading
